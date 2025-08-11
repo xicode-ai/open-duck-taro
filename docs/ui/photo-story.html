@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>拍照短文 - 开口鸭</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      .scroll-container {
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f7fafc;
+      }
+      .scroll-container::-webkit-scrollbar {
+        width: 4px;
+      }
+      .scroll-container::-webkit-scrollbar-track {
+        background: #f7fafc;
+      }
+      .scroll-container::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 2px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 h-screen overflow-hidden">
+    <script src="auth.js"></script>
+    <!-- iOS状态栏 -->
+    <div class="bg-white h-11 flex items-center justify-between px-4 text-sm font-medium">
+      <div class="flex items-center space-x-1">
+        <span>9:41</span>
+      </div>
+      <div class="w-16 h-4 bg-black rounded-full relative">
+        <div class="absolute right-0 top-0 w-1 h-1 bg-white rounded-full m-1"></div>
+      </div>
+      <div class="flex items-center space-x-1">
+        <i class="fas fa-signal text-xs"></i>
+        <i class="fas fa-wifi text-xs"></i>
+        <i class="fas fa-battery-three-quarters text-xs"></i>
+      </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <div class="bg-orange-500 text-white px-4 py-3 flex items-center">
+      <i class="fas fa-arrow-left text-xl mr-4"></i>
+      <h2 class="text-lg font-semibold flex-1">拍照短文</h2>
+      <i class="fas fa-image text-xl"></i>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="px-4 pt-6 pb-20 h-full scroll-container">
+      <!-- 拍照区域 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
+        <div
+          class="aspect-square bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl relative overflow-hidden"
+        >
+          <!-- 示例图片 -->
+          <img
+            src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=400&fit=crop&crop=center"
+            alt="Coffee shop scene"
+            class="w-full h-full object-cover"
+          />
+
+          <!-- 重新拍照按钮 -->
+          <div class="absolute top-3 right-3">
+            <button class="bg-white bg-opacity-90 text-gray-700 p-2 rounded-full shadow-sm">
+              <i class="fas fa-camera text-sm"></i>
+            </button>
+          </div>
+
+          <!-- 拍照提示（初始状态） -->
+          <div
+            class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-6"
+          >
+            <div class="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mb-4">
+              <i class="fas fa-camera text-white text-2xl"></i>
+            </div>
+            <h3 class="text-gray-800 font-semibold mb-2">拍一张照片</h3>
+            <p class="text-gray-600 text-sm mb-4">AI将为你生成英文描述</p>
+            <button class="bg-orange-500 text-white px-6 py-3 rounded-full font-medium">
+              <i class="fas fa-camera mr-2"></i>开始拍照
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mt-4">
+          <div class="flex space-x-2">
+            <button class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-sm">
+              <i class="fas fa-image mr-1"></i>相册选择
+            </button>
+            <button class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-sm">
+              <i class="fas fa-redo mr-1"></i>重新拍照
+            </button>
+          </div>
+          <button
+            class="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium"
+            onclick="handleGenerateStory()"
+          >
+            <i class="fas fa-magic mr-1"></i>生成描述
+          </button>
+        </div>
+      </div>
+
+      <!-- AI生成的短文 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
+        <div class="flex items-center space-x-2 mb-4">
+          <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-robot text-blue-500"></i>
+          </div>
+          <span class="font-semibold text-gray-800">AI生成描述</span>
+          <span class="bg-green-100 text-green-600 px-2 py-1 rounded text-xs">已生成</span>
+        </div>
+
+        <div class="bg-blue-50 rounded-lg p-4 mb-4">
+          <p class="text-gray-800 leading-relaxed text-sm">
+            "This is a cozy coffee shop with warm lighting and comfortable seating. There are
+            several customers enjoying their drinks while working on laptops or chatting with
+            friends. The barista behind the counter is preparing fresh coffee, and the aroma fills
+            the entire space. Large windows let in natural light, creating a welcoming atmosphere
+            perfect for relaxation or productivity."
+          </p>
+        </div>
+
+        <div class="bg-gray-50 rounded-lg p-3 mb-4">
+          <h4 class="text-gray-700 font-medium text-sm mb-2">中文对照:</h4>
+          <p class="text-gray-600 text-sm leading-relaxed">
+            这是一家温馨的咖啡店，有着温暖的灯光和舒适的座椅。几位顾客一边享受着饮品，一边用笔记本电脑工作或与朋友聊天。
+            柜台后的咖啡师正在制作新鲜咖啡，香气弥漫整个空间。大窗户让自然光洒进来，营造出非常适合放松或工作的温馨氛围。
+          </p>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="flex space-x-2">
+            <button class="bg-blue-100 text-blue-600 px-3 py-2 rounded-lg text-sm">
+              <i class="fas fa-volume-up mr-1"></i>播放
+            </button>
+            <button class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-sm">
+              <i class="fas fa-copy mr-1"></i>复制
+            </button>
+          </div>
+          <div class="text-gray-500 text-xs">词汇难度: 中级 | 时长: 15秒</div>
+        </div>
+      </div>
+
+      <!-- 跟读练习区域 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
+        <div class="flex items-center space-x-2 mb-4">
+          <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-microphone text-green-500"></i>
+          </div>
+          <span class="font-semibold text-gray-800">跟读练习</span>
+        </div>
+
+        <!-- 句子分段练习 -->
+        <div class="space-y-3 mb-4">
+          <div class="border border-green-200 rounded-lg p-3 bg-green-50">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-green-700 font-medium text-sm">句子 1/4</span>
+              <button class="bg-green-100 text-green-600 px-2 py-1 rounded text-xs">
+                <i class="fas fa-play mr-1"></i>播放
+              </button>
+            </div>
+            <p class="text-gray-800 text-sm mb-2">
+              "This is a cozy coffee shop with warm lighting and comfortable seating."
+            </p>
+            <div class="flex items-center space-x-2">
+              <button class="bg-green-500 text-white px-4 py-2 rounded-lg text-sm flex-1">
+                <i class="fas fa-microphone mr-1"></i>开始跟读
+              </button>
+              <div class="flex items-center space-x-1">
+                <i class="fas fa-star text-yellow-400"></i>
+                <span class="text-green-600 font-medium text-sm">88分</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="border border-gray-200 rounded-lg p-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-gray-600 font-medium text-sm">句子 2/4</span>
+              <button class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                <i class="fas fa-play mr-1"></i>播放
+              </button>
+            </div>
+            <p class="text-gray-600 text-sm mb-2">
+              "There are several customers enjoying their drinks while working on laptops..."
+            </p>
+            <button class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm w-full">
+              <i class="fas fa-lock mr-1"></i>完成上一句解锁
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+          <div class="flex items-center space-x-2 mb-2">
+            <i class="fas fa-lightbulb text-yellow-500"></i>
+            <span class="text-yellow-700 font-medium text-sm">发音提示</span>
+          </div>
+          <p class="text-yellow-600 text-sm">
+            注意 "comfortable" 的发音: /ˈkʌmftəbl/，重音在第一个音节
+          </p>
+        </div>
+      </div>
+
+      <!-- 整体评分 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
+        <div class="flex items-center space-x-2 mb-4">
+          <i class="fas fa-trophy text-yellow-500 text-lg"></i>
+          <span class="font-semibold text-gray-800">练习成果</span>
+        </div>
+
+        <div class="text-center mb-4">
+          <div
+            class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3"
+          >
+            <span class="text-2xl font-bold text-green-600">B+</span>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-800 mb-1">总体评分: 85分</h3>
+          <p class="text-gray-600 text-sm">发音清晰，继续加油！</p>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600 text-sm">发音准确度</span>
+            <div class="flex items-center space-x-2">
+              <div class="w-20 bg-gray-200 rounded-full h-2">
+                <div class="bg-green-500 h-2 rounded-full w-4/5"></div>
+              </div>
+              <span class="text-green-600 font-medium text-sm">82%</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600 text-sm">语音流畅度</span>
+            <div class="flex items-center space-x-2">
+              <div class="w-20 bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-500 h-2 rounded-full w-full"></div>
+              </div>
+              <span class="text-blue-600 font-medium text-sm">90%</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-gray-600 text-sm">语速控制</span>
+            <div class="flex items-center space-x-2">
+              <div class="w-20 bg-gray-200 rounded-full h-2">
+                <div class="bg-orange-500 h-2 rounded-full w-3/4"></div>
+              </div>
+              <span class="text-orange-600 font-medium text-sm">75%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex space-x-3 mt-4">
+          <button class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-medium text-sm">
+            <i class="fas fa-redo mr-1"></i>重新练习
+          </button>
+          <button class="flex-1 bg-orange-500 text-white py-3 rounded-xl font-medium text-sm">
+            <i class="fas fa-save mr-1"></i>保存记录
+          </button>
+        </div>
+      </div>
+
+      <!-- 学习建议 -->
+      <div class="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-6 text-white mb-6">
+        <h3 class="text-lg font-semibold mb-3">💡 学习建议</h3>
+        <p class="text-blue-100 text-sm mb-3">
+          你的发音准确度很高！建议多练习一些复杂的句子，提升语速控制能力。
+        </p>
+        <button class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg text-sm">
+          继续练习
+        </button>
+      </div>
+
+      <!-- 历史记录 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">📚 历史记录</h3>
+        <div class="space-y-3">
+          <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-camera text-orange-500"></i>
+            </div>
+            <div class="flex-1">
+              <div class="font-medium text-gray-800 text-sm">咖啡店场景</div>
+              <div class="text-gray-500 text-xs">得分: 85分 | 2天前</div>
+            </div>
+            <div class="text-green-500 text-sm font-medium">B+</div>
+          </div>
+
+          <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-camera text-blue-500"></i>
+            </div>
+            <div class="flex-1">
+              <div class="font-medium text-gray-800 text-sm">公园风景</div>
+              <div class="text-gray-500 text-xs">得分: 78分 | 3天前</div>
+            </div>
+            <div class="text-blue-500 text-sm font-medium">B</div>
+          </div>
+
+          <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-camera text-green-500"></i>
+            </div>
+            <div class="flex-1">
+              <div class="font-medium text-gray-800 text-sm">餐厅美食</div>
+              <div class="text-gray-500 text-xs">得分: 92分 | 5天前</div>
+            </div>
+            <div class="text-green-500 text-sm font-medium">A</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function handleGenerateStory() {
+        const usage = checkUsage('photo')
+        if (usage.canUse) {
+          incrementUsage('photo')
+          const remaining = isMember() ? '∞' : usage.remaining - 1
+          alert(
+            `生成描述成功！\n\n"This is a beautiful sunset over the ocean. The golden light reflects on the calm water, creating a peaceful and serene atmosphere."\n\n今日剩余免费次数: ${remaining}`,
+          )
+          // 在这里可以显示生成的内容
+        } else {
+          showMembershipPrompt('今日拍照短文生成次数已用完。')
+        }
+      }
+    </script>
+    <!-- 底部导航栏 -->
+    <div class="bg-white border-t border-gray-200">
+      <div class="flex justify-around items-center py-2 px-4">
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='home.html'">
+          <i class="fas fa-home text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">首页</span>
+        </div>
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='progress.html'">
+          <i class="fas fa-chart-line text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">进度</span>
+        </div>
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='profile.html'">
+          <i class="fas fa-user text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">我的</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1174 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>对话模式 - 开口鸭</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      .duck-avatar {
+        position: relative;
+        background: linear-gradient(45deg, #ffd700, #ffa500);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .duck-avatar::before {
+        content: '';
+        position: absolute;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 25%;
+        height: 20%;
+        background: #ff6b35;
+        border-radius: 0 0 50% 50%;
+        clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%);
+      }
+      .duck-avatar::after {
+        content: '';
+        position: absolute;
+        top: 45%;
+        left: 30%;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #000;
+        box-shadow: 12px 0 0 #000;
+      }
+      /* 整体背景和布局优化 */
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+
+      .scroll-container {
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px 20px 0 0;
+        margin: 0 8px;
+      }
+      .scroll-container::-webkit-scrollbar {
+        width: 6px;
+      }
+      .scroll-container::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .scroll-container::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+      }
+      .scroll-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      /* 微信风格的语音条样式 */
+      .voice-message-container {
+        position: relative;
+        max-width: 220px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .voice-message {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 18px;
+        padding: 8px 12px;
+        min-width: 120px;
+        max-width: 180px;
+        height: 40px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: visible;
+        z-index: 1;
+        backdrop-filter: blur(10px);
+      }
+
+      .voice-message:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .voice-message:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .voice-message.sent {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      .voice-message .play-btn {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: rgba(102, 126, 234, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 8px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+        flex-shrink: 0;
+      }
+
+      .voice-message.sent .play-btn {
+        background: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+      }
+
+      .voice-message .play-btn:hover {
+        transform: scale(1.1);
+      }
+
+      .voice-waves {
+        display: flex;
+        align-items: center;
+        gap: 1px;
+        margin-right: 8px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .wave-bar {
+        width: 2px;
+        background: #667eea;
+        border-radius: 1px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .voice-message.sent .wave-bar {
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 1px 3px rgba(255, 255, 255, 0.3);
+      }
+
+      .wave-bar:nth-child(1) {
+        height: 6px;
+      }
+      .wave-bar:nth-child(2) {
+        height: 4px;
+      }
+      .wave-bar:nth-child(3) {
+        height: 10px;
+      }
+      .wave-bar:nth-child(4) {
+        height: 3px;
+      }
+      .wave-bar:nth-child(5) {
+        height: 8px;
+      }
+      .wave-bar:nth-child(6) {
+        height: 5px;
+      }
+      .wave-bar:nth-child(7) {
+        height: 4px;
+      }
+      .wave-bar:nth-child(8) {
+        height: 7px;
+      }
+
+      .voice-message.playing .wave-bar {
+        animation: wave 1.5s ease-in-out infinite;
+      }
+
+      @keyframes wave {
+        0%,
+        100% {
+          transform: scaleY(1);
+        }
+        50% {
+          transform: scaleY(1.5);
+        }
+      }
+
+      .voice-duration {
+        font-size: 10px;
+        font-weight: 600;
+        color: #64748b;
+        white-space: nowrap;
+        letter-spacing: 0.3px;
+        flex-shrink: 0;
+      }
+
+      .voice-message.sent .voice-duration {
+        color: rgba(255, 255, 255, 0.95);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      /* 语音消息操作按钮 */
+      .voice-actions {
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(15px);
+        border-radius: 16px;
+        padding: 10px 16px;
+        display: none;
+        z-index: 20;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-bottom: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .voice-actions::before {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid rgba(0, 0, 0, 0.8);
+      }
+
+      .voice-actions.show {
+        display: flex;
+        gap: 8px;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        animation: slideDown 0.3s ease;
+      }
+
+      .voice-actions button {
+        font-size: 12px;
+        padding: 8px 14px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: white;
+        font-weight: 600;
+        background: transparent;
+        letter-spacing: 0.5px;
+      }
+
+      .voice-actions button:hover {
+        transform: scale(1.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      /* 语音消息内容区域 */
+      .voice-content {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(15px);
+        border-radius: 16px;
+        padding: 12px 16px;
+        margin-top: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        opacity: 0;
+        transform: translateY(-10px);
+        visibility: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: none;
+      }
+
+      .voice-content.show {
+        opacity: 1;
+        transform: translateY(0);
+        visibility: visible;
+        display: block;
+      }
+
+      /* 语音条本身右对齐，但内容区域左对齐 */
+      .flex.justify-end .voice-message-container .voice-message {
+        align-self: flex-end;
+      }
+
+      /* 所有语音内容都左对齐，符合阅读习惯 */
+      .voice-content {
+        text-align: left;
+        align-self: stretch;
+        margin-bottom: 6px;
+      }
+
+      /* 确保时间戳不被覆盖 */
+      .voice-message-container p.text-xs {
+        margin-top: 4px;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 1;
+        clear: both;
+        font-size: 11px;
+        color: #64748b;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        align-self: flex-start;
+      }
+
+      /* 用户消息容器确保有足够空间 */
+      .flex.justify-end .voice-message-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        margin-bottom: 0;
+        min-height: 0;
+        max-width: 220px;
+      }
+
+      /* 用户消息的时间戳右对齐 */
+      .flex.justify-end .voice-message-container p.text-xs {
+        align-self: flex-end;
+      }
+
+      .voice-text {
+        font-size: 11px;
+        color: #374151;
+        line-height: 1.4;
+        margin-bottom: 6px;
+        font-style: italic;
+      }
+
+      .help-suggestion {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-top: 6px;
+        font-size: 11px;
+        color: #166534;
+        line-height: 1.5;
+      }
+
+      /* 求助成功提示 */
+      .help-success {
+        background: #dbeafe;
+        border: 1px solid #93c5fd;
+        border-radius: 8px;
+        padding: 6px 10px;
+        margin-top: 6px;
+        font-size: 11px;
+        color: #1e40af;
+        display: none;
+        font-weight: 500;
+      }
+
+      .help-success.show {
+        display: block;
+        animation: fadeIn 0.3s ease;
+      }
+
+      /* 翻译结果样式 */
+      .translation-result {
+        background: #fef3f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 6px 8px;
+        margin-top: 4px;
+        font-size: 10px;
+        color: #dc2626;
+        display: none;
+      }
+
+      .translation-result.show {
+        display: block;
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* 语音功能按钮增强 */
+      .voice-actions button.translate-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      }
+
+      .voice-actions button.help-btn {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(240, 147, 251, 0.3);
+      }
+
+      /* 详细功能面板 */
+      .detailed-content {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 6px;
+        font-size: 11px;
+        display: none;
+        line-height: 1.6;
+      }
+
+      .detailed-content.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+      }
+
+      .detailed-content h4 {
+        font-size: 12px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+        margin-top: 0;
+      }
+
+      .detailed-content p {
+        margin: 4px 0;
+        color: #4b5563;
+      }
+
+      .detailed-content ul {
+        margin: 4px 0;
+        padding-left: 16px;
+      }
+
+      .detailed-content li {
+        margin: 2px 0;
+        color: #4b5563;
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          max-height: 0;
+        }
+        to {
+          opacity: 1;
+          max-height: 200px;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 h-screen overflow-hidden">
+    <script src="auth.js"></script>
+    <!-- iOS状态栏 -->
+    <div class="bg-white h-11 flex items-center justify-between px-4 text-sm font-medium">
+      <div class="flex items-center space-x-1">
+        <span>9:41</span>
+      </div>
+      <div class="w-16 h-4 bg-black rounded-full relative">
+        <div class="absolute right-0 top-0 w-1 h-1 bg-white rounded-full m-1"></div>
+      </div>
+      <div class="flex items-center space-x-1">
+        <i class="fas fa-signal text-xs"></i>
+        <i class="fas fa-wifi text-xs"></i>
+        <i class="fas fa-battery-three-quarters text-xs"></i>
+      </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <div
+      class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-4 flex items-center shadow-lg"
+    >
+      <i
+        class="fas fa-arrow-left text-xl mr-4 hover:opacity-80 transition-opacity cursor-pointer"
+      ></i>
+      <div class="flex items-center flex-1">
+        <div
+          class="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-4 shadow-md"
+        >
+          <span class="text-xl">👩‍🏫</span>
+        </div>
+        <div>
+          <h2 class="font-bold text-lg">Emma (AI外教)</h2>
+          <p class="text-sm opacity-90 flex items-center">
+            <span class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+            在线
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 聊天消息区域 -->
+    <div class="flex-1 px-4 py-4 space-y-4 scroll-container" style="height: calc(100vh - 200px)">
+      <!-- AI消息 -->
+      <div class="flex items-start space-x-3">
+        <div
+          class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0"
+        >
+          <span class="text-white text-lg">👩‍🏫</span>
+        </div>
+        <div class="flex-1 max-w-xs">
+          <!-- 语音消息 -->
+          <div class="voice-message-container">
+            <div
+              class="voice-message"
+              onclick="playVoice(this)"
+              oncontextmenu="showVoiceActions(event, this, 'ai')"
+              onmousedown="startLongPress(this)"
+              onmouseup="endLongPress(this)"
+              onmouseleave="endLongPress(this)"
+            >
+              <div class="play-btn">
+                <i class="fas fa-play text-blue-500 text-xs"></i>
+              </div>
+              <div class="voice-waves">
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+              </div>
+              <span class="voice-duration">5"</span>
+
+              <!-- 长按显示的按钮 -->
+              <div class="voice-actions" id="actions-ai-msg-1">
+                <button class="translate-btn" onclick="showTranslation('ai-msg-1')">
+                  <i class="fas fa-language"></i>翻译
+                </button>
+              </div>
+            </div>
+            <!-- 内容区域 -->
+            <div class="voice-content" id="content-ai-msg-1">
+              <div class="voice-text">"Hi! How are you doing today?"</div>
+              <!-- 翻译结果 -->
+              <div class="translation-result" id="trans-ai-msg-1">
+                <div><strong>翻译:</strong> "嗨！你今天过得怎么样？"</div>
+              </div>
+              <!-- 详细内容 -->
+              <div class="detailed-content" id="detail-ai-msg-1">
+                <h4>📖 语法解析</h4>
+                <ul>
+                  <li><strong>"How are you doing"</strong> - 现在进行时的问候方式</li>
+                  <li><strong>"today"</strong> - 时间状语，询问今天的情况</li>
+                </ul>
+
+                <h4>🔄 相似表达</h4>
+                <ul>
+                  <li>"How's your day going?"</li>
+                  <li>"How has your day been?"</li>
+                </ul>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">刚刚</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 用户消息 -->
+      <div class="flex items-start space-x-3 justify-end">
+        <div class="flex-1 flex justify-end max-w-xs">
+          <div class="voice-message-container">
+            <div
+              class="voice-message sent"
+              onclick="playVoice(this)"
+              oncontextmenu="showVoiceActions(event, this, 'user')"
+              onmousedown="startLongPress(this)"
+              onmouseup="endLongPress(this)"
+              onmouseleave="endLongPress(this)"
+            >
+              <div class="play-btn">
+                <i class="fas fa-play text-white text-xs"></i>
+              </div>
+              <div class="voice-waves">
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+              </div>
+              <span class="voice-duration">3"</span>
+
+              <!-- 长按显示的按钮 -->
+              <div class="voice-actions" id="actions-user-msg-1">
+                <button class="translate-btn" onclick="showTranslation('user-msg-1')">
+                  <i class="fas fa-language"></i>翻译
+                </button>
+                <button class="help-btn" onclick="handleHelpRequest('user-msg-1')">
+                  <i class="fas fa-question-circle"></i>求助
+                </button>
+              </div>
+            </div>
+            <!-- 内容区域 -->
+            <div class="voice-content" id="content-user-msg-1">
+              <div class="voice-text">"我很好，谢谢"</div>
+              <!-- 翻译结果 -->
+              <div class="translation-result" id="trans-user-msg-1">
+                <div><strong>翻译:</strong> "I'm fine, thank you"</div>
+              </div>
+              <!-- 求助成功提示 -->
+              <div class="help-success" id="success-user-msg-1">
+                <strong>✅ 求助成功！</strong> 已为您提供地道表达建议，剩余次数:
+                <span id="remaining-user-msg-1">2</span>
+              </div>
+              <!-- 地道表达建议 -->
+              <div class="help-suggestion" id="help-user-msg-1" style="display: none">
+                <h4>💡 地道表达建议</h4>
+                <p><strong>推荐表达:</strong> "I'm doing great, thanks!"</p>
+                <p><strong>改进原因:</strong></p>
+                <ul>
+                  <li>"doing great" 比 "fine" 更积极自然</li>
+                  <li>"thanks" 比 "thank you" 更口语化</li>
+                </ul>
+              </div>
+              <!-- 详细求助内容 -->
+              <div class="detailed-content" id="detail-user-msg-1">
+                <div class="flex items-center justify-between mb-3">
+                  <h4>🎯 发音要点</h4>
+                  <button
+                    class="bg-blue-500 text-white px-3 py-1 rounded text-xs"
+                    onclick="playHelpContent('user-msg-1')"
+                  >
+                    <i class="fas fa-volume-up mr-1"></i>播放
+                  </button>
+                </div>
+                <ul>
+                  <li><strong>"I'm"</strong> /aɪm/ - 注意连读发音</li>
+                  <li><strong>"doing"</strong> /ˈduːɪŋ/ - 重音在第一个音节</li>
+                </ul>
+
+                <h4>📝 表达对比</h4>
+                <ul>
+                  <li><strong>你的表达:</strong> "I'm fine" (正确但较正式)</li>
+                  <li><strong>地道表达:</strong> "I'm doing great" (更自然积极)</li>
+                </ul>
+
+                <h4>🎭 使用场景</h4>
+                <ul>
+                  <li><strong>朋友间:</strong> "I'm doing great!"</li>
+                  <li><strong>正式场合:</strong> "I'm very well, thank you"</li>
+                </ul>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">刚刚</p>
+          </div>
+        </div>
+        <div class="w-10 h-10 duck-avatar flex-shrink-0"></div>
+      </div>
+
+      <!-- 另一条AI消息 -->
+      <div class="flex items-start space-x-3">
+        <div
+          class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0"
+        >
+          <span class="text-white text-lg">👩‍🏫</span>
+        </div>
+        <div class="flex-1 max-w-xs">
+          <div class="voice-message-container">
+            <div
+              class="voice-message"
+              onclick="playVoice(this)"
+              oncontextmenu="showVoiceActions(event, this, 'ai')"
+              onmousedown="startLongPress(this)"
+              onmouseup="endLongPress(this)"
+              onmouseleave="endLongPress(this)"
+            >
+              <div class="play-btn">
+                <i class="fas fa-play text-blue-500 text-xs"></i>
+              </div>
+              <div class="voice-waves">
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+              </div>
+              <span class="voice-duration">6"</span>
+
+              <!-- 长按显示的按钮 -->
+              <div class="voice-actions" id="actions-ai-msg-2">
+                <button class="translate-btn" onclick="showTranslation('ai-msg-2')">
+                  <i class="fas fa-language"></i>翻译
+                </button>
+              </div>
+            </div>
+            <!-- 内容区域 -->
+            <div class="voice-content" id="content-ai-msg-2">
+              <div class="voice-text">"What about your weekend plans?"</div>
+              <!-- 翻译结果 -->
+              <div class="translation-result" id="trans-ai-msg-2">
+                <div><strong>翻译:</strong> "你的周末计划怎么样？"</div>
+              </div>
+              <!-- 详细内容 -->
+              <div class="detailed-content" id="detail-ai-msg-2">
+                <h4>📖 语法解析</h4>
+                <ul>
+                  <li><strong>"What about"</strong> - 询问某事的常用句型</li>
+                  <li><strong>"weekend plans"</strong> - 复数名词短语</li>
+                </ul>
+
+                <h4>🔄 相似表达</h4>
+                <ul>
+                  <li>"Do you have any weekend plans?"</li>
+                  <li>"What are you doing this weekend?"</li>
+                </ul>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">刚刚</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 更多消息示例 -->
+      <div class="flex items-start space-x-3 justify-end">
+        <div class="flex-1 flex justify-end max-w-xs">
+          <div class="voice-message-container">
+            <div
+              class="voice-message sent"
+              onclick="playVoice(this)"
+              oncontextmenu="showVoiceActions(event, this, 'user')"
+              onmousedown="startLongPress(this)"
+              onmouseup="endLongPress(this)"
+              onmouseleave="endLongPress(this)"
+            >
+              <div class="play-btn">
+                <i class="fas fa-play text-white text-xs"></i>
+              </div>
+              <div class="voice-waves">
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+              </div>
+              <span class="voice-duration">4"</span>
+
+              <!-- 长按显示的按钮 -->
+              <div class="voice-actions" id="actions-user-msg-2">
+                <button class="translate-btn" onclick="showTranslation('user-msg-2')">
+                  <i class="fas fa-language"></i>翻译
+                </button>
+                <button class="help-btn" onclick="handleHelpRequest('user-msg-2')">
+                  <i class="fas fa-question-circle"></i>求助
+                </button>
+              </div>
+            </div>
+            <!-- 内容区域 -->
+            <div class="voice-content" id="content-user-msg-2">
+              <div class="voice-text">"计划去公园散步"</div>
+              <!-- 翻译结果 -->
+              <div class="translation-result" id="trans-user-msg-2">
+                <div><strong>翻译:</strong> "I plan to take a walk in the park"</div>
+              </div>
+              <!-- 求助成功提示 -->
+              <div class="help-success" id="success-user-msg-2">
+                <strong>✅ 求助成功！</strong> 已为您提供地道表达建议，剩余次数:
+                <span id="remaining-user-msg-2">2</span>
+              </div>
+              <!-- 地道表达建议 -->
+              <div class="help-suggestion" id="help-user-msg-2" style="display: none">
+                <h4>💡 地道表达建议</h4>
+                <p><strong>推荐表达:</strong> "I'm planning to go for a walk in the park"</p>
+                <p><strong>改进原因:</strong></p>
+                <ul>
+                  <li>"go for a walk" 比 "take a walk" 更自然地道</li>
+                  <li>"planning" 比 "plan" 更口语化</li>
+                </ul>
+              </div>
+              <!-- 详细求助内容 -->
+              <div class="detailed-content" id="detail-user-msg-2">
+                <div class="flex items-center justify-between mb-3">
+                  <h4>🎯 发音要点</h4>
+                  <button
+                    class="bg-blue-500 text-white px-3 py-1 rounded text-xs"
+                    onclick="playHelpContent('user-msg-2')"
+                  >
+                    <i class="fas fa-volume-up mr-1"></i>播放
+                  </button>
+                </div>
+                <ul>
+                  <li><strong>"planning"</strong> /ˈplænɪŋ/ - 注意双n的发音</li>
+                  <li><strong>"walk"</strong> /wɔːk/ - 长音o</li>
+                </ul>
+
+                <h4>📝 表达对比</h4>
+                <ul>
+                  <li><strong>你的表达:</strong> "plan to take a walk"</li>
+                  <li><strong>更地道:</strong> "planning to go for a walk"</li>
+                </ul>
+
+                <h4>📚 词汇扩展</h4>
+                <ul>
+                  <li><strong>go for a stroll</strong> (悠闲散步)</li>
+                  <li><strong>take a hike</strong> (徒步)</li>
+                </ul>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">1分钟前</p>
+          </div>
+        </div>
+        <div class="w-10 h-10 duck-avatar flex-shrink-0"></div>
+      </div>
+
+      <div class="flex items-start space-x-3">
+        <div
+          class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0"
+        >
+          <span class="text-white text-lg">👩‍🏫</span>
+        </div>
+        <div class="flex-1 max-w-xs">
+          <div class="voice-message-container">
+            <div
+              class="voice-message"
+              onclick="playVoice(this)"
+              oncontextmenu="showVoiceActions(event, this, 'ai')"
+              onmousedown="startLongPress(this)"
+              onmouseup="endLongPress(this)"
+              onmouseleave="endLongPress(this)"
+            >
+              <div class="play-btn">
+                <i class="fas fa-play text-blue-500 text-xs"></i>
+              </div>
+              <div class="voice-waves">
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+              </div>
+              <span class="voice-duration">8"</span>
+
+              <!-- 长按显示的按钮 -->
+              <div class="voice-actions" id="actions-ai-msg-3">
+                <button class="translate-btn" onclick="showTranslation('ai-msg-3')">
+                  <i class="fas fa-language"></i>翻译
+                </button>
+              </div>
+            </div>
+            <!-- 内容区域 -->
+            <div class="voice-content" id="content-ai-msg-3">
+              <div class="voice-text">
+                "That sounds lovely! Walking in the park is a great way to relax."
+              </div>
+              <!-- 翻译结果 -->
+              <div class="translation-result" id="trans-ai-msg-3">
+                <div><strong>翻译:</strong> "听起来很棒！在公园散步是放松的好方法。"</div>
+              </div>
+              <!-- 详细内容 -->
+              <div class="detailed-content" id="detail-ai-msg-3">
+                <h4>📖 语法解析</h4>
+                <ul>
+                  <li><strong>"That sounds lovely"</strong> - 表达赞同的常用句型</li>
+                  <li><strong>"a great way to..."</strong> - 表示方法的句型</li>
+                </ul>
+
+                <h4>💡 地道表达学习</h4>
+                <ul>
+                  <li><strong>"sounds lovely"</strong> = "sounds great/wonderful"</li>
+                  <li><strong>"a great way to relax"</strong> - 地道的表达方式</li>
+                </ul>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">1分钟前</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 输入区域 -->
+    <div class="bg-white px-4 py-4 border-t border-gray-200 shadow-lg">
+      <div class="flex items-center justify-center space-x-4">
+        <i
+          class="fas fa-plus-circle text-gray-500 text-xl hover:text-blue-500 transition-colors cursor-pointer"
+        ></i>
+
+        <!-- 按住说话按钮 -->
+        <div class="flex justify-center">
+          <button
+            class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-10 py-2 rounded-full flex items-center space-x-3 active:from-blue-600 active:to-purple-700 transform active:scale-95 transition-all duration-200 shadow-lg hover:shadow-xl"
+          >
+            <i class="fas fa-microphone text-xl"></i>
+            <span class="font-semibold text-lg">按住说话</span>
+          </button>
+        </div>
+
+        <i
+          class="fas fa-smile text-gray-500 text-xl hover:text-blue-500 transition-colors cursor-pointer"
+        ></i>
+      </div>
+
+      <!-- 录音状态提示 -->
+      <div class="hidden mt-3 text-center">
+        <div
+          class="bg-red-500 text-white px-4 py-2 rounded-full inline-flex items-center space-x-2"
+        >
+          <div class="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+          <span>正在录音...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部导航栏 -->
+    <div class="bg-white border-t border-gray-200 shadow-lg">
+      <div class="flex justify-around items-center py-3 px-4">
+        <div
+          class="flex flex-col items-center py-2 hover:text-blue-500 transition-colors cursor-pointer"
+          onclick="window.location.href='home.html'"
+        >
+          <i class="fas fa-home text-gray-500 text-xl hover:text-blue-500 transition-colors"></i>
+          <span class="text-xs text-gray-500 mt-1 font-medium">首页</span>
+        </div>
+        <div
+          class="flex flex-col items-center py-2 hover:text-blue-500 transition-colors cursor-pointer"
+          onclick="window.location.href='progress.html'"
+        >
+          <i
+            class="fas fa-chart-line text-gray-500 text-xl hover:text-blue-500 transition-colors"
+          ></i>
+          <span class="text-xs text-gray-500 mt-1 font-medium">进度</span>
+        </div>
+        <div
+          class="flex flex-col items-center py-2 hover:text-blue-500 transition-colors cursor-pointer"
+          onclick="window.location.href='profile.html'"
+        >
+          <i class="fas fa-user text-gray-500 text-xl hover:text-blue-500 transition-colors"></i>
+          <span class="text-xs text-gray-500 mt-1 font-medium">我的</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function playVoice(element) {
+        // 移除其他播放状态
+        document.querySelectorAll('.voice-message').forEach((msg) => {
+          msg.classList.remove('playing')
+          const playBtn = msg.querySelector('.play-btn i')
+          playBtn.className = playBtn.className.includes('sent')
+            ? 'fas fa-play text-white text-xs'
+            : 'fas fa-play text-blue-500 text-xs'
+        })
+
+        // 切换当前播放状态
+        const isPlaying = element.classList.contains('playing')
+        const playBtn = element.querySelector('.play-btn i')
+
+        if (!isPlaying) {
+          element.classList.add('playing')
+          playBtn.className = playBtn.className.includes('text-white')
+            ? 'fas fa-pause text-white text-xs'
+            : 'fas fa-pause text-blue-500 text-xs'
+
+          // 模拟播放时长
+          const duration = parseInt(element.querySelector('.voice-duration').textContent) * 1000
+          setTimeout(() => {
+            element.classList.remove('playing')
+            playBtn.className = playBtn.className.includes('text-white')
+              ? 'fas fa-play text-white text-xs'
+              : 'fas fa-play text-blue-500 text-xs'
+          }, duration)
+        } else {
+          element.classList.remove('playing')
+          playBtn.className = playBtn.className.includes('text-white')
+            ? 'fas fa-play text-white text-xs'
+            : 'fas fa-play text-blue-500 text-xs'
+        }
+      }
+
+      // 长按相关变量
+      let longPressTimer = null
+      let longPressDelay = 500 // 500ms长按触发
+
+      // 开始长按
+      function startLongPress(element) {
+        console.log('开始长按')
+        longPressTimer = setTimeout(() => {
+          console.log('长按触发')
+          showVoiceActions(null, element, element.classList.contains('sent') ? 'user' : 'ai')
+        }, longPressDelay)
+      }
+
+      // 结束长按
+      function endLongPress(element) {
+        if (longPressTimer) {
+          console.log('结束长按')
+          clearTimeout(longPressTimer)
+          longPressTimer = null
+        }
+      }
+
+      // 阻止右键菜单
+      document.addEventListener('contextmenu', function (e) {
+        e.preventDefault()
+      })
+
+      // 页面加载时确保所有按钮都是隐藏的
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.voice-actions').forEach((actions) => {
+          actions.classList.remove('show')
+        })
+      })
+
+      // 显示语音操作按钮
+      function showVoiceActions(event, element, type) {
+        if (event) {
+          event.preventDefault()
+        }
+
+        console.log('显示按钮:', type)
+
+        // 隐藏所有其他按钮
+        document.querySelectorAll('.voice-actions').forEach((actions) => {
+          actions.classList.remove('show')
+        })
+
+        // 显示当前按钮
+        const actionsId = element.querySelector('.voice-actions').id
+        const actions = document.getElementById(actionsId)
+        if (actions) {
+          actions.classList.add('show')
+          console.log('按钮已显示:', actionsId)
+
+          // 3秒后自动隐藏
+          setTimeout(() => {
+            actions.classList.remove('show')
+            console.log('按钮已隐藏:', actionsId)
+          }, 3000)
+        }
+      }
+
+      // 显示/隐藏翻译结果
+      function showTranslation(msgId) {
+        const contentDiv = document.getElementById(`content-${msgId}`)
+        const translationDiv = document.getElementById(`trans-${msgId}`)
+        const detailDiv = document.getElementById(`detail-${msgId}`)
+
+        // 隐藏所有内容
+        document.querySelectorAll('.voice-content').forEach((content) => {
+          content.classList.remove('show')
+        })
+
+        // 显示当前内容
+        contentDiv.classList.add('show')
+        translationDiv.classList.add('show')
+        detailDiv.classList.add('show')
+
+        // 隐藏按钮
+        document.getElementById(`actions-${msgId}`).classList.remove('show')
+      }
+
+      // 处理求助请求（增强版）
+      function handleHelpRequest(msgId) {
+        const usage = checkUsage('help')
+        if (usage.canUse) {
+          incrementUsage('help')
+          const remaining = isMember() ? '∞' : usage.remaining - 1
+
+          // 显示内容区域
+          const contentDiv = document.getElementById(`content-${msgId}`)
+          const helpDiv = document.getElementById(`help-${msgId}`)
+          const detailDiv = document.getElementById(`detail-${msgId}`)
+          const successDiv = document.getElementById(`success-${msgId}`)
+          const remainingSpan = document.getElementById(`remaining-${msgId}`)
+
+          // 隐藏所有内容
+          document.querySelectorAll('.voice-content').forEach((content) => {
+            content.classList.remove('show')
+          })
+
+          // 显示当前内容
+          contentDiv.classList.add('show')
+
+          if (helpDiv) {
+            helpDiv.style.display = 'block'
+            helpDiv.classList.add('show')
+          }
+
+          if (detailDiv) {
+            detailDiv.classList.add('show')
+          }
+
+          // 显示求助成功提示
+          if (successDiv) {
+            successDiv.classList.add('show')
+            if (remainingSpan) {
+              remainingSpan.textContent = remaining
+            }
+          }
+
+          // 隐藏按钮
+          document.getElementById(`actions-${msgId}`).classList.remove('show')
+
+          // 更新使用状态显示
+          updateUsageDisplay()
+        } else {
+          showMembershipPrompt('今日求助次数已用完。')
+        }
+      }
+
+      // 播放求助内容语音
+      function playHelpContent(msgId) {
+        const helpDiv = document.getElementById(`help-${msgId}`)
+        const detailDiv = document.getElementById(`detail-${msgId}`)
+
+        // 显示内容
+        const contentDiv = document.getElementById(`content-${msgId}`)
+        contentDiv.classList.add('show')
+
+        if (helpDiv) {
+          helpDiv.style.display = 'block'
+          helpDiv.classList.add('show')
+        }
+
+        if (detailDiv) {
+          detailDiv.classList.add('show')
+        }
+
+        // 模拟TTS播放
+        console.log(`播放求助内容: ${msgId}`)
+
+        // 这里可以集成真实的TTS API
+        // 播放地道表达建议
+        setTimeout(() => {
+          console.log('播放: "I\'m doing great, thanks!"')
+        }, 1000)
+
+        // 播放详细解释
+        setTimeout(() => {
+          console.log('播放: "发音要点和语法对比"')
+        }, 3000)
+      }
+
+      function updateUsageDisplay() {
+        // 更新页面上的使用次数显示
+        const userState = getUserState()
+        const remaining = isMember() ? '∞' : Math.max(0, 3 - (userState.dailyUsage.help || 0))
+
+        // 可以在这里添加页面内的使用次数显示更新
+        console.log(`剩余求助次数: ${remaining}`)
+      }
+    </script>
+  </body>
+</html>

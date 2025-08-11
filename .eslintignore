@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+.swc/
+coverage/
+*.min.js
+*.bundle.js
+public/
+docs/
+config/
+types/
+*.config.js
+*.config.ts
+babel.config.js
+jest.config.ts

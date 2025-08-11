@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>开口鸭</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      .duck-logo {
+        position: relative;
+        background: linear-gradient(45deg, #ffd700, #ffa500);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 20px rgba(255, 165, 0, 0.3);
+      }
+      .duck-logo::before {
+        content: '';
+        position: absolute;
+        top: 15%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 30%;
+        height: 25%;
+        background: #ff6b35;
+        border-radius: 0 0 50% 50%;
+        clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+      }
+      .duck-logo::after {
+        content: '';
+        position: absolute;
+        top: 40%;
+        left: 25%;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #000;
+        box-shadow: 25px 0 0 #000;
+      }
+      .scroll-container {
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f7fafc;
+      }
+      .scroll-container::-webkit-scrollbar {
+        width: 4px;
+      }
+      .scroll-container::-webkit-scrollbar-track {
+        background: #f7fafc;
+      }
+      .scroll-container::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 2px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 h-screen overflow-hidden">
+    <script src="auth.js"></script>
+
+    <!-- iOS状态栏 -->
+    <div class="bg-white h-11 flex items-center justify-between px-4 text-sm font-medium">
+      <div class="flex items-center space-x-1">
+        <span>9:41</span>
+      </div>
+      <div class="w-16 h-4 bg-black rounded-full relative">
+        <div class="absolute right-0 top-0 w-1 h-1 bg-white rounded-full m-1"></div>
+      </div>
+      <div class="flex items-center space-x-1">
+        <i class="fas fa-signal text-xs"></i>
+        <i class="fas fa-wifi text-xs"></i>
+        <i class="fas fa-battery-three-quarters text-xs"></i>
+      </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="px-6 pt-8 pb-20 h-full scroll-container">
+      <!-- 标题和Logo -->
+      <!-- <div class="text-center mb-6">
+            <div class="flex items-center justify-center space-x-3 mb-3">
+                <div class="w-8 h-8 duck-logo">
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">开口鸭</h1>
+            </div>
+            <p class="text-gray-600 text-sm">与AI外教练习英语口语</p>
+        </div> -->
+
+      <!-- 用户状态卡片 -->
+      <div
+        class="bg-white rounded-xl p-3 shadow-sm border border-gray-100 mb-4"
+        id="userStatusCard"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-semibold text-gray-800">今日使用情况</h3>
+          <span class="text-xs px-2 py-1 rounded-full" id="membershipBadge">普通用户</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2" id="usageStats">
+          <!-- 动态生成使用统计 -->
+        </div>
+
+        <!-- 非会员提示 -->
+        <div
+          class="mt-3 p-2 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200"
+          id="membershipTip"
+        >
+          <div class="flex items-center space-x-2">
+            <i class="fas fa-crown text-yellow-500 text-sm"></i>
+            <span class="text-xs font-medium text-gray-800">开通会员解锁所有功能</span>
+          </div>
+          <div class="text-xs text-gray-600 mt-1">
+            • 无限次使用所有功能 • 创建自定义话题 • 专属学习计划
+          </div>
+          <button
+            class="mt-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium w-full"
+            onclick="window.location.href='membership.html'"
+          >
+            立即开通 ￥198/年
+          </button>
+        </div>
+      </div>
+
+      <!-- 功能导航 -->
+      <div class="space-y-4">
+        <!-- 对话模式 -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-comments text-white text-xl"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-800">对话模式</h3>
+              <p class="text-gray-500 text-sm">与AI外教语音对话练习</p>
+            </div>
+            <i class="fas fa-chevron-right text-gray-400"></i>
+          </div>
+        </div>
+
+        <!-- 话题模式 -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-layer-group text-white text-xl"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-800">话题模式</h3>
+              <p class="text-gray-500 text-sm">选择话题进行场景对话</p>
+            </div>
+            <i class="fas fa-chevron-right text-gray-400"></i>
+          </div>
+        </div>
+
+        <!-- 翻译功能 -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-language text-white text-xl"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-800">翻译功能</h3>
+              <p class="text-gray-500 text-sm">中英互译，地道口语表达</p>
+            </div>
+            <i class="fas fa-chevron-right text-gray-400"></i>
+          </div>
+        </div>
+
+        <!-- 拍照短文 -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-camera text-white text-xl"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-800">拍照短文</h3>
+              <p class="text-gray-500 text-sm">拍照生成英文描述练习</p>
+            </div>
+            <i class="fas fa-chevron-right text-gray-400"></i>
+          </div>
+        </div>
+
+        <!-- 背单词 -->
+        <div
+          class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+          onclick="window.location.href='vocabulary.html'"
+        >
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-book-open text-white text-xl"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-800">背单词</h3>
+              <p class="text-gray-500 text-sm">语境学习法，分阶段背单词</p>
+            </div>
+            <i class="fas fa-chevron-right text-gray-400"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- 每日推荐 -->
+      <div class="mt-8">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">📚 今日推荐</h3>
+        <div class="bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl p-4 text-white">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center"
+            >
+              <i class="fas fa-fire text-2xl"></i>
+            </div>
+            <div class="flex-1">
+              <h4 class="font-semibold mb-1">每日一句</h4>
+              <p class="text-pink-100 text-sm">"Practice makes perfect!"</p>
+              <p class="text-pink-200 text-xs">熟能生巧！</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 学习统计 -->
+      <div class="mt-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 今日学习</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-white rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-blue-500 mb-1">12</div>
+            <div class="text-gray-600 text-sm">对话练习</div>
+          </div>
+          <div class="bg-white rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-green-500 mb-1">5</div>
+            <div class="text-gray-600 text-sm">连续打卡</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部导航栏 -->
+    <div class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <div class="flex justify-around items-center py-2 px-4">
+        <div class="flex flex-col items-center py-2">
+          <i class="fas fa-home text-blue-500 text-xl"></i>
+          <span class="text-xs text-blue-500 mt-1">首页</span>
+        </div>
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='progress.html'">
+          <i class="fas fa-chart-line text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">进度</span>
+        </div>
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='profile.html'">
+          <i class="fas fa-user text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">我的</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 页面加载时更新用户状态显示
+      document.addEventListener('DOMContentLoaded', () => {
+        updateUserStatus()
+      })
+
+      function updateUserStatus() {
+        const userState = getUserState()
+        const membershipBadge = document.getElementById('membershipBadge')
+        const usageStats = document.getElementById('usageStats')
+        const membershipTip = document.getElementById('membershipTip')
+
+        // 更新会员状态
+        if (userState.isMember) {
+          membershipBadge.textContent = '会员用户'
+          membershipBadge.className = 'text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800'
+          membershipTip.style.display = 'none' // 隐藏会员提示
+        } else {
+          membershipBadge.textContent = '普通用户'
+          membershipBadge.className = 'text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600'
+          membershipTip.style.display = 'block' // 显示会员提示
+        }
+
+        // 更新使用统计
+        const features = [
+          { key: 'help', name: '求助', icon: 'fas fa-question-circle', color: 'orange' },
+          { key: 'translate', name: '地道翻译', icon: 'fas fa-language', color: 'purple' },
+          { key: 'photo', name: '拍照短文', icon: 'fas fa-camera', color: 'blue' },
+        ]
+
+        usageStats.innerHTML = features
+          .map((feature) => {
+            const usage = checkUsage(feature.key)
+            const used = userState.dailyUsage[feature.key] || 0
+            const limit = userState.isMember ? '∞' : '3'
+            const remaining = userState.isMember ? '∞' : Math.max(0, 3 - used)
+
+            return `
+                    <div class="text-center p-1.5 bg-${feature.color}-50 rounded-lg">
+                        <i class="${feature.icon} text-${feature.color}-500 text-sm mb-0.5"></i>
+                        <div class="text-xs font-medium text-gray-800">${feature.name}</div>
+                        <div class="text-xs text-gray-500">剩余: ${remaining}</div>
+                    </div>
+                `
+          })
+          .join('')
+      }
+    </script>
+  </body>
+</html>

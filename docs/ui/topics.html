@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>话题模式 - 开口鸭</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      .scroll-container {
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f7fafc;
+      }
+      .scroll-container::-webkit-scrollbar {
+        width: 4px;
+      }
+      .scroll-container::-webkit-scrollbar-track {
+        background: #f7fafc;
+      }
+      .scroll-container::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 2px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 h-screen overflow-hidden">
+    <script src="auth.js"></script>
+    <!-- iOS状态栏 -->
+    <div class="bg-white h-11 flex items-center justify-between px-4 text-sm font-medium">
+      <div class="flex items-center space-x-1">
+        <span>9:41</span>
+      </div>
+      <div class="w-16 h-4 bg-black rounded-full relative">
+        <div class="absolute right-0 top-0 w-1 h-1 bg-white rounded-full m-1"></div>
+      </div>
+      <div class="flex items-center space-x-1">
+        <i class="fas fa-signal text-xs"></i>
+        <i class="fas fa-wifi text-xs"></i>
+        <i class="fas fa-battery-three-quarters text-xs"></i>
+      </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <div class="bg-green-500 text-white px-4 py-3 flex items-center">
+      <i class="fas fa-arrow-left text-xl mr-4"></i>
+      <h2 class="text-lg font-semibold flex-1">话题模式</h2>
+      <button class="bg-white bg-opacity-20 p-2 rounded-lg" onclick="showAddTopic()">
+        <i class="fas fa-plus text-xl"></i>
+      </button>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="px-4 pt-6 pb-20 h-full scroll-container">
+      <!-- 标题描述 -->
+      <div class="mb-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-2">选择一个话题开始练习</h3>
+        <p class="text-gray-600 text-sm">每个话题都包含相关的日常对话场景</p>
+      </div>
+
+      <!-- 话题网格 -->
+      <div class="grid grid-cols-2 gap-4">
+        <!-- 咖啡话题 -->
+        <div
+          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
+        >
+          <div class="text-center">
+            <div
+              class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
+            >
+              <i class="fas fa-coffee text-orange-500 text-2xl"></i>
+            </div>
+            <h4 class="font-semibold text-gray-800 mb-1">咖啡</h4>
+            <p class="text-xs text-gray-500 mb-3">点咖啡、描述口味偏好</p>
+            <div class="bg-orange-50 rounded-lg p-2">
+              <span class="text-orange-600 text-xs font-medium">15个对话</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 旅游话题 -->
+        <div
+          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
+        >
+          <div class="text-center">
+            <div
+              class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
+            >
+              <i class="fas fa-plane text-blue-500 text-2xl"></i>
+            </div>
+            <h4 class="font-semibold text-gray-800 mb-1">旅游</h4>
+            <p class="text-xs text-gray-500 mb-3">机场、酒店、问路</p>
+            <div class="bg-blue-50 rounded-lg p-2">
+              <span class="text-blue-600 text-xs font-medium">20个对话</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 健身话题 -->
+        <div
+          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
+        >
+          <div class="text-center">
+            <div
+              class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
+            >
+              <i class="fas fa-dumbbell text-green-500 text-2xl"></i>
+            </div>
+            <h4 class="font-semibold text-gray-800 mb-1">健身</h4>
+            <p class="text-xs text-gray-500 mb-3">健身房、运动计划</p>
+            <div class="bg-green-50 rounded-lg p-2">
+              <span class="text-green-600 text-xs font-medium">12个对话</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 餐厅话题 -->
+        <div
+          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
+        >
+          <div class="text-center">
+            <div
+              class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
+            >
+              <i class="fas fa-utensils text-red-500 text-2xl"></i>
+            </div>
+            <h4 class="font-semibold text-gray-800 mb-1">餐厅</h4>
+            <p class="text-xs text-gray-500 mb-3">点餐、服务、买单</p>
+            <div class="bg-red-50 rounded-lg p-2">
+              <span class="text-red-600 text-xs font-medium">18个对话</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 购物话题 -->
+        <div
+          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
+        >
+          <div class="text-center">
+            <div
+              class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
+            >
+              <i class="fas fa-shopping-bag text-purple-500 text-2xl"></i>
+            </div>
+            <h4 class="font-semibold text-gray-800 mb-1">购物</h4>
+            <p class="text-xs text-gray-500 mb-3">选择、试穿、砍价</p>
+            <div class="bg-purple-50 rounded-lg p-2">
+              <span class="text-purple-600 text-xs font-medium">16个对话</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 工作话题 -->
+        <div
+          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
+        >
+          <div class="text-center">
+            <div
+              class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
+            >
+              <i class="fas fa-briefcase text-indigo-500 text-2xl"></i>
+            </div>
+            <h4 class="font-semibold text-gray-800 mb-1">工作</h4>
+            <p class="text-xs text-gray-500 mb-3">面试、会议、同事</p>
+            <div class="bg-indigo-50 rounded-lg p-2">
+              <span class="text-indigo-600 text-xs font-medium">22个对话</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 医院话题 -->
+        <div
+          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
+        >
+          <div class="text-center">
+            <div
+              class="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
+            >
+              <i class="fas fa-user-md text-teal-500 text-2xl"></i>
+            </div>
+            <h4 class="font-semibold text-gray-800 mb-1">医院</h4>
+            <p class="text-xs text-gray-500 mb-3">挂号、问诊、买药</p>
+            <div class="bg-teal-50 rounded-lg p-2">
+              <span class="text-teal-600 text-xs font-medium">14个对话</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 天气话题 -->
+        <div
+          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
+        >
+          <div class="text-center">
+            <div
+              class="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
+            >
+              <i class="fas fa-sun text-yellow-500 text-2xl"></i>
+            </div>
+            <h4 class="font-semibold text-gray-800 mb-1">天气</h4>
+            <p class="text-xs text-gray-500 mb-3">聊天、计划、感受</p>
+            <div class="bg-yellow-50 rounded-lg p-2">
+              <span class="text-yellow-600 text-xs font-medium">10个对话</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 推荐话题 -->
+      <div class="mt-8 mb-6">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4">🔥 热门话题</h4>
+        <div class="bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl p-4 text-white">
+          <div class="flex items-center space-x-4">
+            <div
+              class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center"
+            >
+              <i class="fas fa-heart text-2xl"></i>
+            </div>
+            <div class="flex-1">
+              <h5 class="font-semibold mb-1">约会交友</h5>
+              <p class="text-pink-100 text-sm">浪漫对话、表达情感</p>
+            </div>
+            <div class="bg-white bg-opacity-20 rounded-lg px-3 py-1">
+              <span class="text-sm font-medium">新</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 学习进度 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4">📊 话题学习进度</h4>
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-coffee text-orange-500"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">咖啡话题</div>
+                <div class="text-gray-500 text-xs">已完成 8/15 个对话</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-orange-500 text-sm font-medium">53%</div>
+              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
+                <div class="bg-orange-500 h-1 rounded-full w-8/15"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-plane text-blue-500"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">旅游话题</div>
+                <div class="text-gray-500 text-xs">已完成 12/20 个对话</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-blue-500 text-sm font-medium">60%</div>
+              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
+                <div class="bg-blue-500 h-1 rounded-full w-3/5"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-dumbbell text-green-500"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">健身话题</div>
+                <div class="text-gray-500 text-xs">已完成 5/12 个对话</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-green-500 text-sm font-medium">42%</div>
+              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
+                <div class="bg-green-500 h-1 rounded-full w-5/12"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 学习建议 -->
+      <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl p-6 text-white mb-6">
+        <h4 class="text-lg font-semibold mb-3">💡 学习建议</h4>
+        <p class="text-green-100 text-sm mb-3">
+          建议先完成咖啡话题，再挑战旅游话题。每个话题都有不同的难度等级，循序渐进效果更好！
+        </p>
+        <button class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg text-sm">
+          开始学习
+        </button>
+      </div>
+
+      <!-- 自定义话题 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="text-lg font-semibold text-gray-800">🎯 我的自定义话题</h4>
+          <button
+            class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm"
+            onclick="checkAddTopicPermission()"
+          >
+            <i class="fas fa-plus mr-1"></i>添加话题
+          </button>
+        </div>
+
+        <div class="space-y-3" id="customTopics">
+          <!-- 自定义话题列表 -->
+          <div
+            class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+            onclick="enterCustomTopic('游戏交流', 'fas fa-gamepad')"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-gamepad text-blue-500"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">游戏交流</div>
+                <div class="text-gray-500 text-xs">自定义话题 • 3个对话</div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button
+                class="text-blue-500 text-xs"
+                onclick="event.stopPropagation(); editTopic('custom_game')"
+              >
+                <i class="fas fa-edit"></i>
+              </button>
+              <button
+                class="text-red-500 text-xs"
+                onclick="event.stopPropagation(); deleteTopic('custom_game')"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
+            onclick="enterCustomTopic('音乐分享', 'fas fa-music')"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-music text-purple-500"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">音乐分享</div>
+                <div class="text-gray-500 text-xs">自定义话题 • 2个对话</div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button
+                class="text-purple-500 text-xs"
+                onclick="event.stopPropagation(); editTopic('custom_music')"
+              >
+                <i class="fas fa-edit"></i>
+              </button>
+              <button
+                class="text-red-500 text-xs"
+                onclick="event.stopPropagation(); deleteTopic('custom_music')"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 添加话题弹窗 -->
+    <div
+      id="addTopicModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center transition-opacity duration-300"
+    >
+      <div
+        class="bg-white rounded-2xl p-6 mx-4 w-full max-w-sm transform transition-transform duration-300 scale-95"
+        id="modalContent"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">添加自定义话题</h3>
+          <button onclick="hideAddTopic()" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+
+        <form id="addTopicForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">话题名称</label>
+            <input
+              type="text"
+              id="topicName"
+              placeholder="例如：电影讨论"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">话题描述</label>
+            <textarea
+              id="topicDescription"
+              placeholder="描述这个话题的对话场景..."
+              rows="3"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none resize-none"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">选择图标</label>
+            <div class="grid grid-cols-6 gap-2">
+              <button
+                type="button"
+                class="icon-option p-3 border border-gray-300 rounded-lg hover:border-green-500"
+                data-icon="fas fa-gamepad"
+              >
+                <i class="fas fa-gamepad text-xl text-blue-500"></i>
+              </button>
+              <button
+                type="button"
+                class="icon-option p-3 border border-gray-300 rounded-lg hover:border-green-500"
+                data-icon="fas fa-music"
+              >
+                <i class="fas fa-music text-xl text-purple-500"></i>
+              </button>
+              <button
+                type="button"
+                class="icon-option p-3 border border-gray-300 rounded-lg hover:border-green-500"
+                data-icon="fas fa-film"
+              >
+                <i class="fas fa-film text-xl text-red-500"></i>
+              </button>
+              <button
+                type="button"
+                class="icon-option p-3 border border-gray-300 rounded-lg hover:border-green-500"
+                data-icon="fas fa-book"
+              >
+                <i class="fas fa-book text-xl text-green-500"></i>
+              </button>
+              <button
+                type="button"
+                class="icon-option p-3 border border-gray-300 rounded-lg hover:border-green-500"
+                data-icon="fas fa-car"
+              >
+                <i class="fas fa-car text-xl text-gray-500"></i>
+              </button>
+              <button
+                type="button"
+                class="icon-option p-3 border border-gray-300 rounded-lg hover:border-green-500"
+                data-icon="fas fa-home"
+              >
+                <i class="fas fa-home text-xl text-orange-500"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex space-x-3 pt-4">
+            <button
+              type="button"
+              onclick="hideAddTopic()"
+              class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-medium"
+            >
+              取消
+            </button>
+            <button
+              type="submit"
+              class="flex-1 bg-green-500 text-white py-3 rounded-lg font-medium"
+            >
+              创建话题
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      let selectedIcon = 'fas fa-gamepad'
+
+      // 显示添加话题弹窗
+      function showAddTopic() {
+        const modal = document.getElementById('addTopicModal')
+        const modalContent = document.getElementById('modalContent')
+        modal.classList.remove('hidden')
+
+        // 添加动画效果
+        setTimeout(() => {
+          modalContent.classList.remove('scale-95')
+          modalContent.classList.add('scale-100')
+        }, 10)
+      }
+
+      // 隐藏添加话题弹窗
+      function hideAddTopic() {
+        const modal = document.getElementById('addTopicModal')
+        const modalContent = document.getElementById('modalContent')
+
+        modalContent.classList.remove('scale-100')
+        modalContent.classList.add('scale-95')
+
+        setTimeout(() => {
+          modal.classList.add('hidden')
+          document.getElementById('addTopicForm').reset()
+          // 重置图标选择
+          document.querySelectorAll('.icon-option').forEach((btn) => {
+            btn.classList.remove('border-green-500', 'bg-green-50')
+            btn.classList.add('border-gray-300')
+          })
+          selectedIcon = 'fas fa-gamepad'
+        }, 300)
+      }
+
+      // 图标选择
+      document.querySelectorAll('.icon-option').forEach((button) => {
+        button.addEventListener('click', function () {
+          document.querySelectorAll('.icon-option').forEach((btn) => {
+            btn.classList.remove('border-green-500', 'bg-green-50')
+            btn.classList.add('border-gray-300')
+          })
+          this.classList.remove('border-gray-300')
+          this.classList.add('border-green-500', 'bg-green-50')
+          selectedIcon = this.dataset.icon
+        })
+      })
+
+      // 表单提交
+      document.getElementById('addTopicForm').addEventListener('submit', function (e) {
+        e.preventDefault()
+
+        const topicName = document.getElementById('topicName').value
+        const topicDescription = document.getElementById('topicDescription').value
+
+        if (!topicName.trim()) {
+          alert('请输入话题名称')
+          return
+        }
+
+        // 创建新话题
+        addCustomTopic(topicName, topicDescription, selectedIcon)
+        hideAddTopic()
+
+        // 显示成功提示
+        showSuccessMessage('话题创建成功！')
+      })
+
+      // 添加自定义话题
+      function addCustomTopic(name, description, icon) {
+        const customTopicsContainer = document.getElementById('customTopics')
+        const topicId = 'topic_' + Date.now()
+
+        const topicHtml = `
+                <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors" id="${topicId}" onclick="enterCustomTopic('${name}', '${icon}')">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="${icon} text-blue-500"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800 text-sm">${name}</div>
+                            <div class="text-gray-500 text-xs">自定义话题 • 0个对话</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button class="text-blue-500 text-xs" onclick="event.stopPropagation(); editTopic('${topicId}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="text-red-500 text-xs" onclick="event.stopPropagation(); deleteTopic('${topicId}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `
+
+        customTopicsContainer.insertAdjacentHTML('afterbegin', topicHtml)
+      }
+
+      // 编辑话题
+      function editTopic(topicId) {
+        // 这里可以实现编辑功能
+        alert('编辑功能开发中...')
+      }
+
+      // 删除话题
+      function deleteTopic(topicId) {
+        if (confirm('确定要删除这个话题吗？')) {
+          document.getElementById(topicId).remove()
+        }
+      }
+
+      // 检查添加话题权限
+      function checkAddTopicPermission() {
+        if (isMember()) {
+          showAddTopic()
+        } else {
+          showMembershipPrompt('添加自定义话题是会员专属功能，开通会员即可无限创建个人话题。')
+        }
+      }
+
+      // 显示成功提示
+      function showSuccessMessage(message) {
+        const toast = document.createElement('div')
+        toast.className =
+          'fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50'
+        toast.textContent = message
+        document.body.appendChild(toast)
+
+        setTimeout(() => {
+          toast.remove()
+        }, 2000)
+      }
+    </script>
+
+    <!-- 底部导航栏 -->
+    <div class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <div class="flex justify-around items-center py-2 px-4">
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='home.html'">
+          <i class="fas fa-home text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">首页</span>
+        </div>
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='progress.html'">
+          <i class="fas fa-chart-line text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">进度</span>
+        </div>
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='profile.html'">
+          <i class="fas fa-user text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">我的</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

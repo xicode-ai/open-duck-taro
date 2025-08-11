@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>翻译功能 - 开口鸭</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      .scroll-container {
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f7fafc;
+      }
+      .scroll-container::-webkit-scrollbar {
+        width: 4px;
+      }
+      .scroll-container::-webkit-scrollbar-track {
+        background: #f7fafc;
+      }
+      .scroll-container::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 2px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 h-screen overflow-hidden">
+    <script src="auth.js"></script>
+    <!-- iOS状态栏 -->
+    <div class="bg-white h-11 flex items-center justify-between px-4 text-sm font-medium">
+      <div class="flex items-center space-x-1">
+        <span>9:41</span>
+      </div>
+      <div class="w-16 h-4 bg-black rounded-full relative">
+        <div class="absolute right-0 top-0 w-1 h-1 bg-white rounded-full m-1"></div>
+      </div>
+      <div class="flex items-center space-x-1">
+        <i class="fas fa-signal text-xs"></i>
+        <i class="fas fa-wifi text-xs"></i>
+        <i class="fas fa-battery-three-quarters text-xs"></i>
+      </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <div class="bg-purple-500 text-white px-4 py-3 flex items-center">
+      <i class="fas fa-arrow-left text-xl mr-4" onclick="history.back()"></i>
+      <h2 class="text-lg font-semibold flex-1">翻译功能</h2>
+      <a href="translate-history.html" class="text-white">
+        <i class="fas fa-history text-xl"></i>
+      </a>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="px-4 pt-6 pb-20 h-full scroll-container">
+      <!-- 输入区域 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center space-x-2">
+            <span class="text-gray-600 font-medium">中文</span>
+            <i class="fas fa-arrow-right text-gray-400"></i>
+            <span class="text-purple-500 font-medium">English</span>
+          </div>
+          <button class="text-purple-500">
+            <i class="fas fa-exchange-alt"></i>
+          </button>
+        </div>
+
+        <div class="relative">
+          <textarea
+            id="translationInput"
+            class="w-full h-32 p-3 pr-10 border border-gray-200 rounded-xl resize-none focus:border-purple-500 focus:outline-none"
+            placeholder="请输入要翻译的中文内容..."
+          ></textarea>
+          <button
+            id="clearButton"
+            class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center"
+            onclick="clearInput()"
+            style="display: none"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between mt-3">
+          <div class="flex space-x-2">
+            <button class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-sm">
+              <i class="fas fa-microphone mr-1"></i>语音输入
+            </button>
+            <button class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-sm">
+              <i class="fas fa-camera mr-1"></i>拍照识别
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 翻译结果区域 -->
+      <div class="space-y-4">
+        <!-- 标准翻译 -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div class="flex items-center space-x-2 mb-3">
+            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-book text-blue-500"></i>
+            </div>
+            <span class="font-semibold text-gray-800">标准翻译</span>
+            <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs">书面语</span>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-3 mb-3">
+            <p class="text-gray-800 leading-relaxed mb-3">
+              "I want to go to a coffee shop to buy a latte, but I don't know how to order in
+              English."
+            </p>
+            <div class="flex justify-start">
+              <button
+                class="bg-blue-100 text-blue-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-blue-200 transition-colors"
+              >
+                <i class="fas fa-volume-up text-sm"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <button
+              class="bg-gray-100 text-gray-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors"
+            >
+              <i class="fas fa-copy text-sm"></i>
+            </button>
+            <div class="flex space-x-3">
+              <button
+                class="bg-yellow-100 text-yellow-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-yellow-200 transition-colors"
+              >
+                <i class="fas fa-star text-sm"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 地道口语 -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div class="flex items-center space-x-2 mb-3">
+            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-comments text-green-500"></i>
+            </div>
+            <span class="font-semibold text-gray-800">地道口语</span>
+            <span class="bg-green-100 text-green-600 px-2 py-1 rounded text-xs">推荐</span>
+          </div>
+
+          <div class="bg-green-50 rounded-lg p-3 mb-3">
+            <p class="text-gray-800 leading-relaxed mb-2">
+              "Hey, I'd like to grab a latte from the coffee shop, but I'm not sure how to order it
+              in English."
+            </p>
+            <div class="border-t border-green-200 pt-2 mt-2 mb-3">
+              <p class="text-green-700 text-sm font-medium mb-1">更自然的表达:</p>
+              <p class="text-green-600 text-sm">
+                • "grab a latte" 比 "buy a latte" 更口语化<br />
+                • "I'm not sure" 比 "I don't know" 更礼貌
+              </p>
+            </div>
+            <div class="flex justify-start">
+              <button
+                class="bg-green-100 text-green-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-green-200 transition-colors"
+              >
+                <i class="fas fa-volume-up text-sm"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <button
+              class="bg-gray-100 text-gray-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors"
+            >
+              <i class="fas fa-copy text-sm"></i>
+            </button>
+            <div class="flex space-x-3">
+              <button
+                class="bg-yellow-100 text-yellow-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-yellow-200 transition-colors"
+              >
+                <i class="fas fa-star text-sm"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 相关短语 -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
+          <div class="flex items-center space-x-2 mb-3">
+            <i class="fas fa-lightbulb text-yellow-500"></i>
+            <span class="font-semibold text-gray-800">相关实用短语</span>
+          </div>
+
+          <div class="space-y-3">
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div class="flex-1">
+                <p class="text-gray-800 font-medium text-sm">Can I have a latte, please?</p>
+                <p class="text-gray-500 text-xs">请给我一杯拿铁，好吗？</p>
+              </div>
+              <button
+                class="bg-purple-100 text-purple-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-purple-200 transition-colors ml-3"
+              >
+                <i class="fas fa-play text-xs"></i>
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div class="flex-1">
+                <p class="text-gray-800 font-medium text-sm">I'd like to order a coffee.</p>
+                <p class="text-gray-500 text-xs">我想点一杯咖啡。</p>
+              </div>
+              <button
+                class="bg-purple-100 text-purple-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-purple-200 transition-colors ml-3"
+              >
+                <i class="fas fa-play text-xs"></i>
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div class="flex-1">
+                <p class="text-gray-800 font-medium text-sm">What would you recommend?</p>
+                <p class="text-gray-500 text-xs">你推荐什么？</p>
+              </div>
+              <button
+                class="bg-purple-100 text-purple-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-purple-200 transition-colors ml-3"
+              >
+                <i class="fas fa-play text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 学习提示 -->
+        <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 text-white mb-6">
+          <h3 class="text-lg font-semibold mb-3">💡 翻译技巧</h3>
+          <p class="text-purple-100 text-sm mb-3">
+            记住：口语翻译要自然流畅，不要逐字翻译。多用日常表达，让对话更地道！
+          </p>
+          <button class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg text-sm">
+            了解更多
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部快捷输入 -->
+    <div class="bg-white px-4 py-3 border-t border-gray-200">
+      <div class="flex items-center space-x-2 mb-2">
+        <span class="text-sm text-gray-600">常用翻译:</span>
+      </div>
+      <div class="flex space-x-2 overflow-x-auto">
+        <button
+          class="bg-purple-100 text-purple-600 px-3 py-2 rounded-full text-xs whitespace-nowrap"
+        >
+          你好，谢谢
+        </button>
+        <button
+          class="bg-purple-100 text-purple-600 px-3 py-2 rounded-full text-xs whitespace-nowrap"
+        >
+          不客气
+        </button>
+        <button
+          class="bg-purple-100 text-purple-600 px-3 py-2 rounded-full text-xs whitespace-nowrap"
+        >
+          麻烦您了
+        </button>
+        <button
+          class="bg-purple-100 text-purple-600 px-3 py-2 rounded-full text-xs whitespace-nowrap"
+        >
+          多少钱？
+        </button>
+        <button
+          class="bg-purple-100 text-purple-600 px-3 py-2 rounded-full text-xs whitespace-nowrap"
+        >
+          在哪里？
+        </button>
+      </div>
+    </div>
+
+    <!-- 底部导航栏 -->
+    <div class="bg-white border-t border-gray-200">
+      <div class="flex justify-around items-center py-2 px-4">
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='home.html'">
+          <i class="fas fa-home text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">首页</span>
+        </div>
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='progress.html'">
+          <i class="fas fa-chart-line text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">进度</span>
+        </div>
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='profile.html'">
+          <i class="fas fa-user text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">我的</span>
+        </div>
+      </div>
+    </div>
+    <script>
+      const translationInput = document.getElementById('translationInput')
+      const clearButton = document.getElementById('clearButton')
+
+      translationInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault()
+          handleTranslate()
+        }
+      })
+
+      translationInput.addEventListener('input', function () {
+        // 显示或隐藏清除按钮
+        if (this.value.trim()) {
+          clearButton.style.display = 'flex'
+        } else {
+          clearButton.style.display = 'none'
+        }
+      })
+
+      function clearInput() {
+        translationInput.value = ''
+        clearButton.style.display = 'none'
+        translationInput.focus()
+      }
+
+      function handleTranslate() {
+        const usage = checkUsage('translate')
+        if (usage.canUse) {
+          incrementUsage('translate')
+          const remaining = isMember() ? '∞' : usage.remaining - 1
+
+          const inputElement = document.getElementById('translationInput')
+          const sourceText = inputElement.value.trim()
+
+          if (sourceText === '') {
+            alert('请输入要翻译的内容。')
+            return
+          }
+
+          // 模拟翻译结果
+          const standardTranslation =
+            "I want to go to a coffee shop to buy a latte, but I don't know how to order in English."
+          const colloquialTranslation =
+            "Hey, I'd like to grab a latte from the coffee shop, but I'm not sure how to order it in English."
+          const colloquialNotes =
+            '• "grab a latte" 比 "buy a latte" 更口语化\n• "I\'m not sure" 比 "I don\'t know" 更礼貌'
+
+          saveTranslationHistory(
+            sourceText,
+            standardTranslation,
+            colloquialTranslation,
+            colloquialNotes,
+          )
+
+          alert(
+            `翻译成功！\n\n原文: ${sourceText}\n标准翻译: ${standardTranslation}\n地道口语: ${colloquialTranslation}\n\n今日剩余免费次数: ${remaining}`,
+          )
+        } else {
+          showMembershipPrompt('今日翻译次数已用完。')
+        }
+      }
+
+      function saveTranslationHistory(
+        sourceText,
+        standardTranslation,
+        colloquialTranslation,
+        colloquialNotes,
+      ) {
+        let history = JSON.parse(localStorage.getItem('translationHistory')) || []
+        history.push({
+          sourceText,
+          standardTranslation,
+          colloquialTranslation,
+          colloquialNotes,
+          // 保持向后兼容性
+          translatedText: colloquialTranslation || standardTranslation,
+          timestamp: new Date().toISOString(),
+        })
+        // 最多保存50条历史
+        if (history.length > 50) {
+          history.shift()
+        }
+        localStorage.setItem('translationHistory', JSON.stringify(history))
+      }
+    </script>
+  </body>
+</html>

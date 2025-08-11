@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>背单词学习 - 开口鸭</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      .scroll-container {
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f7fafc;
+      }
+      .scroll-container::-webkit-scrollbar {
+        width: 4px;
+      }
+      .scroll-container::-webkit-scrollbar-track {
+        background: #f7fafc;
+      }
+      .scroll-container::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 2px;
+      }
+      .word-card {
+        animation: slideIn 0.3s ease-out;
+      }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 h-screen overflow-hidden flex flex-col">
+    <script src="auth.js"></script>
+
+    <!-- iOS状态栏 -->
+    <div
+      class="bg-white h-11 flex items-center justify-between px-4 text-sm font-medium flex-shrink-0"
+    >
+      <div class="flex items-center space-x-1">
+        <span>9:41</span>
+      </div>
+      <div class="w-16 h-4 bg-black rounded-full relative">
+        <div class="absolute right-0 top-0 w-1 h-1 bg-white rounded-full m-1"></div>
+      </div>
+      <div class="flex items-center space-x-1">
+        <i class="fas fa-signal text-xs"></i>
+        <i class="fas fa-wifi text-xs"></i>
+        <i class="fas fa-battery-three-quarters text-xs"></i>
+      </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <div class="bg-red-500 text-white px-4 py-3 flex items-center flex-shrink-0">
+      <i class="fas fa-arrow-left text-xl mr-4" onclick="history.back()"></i>
+      <h2 class="text-lg font-semibold flex-1" id="stageTitle">背单词</h2>
+      <button class="bg-white bg-opacity-20 p-2 rounded-lg">
+        <i class="fas fa-history text-xl"></i>
+      </button>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="flex-1 px-4 pt-6 pb-20 scroll-container">
+      <!-- 当前阶段显示 -->
+      <div class="mb-4">
+        <div
+          class="inline-flex items-center space-x-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100"
+        >
+          <span id="stageIcon" class="text-lg">🌱</span>
+          <span id="stageName" class="text-sm font-medium text-gray-700">萌芽期</span>
+          <span id="stageAge" class="text-xs text-gray-500">3-6岁</span>
+        </div>
+      </div>
+
+      <!-- 单词卡片 -->
+      <div class="word-card bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="text-3xl font-bold text-gray-900 mb-1" id="wordText">immense</h3>
+            <p class="text-gray-500 font-medium" id="wordMeaning">adj. 极大的，巨大的</p>
+          </div>
+          <button class="text-gray-400 hover:text-red-500 transition-colors" id="favoriteBtn">
+            <i class="fas fa-star text-xl"></i>
+          </button>
+        </div>
+
+        <!-- 音标发音 -->
+        <div class="flex items-center space-x-6 mb-6">
+          <div class="flex items-center space-x-2">
+            <span class="text-sm font-semibold text-gray-400">英</span>
+            <span class="text-gray-700 font-mono" id="ukPhonetic">/ɪˈmens/</span>
+            <button
+              class="text-red-500 hover:text-red-600 transition-colors"
+              onclick="playAudio('uk')"
+            >
+              <i class="fas fa-volume-up"></i>
+            </button>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-sm font-semibold text-gray-400">美</span>
+            <span class="text-gray-700 font-mono" id="usPhonetic">/ɪˈmens/</span>
+            <button
+              class="text-red-500 hover:text-red-600 transition-colors"
+              onclick="playAudio('us')"
+            >
+              <i class="fas fa-volume-up"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 例句 -->
+        <div class="border-t border-gray-100 pt-4">
+          <div class="bg-gray-50 rounded-xl p-4">
+            <p class="text-gray-800 mb-2 leading-relaxed" id="exampleSentence">
+              He inherited an
+              <span class="font-semibold text-red-500 bg-red-50 px-1 rounded">immense</span>
+              fortune.
+            </p>
+            <p class="text-gray-500 text-sm" id="exampleTranslation">他继承了巨额财富。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 操作按钮 -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <button
+          class="action-btn bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center active:scale-95 transition-transform"
+          data-action="unknown"
+        >
+          <div
+            class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mx-auto mb-2"
+          >
+            <i class="fas fa-times text-red-500 text-xl"></i>
+          </div>
+          <span class="text-sm font-medium text-gray-700">不认识</span>
+        </button>
+
+        <button
+          class="action-btn bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center active:scale-95 transition-transform"
+          data-action="vague"
+        >
+          <div
+            class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-2"
+          >
+            <i class="fas fa-question text-yellow-500 text-xl"></i>
+          </div>
+          <span class="text-sm font-medium text-gray-700">模糊</span>
+        </button>
+
+        <button
+          class="action-btn bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center active:scale-95 transition-transform"
+          data-action="known"
+        >
+          <div
+            class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-2"
+          >
+            <i class="fas fa-check text-green-500 text-xl"></i>
+          </div>
+          <span class="text-sm font-medium text-gray-700">认识</span>
+        </button>
+      </div>
+
+      <!-- 学习统计 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <h4 class="font-semibold text-gray-800 mb-3">今日学习进度</h4>
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <div class="text-2xl font-bold text-red-500 mb-1" id="totalWords">12</div>
+            <div class="text-xs text-gray-500">已学单词</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-green-500 mb-1" id="masteredWords">8</div>
+            <div class="text-xs text-gray-500">掌握单词</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-blue-500 mb-1" id="streakDays">5</div>
+            <div class="text-xs text-gray-500">连续天数</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部导航栏 -->
+    <div class="bg-white border-t border-gray-200 flex-shrink-0">
+      <div class="flex justify-around items-center py-2 px-4">
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='home.html'">
+          <i class="fas fa-home text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">首页</span>
+        </div>
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='progress.html'">
+          <i class="fas fa-chart-line text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">进度</span>
+        </div>
+        <div class="flex flex-col items-center py-2" onclick="window.location.href='profile.html'">
+          <i class="fas fa-user text-gray-400 text-xl"></i>
+          <span class="text-xs text-gray-400 mt-1">我的</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 获取URL参数中的阶段信息
+      const urlParams = new URLSearchParams(window.location.search)
+      const stage = urlParams.get('stage') || '萌芽期'
+
+      // 阶段配置
+      const stageConfig = {
+        萌芽期: { icon: '🌱', age: '3-6岁', color: 'green' },
+        基础期: { icon: '📚', age: '6-12岁', color: 'blue' },
+        发展期: { icon: '🚀', age: '12-15岁', color: 'purple' },
+        加速期: { icon: '⚡️', age: '15-18岁', color: 'orange' },
+        精通期: { icon: '🏆', age: '18-30岁', color: 'yellow' },
+        大师期: { icon: '🧘', age: '30岁+', color: 'indigo' },
+      }
+
+      // 更新页面标题和阶段信息
+      document.getElementById('stageTitle').textContent = `背单词 - ${stage}`
+      document.getElementById('stageIcon').textContent = stageConfig[stage]?.icon || '🌱'
+      document.getElementById('stageName').textContent = stage
+      document.getElementById('stageAge').textContent = stageConfig[stage]?.age || '3-6岁'
+
+      // 模拟单词数据（实际应用中应该从后端获取）
+      const words = [
+        {
+          word: 'immense',
+          meaning: 'adj. 极大的，巨大的',
+          ukPhonetic: '/ɪˈmens/',
+          usPhonetic: '/ɪˈmens/',
+          example: 'He inherited an immense fortune.',
+          translation: '他继承了巨额财富。',
+          isFavorite: false,
+        },
+        {
+          word: 'brilliant',
+          meaning: 'adj. 杰出的，辉煌的',
+          ukPhonetic: '/ˈbrɪljənt/',
+          usPhonetic: '/ˈbrɪljənt/',
+          example: 'She has a brilliant mind.',
+          translation: '她有一个聪明的头脑。',
+          isFavorite: true,
+        },
+        {
+          word: 'magnificent',
+          meaning: 'adj. 壮丽的，宏伟的',
+          ukPhonetic: '/mæɡˈnɪfɪsnt/',
+          usPhonetic: '/mæɡˈnɪfɪsnt/',
+          example: 'The palace is magnificent.',
+          translation: '这座宫殿很宏伟。',
+          isFavorite: false,
+        },
+      ]
+
+      let currentWordIndex = 0
+      let totalWords = 12
+      let masteredWords = 8
+      let streakDays = 5
+
+      // 更新单词卡片
+      function updateWordCard() {
+        const word = words[currentWordIndex]
+        document.getElementById('wordText').textContent = word.word
+        document.getElementById('wordMeaning').textContent = word.meaning
+        document.getElementById('ukPhonetic').textContent = word.ukPhonetic
+        document.getElementById('usPhonetic').textContent = word.usPhonetic
+        document.getElementById('exampleSentence').innerHTML = word.example.replace(
+          new RegExp(word.word, 'gi'),
+          `<span class="font-semibold text-red-500 bg-red-50 px-1 rounded">${word.word}</span>`,
+        )
+        document.getElementById('exampleTranslation').textContent = word.translation
+
+        // 更新收藏按钮状态
+        const favoriteBtn = document.getElementById('favoriteBtn')
+        if (word.isFavorite) {
+          favoriteBtn.querySelector('i').classList.remove('text-gray-400')
+          favoriteBtn.querySelector('i').classList.add('text-red-500')
+        } else {
+          favoriteBtn.querySelector('i').classList.remove('text-red-500')
+          favoriteBtn.querySelector('i').classList.add('text-gray-400')
+        }
+      }
+
+      // 播放音频
+      function playAudio(type) {
+        console.log(`播放${type === 'uk' ? '英式' : '美式'}发音`)
+        // 实际应用中应该调用TTS API
+      }
+
+      // 处理操作按钮点击
+      document.querySelectorAll('.action-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+          const action = button.getAttribute('data-action')
+          console.log(`用户选择了: ${action}`)
+
+          // 更新统计数据
+          if (action === 'known') {
+            masteredWords++
+          }
+          totalWords++
+
+          // 更新统计显示
+          document.getElementById('totalWords').textContent = totalWords
+          document.getElementById('masteredWords').textContent = masteredWords
+
+          // 切换到下一个单词
+          currentWordIndex = (currentWordIndex + 1) % words.length
+          updateWordCard()
+        })
+      })
+
+      // 收藏按钮点击
+      document.getElementById('favoriteBtn').addEventListener('click', () => {
+        const icon = document.getElementById('favoriteBtn').querySelector('i')
+        if (icon.classList.contains('text-red-500')) {
+          icon.classList.remove('text-red-500')
+          icon.classList.add('text-gray-400')
+          words[currentWordIndex].isFavorite = false
+        } else {
+          icon.classList.remove('text-gray-400')
+          icon.classList.add('text-red-500')
+          words[currentWordIndex].isFavorite = true
+        }
+      })
+
+      // 初始化页面
+      updateWordCard()
+    </script>
+  </body>
+</html>

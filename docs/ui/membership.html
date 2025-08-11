@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>开通会员 - 开口鸭</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body class="bg-gray-50 h-screen overflow-y-auto">
+    <!-- iOS状态栏 -->
+    <div class="bg-white h-11 flex items-center justify-between px-4 text-sm font-medium">
+      <div class="flex items-center space-x-1">
+        <span>9:41</span>
+      </div>
+      <div class="w-16 h-4 bg-black rounded-full relative">
+        <div class="absolute right-0 top-0 w-1 h-1 bg-white rounded-full m-1"></div>
+      </div>
+      <div class="flex items-center space-x-1">
+        <i class="fas fa-signal text-xs"></i>
+        <i class="fas fa-wifi text-xs"></i>
+        <i class="fas fa-battery-three-quarters text-xs"></i>
+      </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <div
+      class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-3 flex items-center"
+    >
+      <i class="fas fa-arrow-left text-xl mr-4"></i>
+      <h2 class="text-lg font-semibold flex-1">开通会员</h2>
+      <i class="fas fa-crown text-xl"></i>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="p-6">
+      <!-- 会员权益 -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm mb-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">
+          <i class="fas fa-crown text-yellow-500 mr-2"></i>会员专属权益
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-yellow-50 rounded-lg p-4 text-center">
+            <i class="fas fa-comments text-yellow-600 text-2xl mb-2"></i>
+            <h4 class="font-semibold text-sm">无限求助</h4>
+            <p class="text-xs text-gray-500">对话模式无限次求助</p>
+          </div>
+          <div class="bg-yellow-50 rounded-lg p-4 text-center">
+            <i class="fas fa-layer-group text-yellow-600 text-2xl mb-2"></i>
+            <h4 class="font-semibold text-sm">所有话题</h4>
+            <p class="text-xs text-gray-500">解锁全部话题模式</p>
+          </div>
+          <div class="bg-yellow-50 rounded-lg p-4 text-center">
+            <i class="fas fa-language text-yellow-600 text-2xl mb-2"></i>
+            <h4 class="font-semibold text-sm">无限翻译</h4>
+            <p class="text-xs text-gray-500">地道口语无限次翻译</p>
+          </div>
+          <div class="bg-yellow-50 rounded-lg p-4 text-center">
+            <i class="fas fa-camera text-yellow-600 text-2xl mb-2"></i>
+            <h4 class="font-semibold text-sm">无限拍照</h4>
+            <p class="text-xs text-gray-500">拍照短文无限次生成</p>
+          </div>
+          <div class="bg-yellow-50 rounded-lg p-4 text-center">
+            <i class="fas fa-star text-yellow-600 text-2xl mb-2"></i>
+            <h4 class="font-semibold text-sm">会员图标</h4>
+            <p class="text-xs text-gray-500">专属皇冠图标</p>
+          </div>
+          <div class="bg-yellow-50 rounded-lg p-4 text-center">
+            <i class="fas fa-headset text-yellow-600 text-2xl mb-2"></i>
+            <h4 class="font-semibold text-sm">优先客服</h4>
+            <p class="text-xs text-gray-500">专属客服支持</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 价格方案 -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">选择您的方案</h3>
+        <div
+          class="border-2 border-yellow-400 rounded-xl p-4 flex items-center justify-between bg-yellow-50"
+        >
+          <div>
+            <h4 class="font-bold text-gray-800">年度会员</h4>
+            <p class="text-sm text-gray-600">￥<span class="text-2xl font-bold">198</span> /年</p>
+            <p class="text-xs text-gray-500 mt-1">立省 ￥40 (原价 ￥238)</p>
+          </div>
+          <div class="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center">
+            <i class="fas fa-check text-white text-xs"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- 支付方式 -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">支付方式</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <i class="fab fa-weixin text-green-500 text-2xl"></i>
+              <span class="text-gray-700">微信支付</span>
+            </div>
+            <div class="w-6 h-6 rounded-full border-2 border-gray-300"></div>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <i class="fab fa-alipay text-blue-500 text-2xl"></i>
+              <span class="text-gray-700">支付宝</span>
+            </div>
+            <div class="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center">
+              <i class="fas fa-check text-white text-xs"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 确认支付 -->
+      <div class="text-center">
+        <button
+          class="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-4 rounded-full font-bold text-lg"
+          onclick="handlePayment()"
+        >
+          确认支付 ￥198
+        </button>
+        <p class="text-xs text-gray-500 mt-4">
+          点击确认支付即表示您同意
+          <a href="#" class="text-blue-500">《会员服务协议》</a>
+        </p>
+      </div>
+    </div>
+    <script src="auth.js"></script>
+    <script>
+      function handlePayment() {
+        // 模拟支付成功
+        becomeMember()
+      }
+    </script>
+  </body>
+</html>
