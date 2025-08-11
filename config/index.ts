@@ -17,7 +17,7 @@ export default defineConfig<'vite'>(async (merge, { command, mode }) => {
     },
     sourceRoot: 'src',
     outputRoot: 'dist',
-    plugins: [],
+    plugins: ['@taro-hooks/plugin-react', '@tarojs/plugin-html'],
     defineConstants: {
     },
     copy: {
@@ -43,16 +43,28 @@ export default defineConfig<'vite'>(async (merge, { command, mode }) => {
             generateScopedName: '[name]__[local]___[hash:base64:5]'
           }
         }
-      },
+      }
     },
     h5: {
       publicPath: '/',
       staticDirectory: 'static',
-
+      esnextModules: ['@taroify'],
       miniCssExtractPluginOption: {
         ignoreOrder: true,
-        filename: 'css/[name].[hash].css',
-        chunkFilename: 'css/[name].[chunkhash].css'
+        filename: 'css/[name].css',
+        chunkFilename: 'css/[name].css'
+      },
+      router: {
+        mode: 'browser'
+      },
+      devServer: {
+        port: 8889,
+        hot: false,
+        host: '0.0.0.0',
+        historyApiFallback: true,
+        headers: {
+          'Access-Control-Allow-Origin': '*'
+        }
       },
       postcss: {
         autoprefixer: {
@@ -67,6 +79,19 @@ export default defineConfig<'vite'>(async (merge, { command, mode }) => {
           }
         }
       },
+      vite: {
+        plugins: [
+          // 添加必要的 Vite 插件
+        ],
+        resolve: {
+          alias: {
+            '~': '/src'
+          }
+        },
+        define: {
+          'process.env.TARO_ENV': JSON.stringify('h5')
+        }
+      }
     },
     rn: {
       appName: 'taroDemo',
