@@ -1,18 +1,14 @@
-import { Component, PropsWithChildren } from 'react';
+import { PropsWithChildren } from 'react'
+import { useLaunch } from '@tarojs/taro'
+import './app.scss'
 
-import './app.scss';
+function App({ children }: PropsWithChildren) {
+  useLaunch(() => {
+    // 开口鸭应用启动
+  })
 
-class App extends Component<PropsWithChildren> {
-  componentDidMount() {}
-
-  componentDidShow() {}
-
-  componentDidHide() {}
-
-  // this.props.children 是将要会渲染的页面
-  render() {
-    return this.props.children;
-  }
+  // children 就是要渲染的页面
+  return children
 }
 
-export default App;
+export default App

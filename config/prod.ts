@@ -1,4 +1,5 @@
-import type { UserConfigExport } from "@tarojs/cli";
+import type { UserConfigExport } from '@tarojs/cli'
+
 export default {
   mini: {},
   h5: {
@@ -14,7 +15,7 @@ export default {
     //   chain.plugin('analyzer')
     //     .use(require('webpack-bundle-analyzer').BundleAnalyzerPlugin, [])
     //   /**
-    //    * 如果 h5 端首屏加载时间过长，可以使用 prerender-spa-plugin 插件预加载首页。
+    //    * 如果 h5 端首屏加载时间过长，可以使用 prerender-spa-plugin 插件预加载首屏数据。
     //    * @docs https://github.com/chrisvfritz/prerender-spa-plugin
     //    */
     //   const path = require('path')
@@ -22,11 +23,23 @@ export default {
     //   const staticDir = path.join(__dirname, '..', 'dist')
     //   chain
     //     .plugin('prerender')
-    //     .use(new Prerender({
+    //     .use(Prerender, [{
     //       staticDir,
     //       routes: [ '/pages/index/index' ],
-    //       postProcess: (context) => ({ ...context, outputPath: path.join(staticDir, 'index.html') })
-    //     }))
+    //       postProcess (renderedRoute) {
+    //         renderedRoute.html = renderedRoute.html
+    //           .replace(/<script (.*?)>/gi, '<script $1 defer>')
+    //           .replace('id="app"', 'id="app" data-server-rendered="true"')
+    //         return renderedRoute
+    //       },
+    //       minify: {
+    //         collapseBooleanAttributes: true,
+    //         collapseWhitespace: true,
+    //         decodeEntities: true,
+    //         keepClosingSlash: true,
+    //         sortAttributes: true
+    //       }
+    //     }])
     // }
-  }
-} satisfies UserConfigExport<'vite'>
+  },
+} satisfies UserConfigExport

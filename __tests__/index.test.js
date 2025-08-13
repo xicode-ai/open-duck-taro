@@ -1,16 +1,11 @@
-// Simple test to verify Jest is working
-describe('Basic Test', () => {
-  test('should work', () => {
-    expect(1 + 1).toBe(2);
-  });
+/* eslint-disable no-undef */
+import TestUtils from '@tarojs/test-utils-react'
 
-  test('should handle strings', () => {
-    expect('hello' + ' world').toBe('hello world');
-  });
-
-  test('should handle arrays', () => {
-    const arr = [1, 2, 3];
-    expect(arr).toHaveLength(3);
-    expect(arr).toContain(2);
-  });
-});
+describe('Testing', () => {
+  test('Test', async () => {
+    const testUtils = new TestUtils()
+    await testUtils.createApp()
+    await testUtils.PageLifecycle.onShow('pages/index/index')
+    expect(testUtils.html()).toMatchSnapshot()
+  })
+})

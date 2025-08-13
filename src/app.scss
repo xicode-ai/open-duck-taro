@@ -1,0 +1,242 @@
+/* 完全自定义的样式系统，不依赖第三方UI库 */
+
+/* 全局样式变量 */
+:root {
+  /* 主色调 */
+  --primary-color: #4a90e2;
+  --primary-light: #6ba3f0;
+  --primary-dark: #3a7bd5;
+
+  /* 辅助色 */
+  --secondary-color: #50c878;
+  --warning-color: #ff9500;
+  --error-color: #ff3b30;
+
+  /* 中性色 */
+  --text-primary: #333;
+  --text-secondary: #666;
+  --text-tertiary: #999;
+  --text-light: #ccc;
+
+  /* 背景色 */
+  --bg-primary: #fff;
+  --bg-secondary: #f5f7fa;
+  --bg-tertiary: #e8ebf0;
+
+  /* 边框色 */
+  --border-color: #e5e5e5;
+  --border-light: #f0f0f0;
+
+  /* 阴影 */
+  --shadow-light: 0 2px 8px rgb(74 144 226 / 10%);
+  --shadow-medium: 0 4px 16px rgb(74 144 226 / 15%);
+  --shadow-heavy: 0 8px 24px rgb(74 144 226 / 20%);
+
+  /* 圆角 */
+  --radius-small: 6px;
+  --radius-medium: 12px;
+  --radius-large: 16px;
+  --radius-round: 50%;
+
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+}
+
+.container {
+  padding: var(--spacing-md);
+}
+
+.card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-medium);
+  box-shadow: var(--shadow-light);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: 32px;
+  font-weight: 500;
+  box-shadow: var(--shadow-light);
+
+  &:active {
+    background: var(--primary-dark);
+    transform: translateY(2px);
+  }
+}
+
+.btn-secondary {
+  background: var(--bg-primary);
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: 32px;
+  font-weight: 500;
+
+  &:active {
+    background: var(--bg-secondary);
+    transform: translateY(2px);
+  }
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: 32px;
+  font-weight: 500;
+
+  &:active {
+    background: var(--primary-color);
+    color: white;
+  }
+}
+
+/* 文本样式 */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+
+.text-light {
+  color: var(--text-light);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* 布局工具 */
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-center {
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-between {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-around {
+  justify-content: space-around;
+  align-items: center;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+/* 间距工具 */
+.m-0 {
+  margin: 0;
+}
+
+.m-xs {
+  margin: var(--spacing-xs);
+}
+
+.m-sm {
+  margin: var(--spacing-sm);
+}
+
+.m-md {
+  margin: var(--spacing-md);
+}
+
+.m-lg {
+  margin: var(--spacing-lg);
+}
+
+.m-xl {
+  margin: var(--spacing-xl);
+}
+
+.m-xxl {
+  margin: var(--spacing-xxl);
+}
+
+.p-0 {
+  padding: 0;
+}
+
+.p-xs {
+  padding: var(--spacing-xs);
+}
+
+.p-sm {
+  padding: var(--spacing-sm);
+}
+
+.p-md {
+  padding: var(--spacing-md);
+}
+
+.p-lg {
+  padding: var(--spacing-lg);
+}
+
+.p-xl {
+  padding: var(--spacing-xl);
+}
+
+.p-xxl {
+  padding: var(--spacing-xxl);
+}
+
+/* 响应式工具 */
+@media (width <= 750px) {
+  .container {
+    padding: var(--spacing-sm);
+  }
+
+  .card {
+    padding: var(--spacing-sm);
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    font-size: 28px;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}

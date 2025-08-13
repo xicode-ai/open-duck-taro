@@ -1,0 +1,176 @@
+.chat-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f0f2f5;
+}
+
+.messages-container {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: 120px;
+  background: #f0f2f5;
+}
+
+.message {
+  margin-bottom: 16px;
+  display: flex;
+  animation: fadeIn 0.3s ease-out;
+
+  &.user {
+    justify-content: flex-end;
+
+    .message-content {
+      background: #007aff;
+      color: white;
+      border-radius: 18px 18px 6px;
+      margin-right: 8px;
+      max-width: 75%;
+    }
+  }
+
+  &.ai {
+    justify-content: flex-start;
+
+    .message-content {
+      background: white;
+      color: #333;
+      border-radius: 18px 18px 18px 6px;
+      margin-left: 8px;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+      border: 1px solid #e5e5ea;
+      max-width: 75%;
+    }
+  }
+}
+
+.message-content {
+  padding: 12px 16px;
+  position: relative;
+}
+
+.voice-message {
+  display: flex;
+  align-items: center;
+  min-width: 100px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &.playing {
+    animation: pulse 1s infinite;
+
+    .at-icon {
+      animation: pulse 0.8s infinite;
+    }
+  }
+
+  .duration {
+    margin-left: 8px;
+    font-size: 14px;
+    opacity: 0.8;
+  }
+}
+
+.text-message {
+  font-size: 16px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.translation {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgb(255 255 255 / 30%);
+
+  .translation-text {
+    font-size: 14px;
+    opacity: 0.8;
+    font-style: italic;
+  }
+}
+
+.recording-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgb(0 0 0 / 85%);
+  color: white;
+  padding: 32px 24px;
+  border-radius: 16px;
+  text-align: center;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  min-width: 200px;
+
+  .recording-animation {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: center;
+
+    .recording-dot {
+      width: 12px;
+      height: 12px;
+      background: #ff3b30;
+      border-radius: 50%;
+      animation: recording-pulse 1s infinite;
+    }
+  }
+
+  .recording-text {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .recording-tip {
+    font-size: 14px;
+    opacity: 0.8;
+  }
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 20px 16px;
+  box-shadow: 0 -1px 8px rgb(0 0 0 / 10%);
+  z-index: 100;
+  border-top: 1px solid #e5e5ea;
+}
+
+.record-button {
+  background: #007aff;
+  border-radius: 25px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgb(0 122 255 / 30%);
+  transition: all 0.2s ease;
+  user-select: none;
+
+  &.recording {
+    background: #ff3b30;
+    transform: scale(1.02);
+    box-shadow: 0 4px 16px rgb(255 59 48 / 40%);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  .record-text {
+    margin-left: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+  }
+}

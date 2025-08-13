@@ -1,0 +1,129 @@
+.membership-page {
+  height: 100vh;
+  background: linear-gradient(135deg, #4a90e2 0%, #6ba3f0 100%);
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-section {
+  text-align: center;
+  padding: var(--spacing-xxl) 0;
+
+  .crown-icon {
+    font-size: 80px;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .hero-title {
+    font-size: 48px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: var(--spacing-sm);
+    text-shadow: 0 2px 8px rgb(0 0 0 / 20%);
+  }
+
+  .hero-subtitle {
+    font-size: 28px;
+    color: rgb(255 255 255 / 90%);
+  }
+}
+
+.features-section {
+  background: rgb(255 255 255 / 95%);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  backdrop-filter: blur(10px);
+
+  .section-title {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+
+    .feature-text {
+      font-size: 28px;
+      color: var(--text-primary);
+    }
+  }
+}
+
+.pricing-section {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+
+  .price-card {
+    flex: 1;
+    background: rgb(255 255 255 / 95%);
+    border-radius: var(--radius-medium);
+    padding: var(--spacing-lg);
+    text-align: center;
+    backdrop-filter: blur(10px);
+
+    .price-period {
+      font-size: 24px;
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .price-display {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      margin-bottom: var(--spacing-sm);
+
+      .price-currency {
+        font-size: 28px;
+        color: var(--text-primary);
+      }
+
+      .price-amount {
+        font-size: 56px;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin: 0 var(--spacing-xs);
+      }
+
+      .price-unit {
+        font-size: 24px;
+        color: var(--text-secondary);
+      }
+    }
+
+    .price-save {
+      font-size: 20px;
+      color: var(--secondary-color);
+      font-weight: 500;
+    }
+  }
+}
+
+.action-section {
+  margin-top: auto;
+  text-align: center;
+
+  .upgrade-btn {
+    width: 100%;
+    font-size: 36px !important;
+    font-weight: 600 !important;
+    padding: var(--spacing-lg) !important;
+    border-radius: var(--radius-medium) !important;
+    margin-bottom: var(--spacing-md);
+    box-shadow: var(--shadow-heavy);
+  }
+
+  .trial-text {
+    font-size: 24px;
+    color: rgb(255 255 255 / 80%);
+  }
+}

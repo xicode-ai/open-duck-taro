@@ -1,0 +1,26 @@
+.translate-history-page {
+  height: 100vh;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-xxl);
+
+  .empty-text {
+    display: block;
+    font-size: 36px;
+    color: var(--text-primary);
+    margin: var(--spacing-lg) 0 var(--spacing-md);
+    font-weight: 600;
+  }
+
+  .empty-description {
+    font-size: 28px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+}

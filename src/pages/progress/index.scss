@@ -1,0 +1,211 @@
+.progress-page {
+  height: 100vh;
+  background: var(--bg-secondary);
+}
+
+.content-area {
+  height: 100%;
+  padding: var(--spacing-md);
+  padding-bottom: 120px;
+}
+
+.level-card {
+  background: white;
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-light);
+
+  .level-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+
+    .level-title {
+      font-size: 28px;
+      color: var(--text-secondary);
+    }
+
+    .level-name {
+      font-size: 32px;
+      font-weight: 600;
+    }
+  }
+
+  .level-progress {
+    margin-bottom: var(--spacing-lg);
+
+    .progress-text {
+      font-size: 24px;
+      color: var(--text-secondary);
+      margin-top: var(--spacing-sm);
+      text-align: center;
+    }
+  }
+
+  .level-stats {
+    display: flex;
+    justify-content: space-around;
+
+    .stat-item {
+      text-align: center;
+
+      .stat-number {
+        display: block;
+        font-size: 40px;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: var(--spacing-xs);
+      }
+
+      .stat-label {
+        font-size: 24px;
+        color: var(--text-secondary);
+      }
+    }
+  }
+}
+
+.progress-section,
+.achievement-section,
+.stats-section {
+  margin-bottom: var(--spacing-lg);
+
+  .section-title {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+  }
+}
+
+.progress-item {
+  background: white;
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-light);
+
+  .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+
+    .item-info {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+
+      .item-title {
+        font-size: 28px;
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+    }
+
+    .item-percent {
+      font-size: 24px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+  }
+
+  .item-progress {
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .item-stats {
+    font-size: 22px;
+    color: var(--text-tertiary);
+    text-align: right;
+  }
+}
+
+.achievement-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+
+  .achievement-item {
+    background: white;
+    border-radius: var(--radius-medium);
+    padding: var(--spacing-lg);
+    text-align: center;
+    box-shadow: var(--shadow-light);
+    position: relative;
+    transition: all 0.2s ease;
+
+    &.unlocked {
+      border: 2px solid var(--secondary-color);
+    }
+
+    &.locked {
+      opacity: 0.6;
+
+      .locked-overlay {
+        position: absolute;
+        top: var(--spacing-sm);
+        right: var(--spacing-sm);
+      }
+    }
+
+    .achievement-icon {
+      font-size: 48px;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .achievement-title {
+      display: block;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .achievement-description {
+      font-size: 20px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+  }
+}
+
+.stats-section {
+  .week-stats {
+    background: white;
+    border-radius: var(--radius-medium);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-light);
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    height: 120px;
+    margin-bottom: var(--spacing-md);
+
+    .day-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .day-bar {
+        width: 24px;
+        border-radius: 12px 12px 0 0;
+        margin-bottom: var(--spacing-xs);
+        transition: all 0.3s ease;
+      }
+
+      .day-label {
+        font-size: 20px;
+        color: var(--text-secondary);
+      }
+    }
+  }
+
+  .stats-summary {
+    font-size: 24px;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+}

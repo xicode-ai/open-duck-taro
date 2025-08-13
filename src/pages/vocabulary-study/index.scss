@@ -1,0 +1,344 @@
+.vocabulary-study-page {
+  height: 100vh;
+  background: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+}
+
+.loading-page {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: var(--text-secondary);
+}
+
+.progress-section {
+  background: white;
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-light);
+  text-align: center;
+
+  .step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+
+    .step-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--border-color);
+      transition: all 0.3s ease;
+
+      &.active {
+        background: var(--primary-color);
+        transform: scale(1.2);
+      }
+    }
+  }
+
+  .step-title {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .step-description {
+    font-size: 24px;
+    color: var(--text-secondary);
+  }
+}
+
+.content-area {
+  flex: 1;
+  padding: var(--spacing-md);
+  padding-bottom: 120px;
+}
+
+.word-card {
+  background: white;
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-light);
+
+  .word-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+
+    .word-text {
+      font-size: 64px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 2px;
+    }
+
+    .level-badge {
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-small);
+
+      .level-text {
+        font-size: 20px;
+        color: white;
+        font-weight: 500;
+        text-transform: capitalize;
+      }
+    }
+  }
+}
+
+.pronunciation-section {
+  margin-bottom: var(--spacing-xl);
+
+  .section-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .pronunciation-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+
+    .accent-btn {
+      flex: 1;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-medium);
+      padding: var(--spacing-md);
+      display: flex;
+      align-items: center;
+      transition: all 0.2s ease;
+
+      &:active {
+        transform: scale(0.98);
+      }
+
+      &.active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+
+        .accent-text {
+          color: white;
+        }
+      }
+
+      .accent-text {
+        margin-left: var(--spacing-sm);
+        font-size: 24px;
+        color: var(--text-primary);
+        font-family: 'Times New Roman', serif;
+      }
+    }
+  }
+}
+
+.meaning-section {
+  margin-bottom: var(--spacing-xl);
+
+  .section-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .meaning-content {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: var(--radius-medium);
+    padding: var(--spacing-lg);
+    border-left: 4px solid var(--primary-color);
+
+    .meaning-text {
+      font-size: 32px;
+      color: var(--text-primary);
+      font-weight: 500;
+      line-height: 1.5;
+    }
+  }
+}
+
+.example-section {
+  margin-bottom: var(--spacing-xl);
+
+  .section-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .example-content {
+    background: linear-gradient(135deg, #f0fff4 0%, #dcfce7 100%);
+    border-radius: var(--radius-medium);
+    padding: var(--spacing-lg);
+    border-left: 4px solid var(--secondary-color);
+
+    .example-en {
+      display: block;
+      font-size: 28px;
+      color: var(--text-primary);
+      line-height: 1.6;
+      margin-bottom: var(--spacing-sm);
+      font-style: italic;
+    }
+
+    .example-zh {
+      display: block;
+      font-size: 26px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+  }
+}
+
+.practice-section {
+  .section-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .practice-tip {
+    font-size: 24px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .record-area {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-lg);
+
+    .start-record-btn {
+      background: var(--primary-color);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-lg) var(--spacing-xl);
+      display: flex;
+      align-items: center;
+      box-shadow: var(--shadow-medium);
+      transition: all 0.2s ease;
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      .record-text {
+        margin-left: var(--spacing-sm);
+        color: white;
+        font-size: 32px;
+        font-weight: 500;
+      }
+    }
+
+    .recording-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .stop-record-btn {
+        width: 80px;
+        height: 80px;
+        background: #f44;
+        border-radius: var(--radius-round);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: var(--spacing-md);
+        box-shadow: var(--shadow-medium);
+        animation: recording-pulse 1s infinite;
+
+        &:active {
+          transform: scale(0.95);
+        }
+      }
+
+      .recording-text {
+        font-size: 28px;
+        color: var(--text-secondary);
+      }
+    }
+  }
+}
+
+.score-section {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-lg);
+  text-align: center;
+
+  .score-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .score-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    margin-bottom: var(--spacing-md);
+
+    .score-number {
+      font-size: 72px;
+      font-weight: 700;
+      margin-right: var(--spacing-xs);
+    }
+
+    .score-label {
+      font-size: 32px;
+      color: var(--text-secondary);
+    }
+  }
+
+  .score-details {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: var(--spacing-md);
+
+    .score-item {
+      text-align: center;
+
+      .detail-label {
+        display: block;
+        font-size: 22px;
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-xs);
+      }
+
+      .detail-value {
+        display: block;
+        font-size: 36px;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .feedback-section {
+    .feedback-text {
+      font-size: 24px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+  }
+}
+
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: var(--spacing-lg);
+  box-shadow: 0 -4px 16px rgb(0 0 0 / 10%);
+  z-index: 100;
+}
