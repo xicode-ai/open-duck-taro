@@ -293,16 +293,7 @@
 
 /* 适配不同屏幕尺寸 */
 @media (max-width: 375px) {
-  .header-section .welcome-card .avatar-section .avatar {
-    width: 100px;
-    height: 100px;
-  }
-
   .functions-section .section-title {
-    font-size: 32px;
-  }
-
-  .quick-start-section .quick-start-btn .btn-text {
     font-size: 32px;
   }
 }
@@ -324,6 +315,14 @@
       &::after {
         display: none !important;
       }
+    }
+  }
+
+  .at-button {
+    &.at-button--small {
+      height: auto !important;
+      line-height: 1.5 !important;
+      padding: 6px 12px !important;
     }
   }
 }

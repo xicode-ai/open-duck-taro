@@ -1,15 +1,15 @@
-import path from 'path'
 import { defineConfig, type UserConfigExport } from '@tarojs/cli'
-import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
-import { fileURLToPath } from 'url'
 import devConfig from './dev'
 import prodConfig from './prod'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __dirname = dirname(__filename)
 
-const config = defineConfig(async (merge, { command: _command, mode: _mode }) => {
-  const baseConfig: UserConfigExport = {
+// https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
+export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
+  const baseConfig: UserConfigExport<'webpack5'> = {
     projectName: 'open-duck',
     date: '2024-1-1',
     designWidth: 750,
@@ -21,30 +21,23 @@ const config = defineConfig(async (merge, { command: _command, mode: _mode }) =>
     },
     sourceRoot: 'src',
     outputRoot: 'dist',
-    plugins: ['@tarojs/plugin-html', '@tarojs/plugin-framework-react'],
+    entry: 'src/app.ts',
+    plugins: ['@tarojs/plugin-framework-react', '@tarojs/plugin-platform-h5'],
     defineConstants: {},
-    alias: {
-      '@': path.resolve(__dirname, '..', 'src'),
-      '@/components': path.resolve(__dirname, '..', 'src/components'),
-      '@/pages': path.resolve(__dirname, '..', 'src/pages'),
-      '@/utils': path.resolve(__dirname, '..', 'src/utils'),
-      '@/stores': path.resolve(__dirname, '..', 'src/stores'),
-      '@/services': path.resolve(__dirname, '..', 'src/services'),
-      '@/types': path.resolve(__dirname, '..', 'src/types'),
-    },
     copy: {
       patterns: [],
       options: {},
     },
     framework: 'react',
     compiler: 'webpack5',
-    cache: {
-      enable: false,
-    },
-    prebundle: {
-      enable: true,
-      force: false,
-      include: ['react', 'react-dom'],
+    alias: {
+      '@': resolve(__dirname, '..', 'src'),
+      '@/components': resolve(__dirname, '..', 'src/components'),
+      '@/pages': resolve(__dirname, '..', 'src/pages'),
+      '@/utils': resolve(__dirname, '..', 'src/utils'),
+      '@/stores': resolve(__dirname, '..', 'src/stores'),
+      '@/services': resolve(__dirname, '..', 'src/services'),
+      '@/types': resolve(__dirname, '..', 'src/types'),
     },
     mini: {
       postcss: {
@@ -52,31 +45,18 @@ const config = defineConfig(async (merge, { command: _command, mode: _mode }) =>
           enable: true,
           config: {},
         },
-        url: {
-          enable: true,
-          config: {
-            limit: 1024,
-          },
-        },
         cssModules: {
-          enable: false,
+          enable: false, // 默认为 false，如需使用 css modules 功能，则设为 true
           config: {
-            namingPattern: 'module',
+            namingPattern: 'module', // 转换模式，取值为 global/module
             generateScopedName: '[name]__[local]___[hash:base64:5]',
           },
         },
-      },
-      webpackChain(chain) {
-        chain.resolve.plugin('tsconfig-paths').use(TsconfigPathsPlugin)
       },
     },
     h5: {
       publicPath: '/',
       staticDirectory: 'static',
-      output: {
-        filename: 'js/[name].[hash:8].js',
-        chunkFilename: 'js/[name].[chunkhash:8].js',
-      },
       miniCssExtractPluginOption: {
         ignoreOrder: true,
         filename: 'css/[name].[hash].css',
@@ -88,41 +68,27 @@ const config = defineConfig(async (merge, { command: _command, mode: _mode }) =>
           config: {},
         },
         cssModules: {
-          enable: false,
+          enable: false, // 默认为 false，如需使用 css modules 功能，则设为 true
           config: {
-            namingPattern: 'module',
+            namingPattern: 'module', // 转换模式，取值为 global/module
             generateScopedName: '[name]__[local]___[hash:base64:5]',
           },
         },
       },
-      webpackChain(chain) {
-        // 添加 tsconfig-paths 插件
-        chain.resolve.plugin('tsconfig-paths').use(TsconfigPathsPlugin)
-
-        // 配置模块解析
-        chain.resolve.extensions.add('.ts').add('.tsx').add('.js').add('.jsx').add('.json')
-
-        // 配置 target 为 web
-        chain.target('web')
-
-        // 配置 output 的 globalObject
-        chain.output.globalObject('globalThis')
-      },
     },
     rn: {
-      appName: 'taroDemo',
+      appName: 'openDuck',
       postcss: {
         cssModules: {
-          enable: false,
+          enable: false, // 默认为 false，如需使用 css modules 功能，则设为 true
         },
       },
     },
   }
-
   if (process.env.NODE_ENV === 'development') {
+    // 本地开发构建配置（不混淆压缩）
     return merge({}, baseConfig, devConfig)
   }
+  // 生产构建配置（默认开启压缩混淆等）
   return merge({}, baseConfig, prodConfig)
 })
-
-export default config
