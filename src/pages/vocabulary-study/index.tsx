@@ -1,489 +1,628 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import Taro, { useRouter } from '@tarojs/taro'
-import { View, Text, ScrollView } from '@tarojs/components'
-import { AtButton, AtIcon } from 'taro-ui'
-import { useVocabularyStore } from '@/stores'
-import {
-  formatDuration,
-  getUserLevelColor,
-  safeAsync,
-  safeEventHandler,
-} from '@/utils'
-import type { Vocabulary, PronunciationScore } from '@/types'
-import { withPageErrorBoundary } from '@/components/ErrorBoundary/PageErrorBoundary'
-import { CustomNavBar } from '../../components/common'
+import { useState, useEffect, useRef } from 'react'
+import { View, Text } from '@tarojs/components'
+import Taro from '@tarojs/taro'
+import { AtIcon } from 'taro-ui'
+import { useUserStore } from '../../stores/user'
+import { useVocabularyStore } from '../../stores/vocabulary'
 import './index.scss'
 
-const VocabularyStudy = () => {
-  const router = useRouter()
-  const { vocabularies, addStudiedWord } = useVocabularyStore()
+interface Vocabulary {
+  id: string
+  word: string
+  pronunciation: {
+    us: string
+    uk: string
+  }
+  meaning: string
+  partOfSpeech: string
+  example: {
+    english: string
+    chinese: string
+  }
+  level: string
+}
 
+interface StudySession {
+  mode: 'new' | 'review' | 'test' | 'challenge'
+  level: string
+  wordCount: number
+  correctCount: number
+  incorrectCount: number
+  startTime: number
+  currentIndex: number
+  words: Vocabulary[]
+}
+
+const VocabularyStudyPage = () => {
+  const { updateDailyUsage } = useUserStore()
+  // const { updateWordProgress } = useVocabularyStore() // 功能暂未实现
+
+  // 状态管理
+  const [session, setSession] = useState<StudySession | null>(null)
   const [currentWord, setCurrentWord] = useState<Vocabulary | null>(null)
-  const [showMeaning, setShowMeaning] = useState(false)
-  const [showExample, setShowExample] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentAccent, setCurrentAccent] = useState<'us' | 'uk'>('us')
-  const [isRecording, setIsRecording] = useState(false)
-  const [recordDuration, setRecordDuration] = useState(0)
-  const [pronunciationScore, setPronunciationScore] =
-    useState<PronunciationScore | null>(null)
-  const [studyStep, setStudyStep] = useState(0) // 0: 看单词, 1: 听发音, 2: 看含义, 3: 看例句, 4: 练发音
+  const [showMeaning, setShowMeaning] = useState(true)
+  const [selectedOption, setSelectedOption] = useState<number | null>(null)
+  const [showAnswer, setShowAnswer] = useState(false)
+  const [isCompleted, setIsCompleted] = useState(false)
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null)
+  const [timeRemaining, setTimeRemaining] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
 
-  const innerAudioContextRef = useRef<Taro.InnerAudioContext | null>(null)
-  const recorderManagerRef = useRef<Taro.RecorderManager | null>(null)
-  const recordTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
-  const handleRecordComplete = useCallback(
-    (...args: [string, number]) => {
-      safeAsync(async (_filePath: string, _duration: number) => {
-        Taro.showLoading({ title: '评分中...', mask: true })
-
-        // 这里应该调用真实的语音评分API
-        // const score = await api.post('/pronunciation/score', { audioFile: filePath, word: currentWord?.word })
-
-        // 模拟评分结果
-        setTimeout(() => {
-          const mockScore: PronunciationScore = {
-            overall: Math.floor(Math.random() * 30) + 70,
-            accuracy: Math.floor(Math.random() * 30) + 70,
-            fluency: Math.floor(Math.random() * 30) + 70,
-            completeness: Math.floor(Math.random() * 30) + 70,
-            feedback: '发音很不错！继续保持这样的练习。',
-          }
-
-          setPronunciationScore(mockScore)
-          Taro.hideLoading()
-        }, 1500)
-      }, 'api')(...args)
+  // 模拟单词数据
+  const mockWords: Vocabulary[] = [
+    {
+      id: '1',
+      word: 'immense',
+      pronunciation: {
+        us: '/ɪˈmens/',
+        uk: '/ɪˈmens/',
+      },
+      meaning: 'adj. 极大的，巨大的',
+      partOfSpeech: 'adjective',
+      example: {
+        english: 'He inherited an immense fortune.',
+        chinese: '他继承了巨额财富。',
+      },
+      level: 'university',
     },
-    [setPronunciationScore]
-  )
-
-  const studySteps = [
-    { title: '认识单词', description: '仔细观察这个单词' },
-    { title: '听发音', description: '点击播放按钮听单词发音' },
-    { title: '理解含义', description: '查看单词的中文含义' },
-    { title: '学习例句', description: '通过例句理解单词用法' },
-    { title: '练习发音', description: '跟读单词，练习发音' },
+    {
+      id: '2',
+      word: 'brilliant',
+      pronunciation: {
+        us: '/ˈbrɪljənt/',
+        uk: '/ˈbrɪljənt/',
+      },
+      meaning: 'adj. 杰出的，聪明的',
+      partOfSpeech: 'adjective',
+      example: {
+        english: 'She gave a brilliant performance.',
+        chinese: '她的表演非常精彩。',
+      },
+      level: 'high',
+    },
+    {
+      id: '3',
+      word: 'fascinating',
+      pronunciation: {
+        us: '/ˈfæsɪneɪtɪŋ/',
+        uk: '/ˈfæsɪneɪtɪŋ/',
+      },
+      meaning: 'adj. 迷人的，极有趣的',
+      partOfSpeech: 'adjective',
+      example: {
+        english: 'The documentary was absolutely fascinating.',
+        chinese: '这部纪录片非常引人入胜。',
+      },
+      level: 'university',
+    },
   ]
 
+  // 页面初始化
   useEffect(() => {
-    const { wordId } = router.params
-    if (wordId) {
-      const word = vocabularies.find(w => w.id === wordId)
-      if (word) {
-        setCurrentWord(word)
-      }
+    const instance = Taro.getCurrentInstance()
+    const { mode, level, wordCount } = instance.router?.params || {}
+
+    if (mode && level && wordCount) {
+      initializeSession(
+        mode as StudySession['mode'],
+        level,
+        parseInt(wordCount)
+      )
+    } else {
+      Taro.navigateBack()
+    }
+  }, []) // initializeSession 在组件内定义，忽略依赖警告
+
+  // 计时器
+  useEffect(() => {
+    if (
+      session?.mode === 'challenge' &&
+      timeRemaining > 0 &&
+      !isPaused &&
+      !isCompleted
+    ) {
+      timerRef.current = setTimeout(() => {
+        setTimeRemaining(timeRemaining - 1)
+      }, 1000)
     }
 
-    // 初始化音频播放器
-    const innerAudioContext = Taro.createInnerAudioContext()
-    innerAudioContextRef.current = innerAudioContext
-
-    innerAudioContext.onPlay(() => {
-      setIsPlaying(true)
-    })
-
-    innerAudioContext.onStop(() => {
-      setIsPlaying(false)
-    })
-
-    innerAudioContext.onEnded(() => {
-      setIsPlaying(false)
-    })
-
-    innerAudioContext.onError(() => {
-      setIsPlaying(false)
-      Taro.showToast({ title: '播放失败', icon: 'none' })
-    })
-
-    // 初始化录音管理器（仅在支持的环境中）
-    const env = Taro.getEnv()
-    if (env !== Taro.ENV_TYPE.WEB) {
-      try {
-        const recorderManager = Taro.getRecorderManager()
-        if (recorderManager && typeof recorderManager.onStart === 'function') {
-          recorderManagerRef.current = recorderManager
-
-          recorderManager.onStart(() => {
-            setIsRecording(true)
-            startRecordTimer()
-          })
-
-          recorderManager.onStop(res => {
-            setIsRecording(false)
-            stopRecordTimer()
-            handleRecordComplete(res.tempFilePath, res.duration / 1000)
-          })
-
-          recorderManager.onError(() => {
-            setIsRecording(false)
-            stopRecordTimer()
-            Taro.showToast({ title: '录音失败', icon: 'none' })
-          })
-        }
-      } catch (error) {
-        console.warn('录音管理器初始化失败:', error)
-      }
+    if (timeRemaining === 0 && session?.mode === 'challenge') {
+      completeSession()
     }
 
     return () => {
-      innerAudioContext.destroy()
-    }
-  }, [router.params, vocabularies, handleRecordComplete])
-
-  const startRecordTimer = () => {
-    setRecordDuration(0)
-    recordTimerRef.current = setInterval(() => {
-      setRecordDuration(prev => prev + 1)
-    }, 1000)
-  }
-
-  const stopRecordTimer = () => {
-    if (recordTimerRef.current) {
-      clearInterval(recordTimerRef.current)
-      recordTimerRef.current = null
-    }
-    setRecordDuration(0)
-  }
-
-  const handlePlayPronunciation = safeEventHandler((accent: 'us' | 'uk') => {
-    if (!currentWord) return
-
-    if (isPlaying) {
-      innerAudioContextRef.current?.stop()
-      return
-    }
-
-    setCurrentAccent(accent)
-
-    // 这里应该播放真实的音频文件
-    // innerAudioContextRef.current!.src = currentWord.audioUrl[accent]
-    // innerAudioContextRef.current?.play()
-
-    // 模拟播放
-    setIsPlaying(true)
-    setTimeout(() => {
-      setIsPlaying(false)
-    }, 2000)
-
-    // 如果是第一次播放，自动进入下一步
-    if (studyStep === 1) {
-      setTimeout(() => {
-        setStudyStep(2)
-        setShowMeaning(true)
-      }, 2500)
-    }
-  }, 'play-pronunciation')
-
-  const handleStartRecord = safeEventHandler(() => {
-    const env = Taro.getEnv()
-
-    // 检查是否在H5环境中
-    if (env === Taro.ENV_TYPE.WEB) {
-      Taro.showModal({
-        title: '提示',
-        content: 'H5环境暂不支持录音功能，请在小程序或APP中使用语音练习',
-        showCancel: false,
-      })
-      return
-    }
-
-    // 检查录音管理器是否可用
-    if (!recorderManagerRef.current) {
-      Taro.showModal({
-        title: '提示',
-        content: '录音功能初始化失败，请重新进入页面或重启应用',
-        showCancel: false,
-      })
-      return
-    }
-
-    Taro.authorize({
-      scope: 'scope.record',
-      success: () => {
-        recorderManagerRef.current?.start({
-          duration: 10000,
-          sampleRate: 16000,
-          numberOfChannels: 1,
-          encodeBitRate: 96000,
-          format: 'mp3',
-        })
-      },
-      fail: () => {
-        Taro.showModal({
-          title: '提示',
-          content: '需要获取麦克风权限才能进行语音练习',
-          success: res => {
-            if (res.confirm) {
-              Taro.openSetting()
-            }
-          },
-        })
-      },
-    })
-  }, 'start-record')
-
-  const handleStopRecord = safeEventHandler(() => {
-    recorderManagerRef.current?.stop()
-  }, 'stop-record')
-
-  const handleNextStep = safeEventHandler(() => {
-    if (studyStep < studySteps.length - 1) {
-      const nextStep = studyStep + 1
-      setStudyStep(nextStep)
-
-      // 根据步骤自动显示相应内容
-      switch (nextStep) {
-        case 2:
-          setShowMeaning(true)
-          break
-        case 3:
-          setShowExample(true)
-          break
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
       }
-    } else {
-      handleCompleteStudy()
     }
-  }, 'next-step')
+  }, [timeRemaining, isPaused, isCompleted, session])
 
-  const handleCompleteStudy = safeEventHandler(() => {
-    if (currentWord) {
-      addStudiedWord(currentWord.id)
-      Taro.showModal({
-        title: '恭喜！',
-        content: '您已完成这个单词的学习！',
-        showCancel: false,
-        success: () => {
-          Taro.navigateBack()
-        },
-      })
+  // 初始化学习会话
+  const initializeSession = (
+    mode: StudySession['mode'],
+    level: string,
+    wordCount: number
+  ) => {
+    const newSession: StudySession = {
+      mode,
+      level,
+      wordCount,
+      correctCount: 0,
+      incorrectCount: 0,
+      startTime: Date.now(),
+      currentIndex: 0,
+      words: mockWords.slice(0, wordCount),
     }
-  }, 'complete-study')
 
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return '#50C878'
-    if (score >= 80) return '#4A90E2'
-    if (score >= 70) return '#FF9500'
-    return '#E74C3C'
+    setSession(newSession)
+    setCurrentWord(newSession.words[0])
+
+    // 挑战模式设置计时器
+    if (mode === 'challenge') {
+      setTimeRemaining(wordCount * 10) // 每个单词10秒
+    }
+
+    // 测试模式隐藏词义
+    if (mode === 'test') {
+      setShowMeaning(false)
+    }
   }
 
-  if (!currentWord) {
+  // 播放音频
+  const playAudio = (type: 'us' | 'uk' | 'sentence') => {
+    const audioId = `${currentWord?.id}-${type}`
+
+    if (playingAudio === audioId) {
+      setPlayingAudio(null)
+      Taro.stopBackgroundAudio()
+    } else {
+      setPlayingAudio(audioId)
+
+      // 模拟音频播放
+      setTimeout(() => {
+        setPlayingAudio(null)
+      }, 2000)
+
+      Taro.showToast({
+        title: '播放中',
+        icon: 'none',
+      })
+    }
+  }
+
+  // 处理答案选择
+  const handleAnswer = (action: 'know' | 'unknown' | 'hard') => {
+    if (!session || !currentWord) return
+
+    const isCorrect = action === 'know'
+
+    // 更新会话统计
+    setSession(prev =>
+      prev
+        ? {
+            ...prev,
+            correctCount: prev.correctCount + (isCorrect ? 1 : 0),
+            incorrectCount: prev.incorrectCount + (isCorrect ? 0 : 1),
+          }
+        : null
+    )
+
+    // 更新单词学习进度
+    // updateWordProgress(currentWord.id, action) // 功能暂未实现
+    updateDailyUsage('vocabulary')
+
+    // 下一个单词或完成
+    nextWord()
+  }
+
+  // 下一个单词
+  const nextWord = () => {
+    if (!session) return
+
+    const nextIndex = session.currentIndex + 1
+
+    if (nextIndex >= session.words.length) {
+      completeSession()
+    } else {
+      setSession(prev => (prev ? { ...prev, currentIndex: nextIndex } : null))
+      setCurrentWord(session.words[nextIndex])
+      setSelectedOption(null)
+      setShowAnswer(false)
+
+      // 重置显示状态
+      if (session.mode !== 'test') {
+        setShowMeaning(true)
+      }
+    }
+  }
+
+  // 完成学习会话
+  const completeSession = () => {
+    setIsCompleted(true)
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+    }
+  }
+
+  // 暂停/继续
+  const togglePause = () => {
+    setIsPaused(!isPaused)
+  }
+
+  // 重新开始
+  const restartSession = () => {
+    if (session) {
+      setSession(prev =>
+        prev
+          ? {
+              ...prev,
+              currentIndex: 0,
+              correctCount: 0,
+              incorrectCount: 0,
+              startTime: Date.now(),
+            }
+          : null
+      )
+      setCurrentWord(session.words[0])
+      setIsCompleted(false)
+      setSelectedOption(null)
+      setShowAnswer(false)
+
+      if (session.mode === 'challenge') {
+        setTimeRemaining(session.wordCount * 10)
+        setIsPaused(false)
+      }
+    }
+  }
+
+  // 继续学习
+  const continueLearning = () => {
+    Taro.navigateBack()
+  }
+
+  // 格式化时间
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // 获取模式信息
+  const getModeInfo = () => {
+    const modeMap = {
+      new: { title: '学新单词', icon: '📖', desc: '学习新单词，建立词汇基础' },
+      review: { title: '复习巩固', icon: '🔄', desc: '复习已学单词，加深记忆' },
+      test: { title: '单词测试', icon: '✅', desc: '测试掌握程度，查漏补缺' },
+      challenge: {
+        title: '挑战模式',
+        icon: '⚡',
+        desc: '限时挑战，检验学习成果',
+      },
+    }
+    return session ? modeMap[session.mode] : null
+  }
+
+  if (!session || !currentWord) {
     return (
-      <View className="loading-page">
-        <Text>加载中...</Text>
+      <View className="vocabulary-study-page">
+        <View className="empty-state">
+          <Text className="empty-icon">📚</Text>
+          <Text className="empty-title">加载中...</Text>
+        </View>
       </View>
     )
   }
 
-  const stageName = router.params?.stage || '基础期'
+  const modeInfo = getModeInfo()
+  const progress = Math.round(
+    ((session.currentIndex + 1) / session.wordCount) * 100
+  )
+  const timerClass =
+    timeRemaining < 30 ? 'danger' : timeRemaining < 60 ? 'warning' : ''
 
   return (
     <View className="vocabulary-study-page">
-      <CustomNavBar title={`背单词 - ${stageName}`} backgroundColor="#d9534f" />
-      <ScrollView className="content-area" scrollY>
-        {/* 学习进度 */}
-        <View className="progress-section">
-          <View className="step-indicator">
-            {studySteps.map((step, index) => (
-              <View
-                key={index}
-                className={`step-dot ${index <= studyStep ? 'active' : ''}`}
-              />
-            ))}
-          </View>
-          <Text className="step-title">{studySteps[studyStep].title}</Text>
-          <Text className="step-description">
-            {studySteps[studyStep].description}
-          </Text>
-        </View>
-        {/* 单词卡片 */}
-        <View className="word-card">
-          <View className="word-header">
-            <Text className="word-text">{currentWord.word}</Text>
-            <View
-              className="level-badge"
-              style={{ backgroundColor: getUserLevelColor(currentWord.level) }}
-            >
-              <Text className="level-text">{currentWord.level}</Text>
+      {/* 学习头部 */}
+      <View className="study-header">
+        <View className="header-content">
+          <View className="mode-info">
+            <View className="mode-icon">
+              <Text>{modeInfo?.icon}</Text>
+            </View>
+            <View className="mode-details">
+              <Text className="mode-title">{modeInfo?.title}</Text>
+              <Text className="mode-desc">{modeInfo?.desc}</Text>
             </View>
           </View>
 
-          {/* 发音区域 */}
-          {studyStep >= 1 && (
-            <View className="pronunciation-section fade-in">
-              <Text className="section-title">发音</Text>
-              <View className="pronunciation-buttons">
-                <View
-                  className={`accent-btn ${currentAccent === 'us' ? 'active' : ''}`}
-                  onClick={() => handlePlayPronunciation('us')}
-                >
-                  <AtIcon
-                    value={
-                      isPlaying && currentAccent === 'us' ? 'pause' : 'play'
-                    }
-                    size="16"
-                    color={currentAccent === 'us' ? 'white' : '#4A90E2'}
-                  />
-                  <Text className="accent-text">
-                    美式 {currentWord.pronunciation.us}
-                  </Text>
-                </View>
-                <View
-                  className={`accent-btn ${currentAccent === 'uk' ? 'active' : ''}`}
-                  onClick={() => handlePlayPronunciation('uk')}
-                >
-                  <AtIcon
-                    value={
-                      isPlaying && currentAccent === 'uk' ? 'pause' : 'play'
-                    }
-                    size="16"
-                    color={currentAccent === 'uk' ? 'white' : '#4A90E2'}
-                  />
-                  <Text className="accent-text">
-                    英式 {currentWord.pronunciation.uk}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          )}
-
-          {/* 含义区域 */}
-          {(studyStep >= 2 || showMeaning) && (
-            <View className="meaning-section fade-in">
-              <Text className="section-title">含义</Text>
-              <View className="meaning-content">
-                <Text className="meaning-text">{currentWord.meaning}</Text>
-              </View>
-            </View>
-          )}
-
-          {/* 例句区域 */}
-          {(studyStep >= 3 || showExample) && (
-            <View className="example-section fade-in">
-              <Text className="section-title">例句</Text>
-              <View className="example-content">
-                <Text className="example-en">
-                  {currentWord.example.english}
-                </Text>
-                <Text className="example-zh">
-                  {currentWord.example.chinese}
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {/* 发音练习区域 */}
-          {studyStep >= 4 && (
-            <View className="practice-section fade-in">
-              <Text className="section-title">发音练习</Text>
-              <Text className="practice-tip">
-                请跟读单词: {currentWord.word}
+          <View className="study-progress">
+            <View className="progress-info">
+              <Text className="progress-title">学习进度</Text>
+              <Text className="progress-detail">
+                {session.currentIndex + 1} / {session.wordCount}
               </Text>
+            </View>
+            <View className="progress-stats">
+              <Text className="current-count">{progress}%</Text>
+              <Text className="total-count">已完成</Text>
+            </View>
+          </View>
+        </View>
+      </View>
 
-              <View className="record-area">
-                {isRecording ? (
-                  <View className="recording-state">
-                    <View
-                      className="stop-record-btn"
-                      onClick={handleStopRecord}
-                    >
-                      <AtIcon value="stop" size="24" color="white" />
-                    </View>
-                    <Text className="recording-text">
-                      录音中... {formatDuration(recordDuration)}
-                    </Text>
-                  </View>
-                ) : (
+      {/* 单词卡片 */}
+      <View className="word-card-container">
+        <View className={`word-card ${session.mode}-mode`}>
+          {/* 挑战模式计时器 */}
+          {session.mode === 'challenge' && (
+            <View className={`challenge-timer ${timerClass}`}>
+              <AtIcon value="clock" className="timer-icon" />
+              <Text>{formatTime(timeRemaining)}</Text>
+            </View>
+          )}
+
+          <View className="card-content">
+            <View className="word-main">
+              <Text className="word-text">{currentWord.word}</Text>
+              <Text className="word-type">{currentWord.partOfSpeech}</Text>
+
+              <View className="pronunciations">
+                <View className="pronunciation">
+                  <Text className="accent-label">美式</Text>
+                  <Text className="phonetic">
+                    {currentWord.pronunciation.us}
+                  </Text>
                   <View
-                    className="start-record-btn"
-                    onClick={handleStartRecord}
+                    className={`play-btn ${playingAudio === `${currentWord.id}-us` ? 'playing' : ''}`}
+                    onClick={() => playAudio('us')}
                   >
-                    <AtIcon value="microphone" size="24" color="white" />
-                    <Text className="record-text">点击录音</Text>
-                  </View>
-                )}
-              </View>
-
-              {/* 评分结果 */}
-              {pronunciationScore && (
-                <View className="score-section fade-in">
-                  <Text className="score-title">发音评分</Text>
-
-                  <View className="score-display">
-                    <Text
-                      className="score-number"
-                      style={{
-                        color: getScoreColor(pronunciationScore.overall),
-                      }}
-                    >
-                      {pronunciationScore.overall}
-                    </Text>
-                    <Text className="score-label">分</Text>
-                  </View>
-
-                  <View className="score-details">
-                    <View className="score-item">
-                      <Text className="detail-label">准确度</Text>
-                      <Text
-                        className="detail-value"
-                        style={{
-                          color: getScoreColor(pronunciationScore.accuracy),
-                        }}
-                      >
-                        {pronunciationScore.accuracy}
-                      </Text>
-                    </View>
-                    <View className="score-item">
-                      <Text className="detail-label">流利度</Text>
-                      <Text
-                        className="detail-value"
-                        style={{
-                          color: getScoreColor(pronunciationScore.fluency),
-                        }}
-                      >
-                        {pronunciationScore.fluency}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View className="feedback-section">
-                    <Text className="feedback-text">
-                      {pronunciationScore.feedback}
-                    </Text>
+                    <AtIcon
+                      value={
+                        playingAudio === `${currentWord.id}-us`
+                          ? 'pause'
+                          : 'sound'
+                      }
+                    />
                   </View>
                 </View>
+
+                <View className="pronunciation">
+                  <Text className="accent-label">英式</Text>
+                  <Text className="phonetic">
+                    {currentWord.pronunciation.uk}
+                  </Text>
+                  <View
+                    className={`play-btn ${playingAudio === `${currentWord.id}-uk` ? 'playing' : ''}`}
+                    onClick={() => playAudio('uk')}
+                  >
+                    <AtIcon
+                      value={
+                        playingAudio === `${currentWord.id}-uk`
+                          ? 'pause'
+                          : 'sound'
+                      }
+                    />
+                  </View>
+                </View>
+              </View>
+
+              {showMeaning && (
+                <Text className="word-meaning">{currentWord.meaning}</Text>
               )}
             </View>
-          )}
-        </View>
-      </ScrollView>
 
-      {/* 底部操作按钮 */}
-      <View className="bottom-actions">
-        {studyStep < 4 ? (
-          <AtButton
-            type="primary"
-            onClick={handleNextStep}
-            disabled={studyStep === 1 && !isPlaying}
-          >
-            {studyStep === 0 ? '开始学习' : '下一步'}
-          </AtButton>
-        ) : (
-          <AtButton type="primary" onClick={handleCompleteStudy}>
-            完成学习
-          </AtButton>
-        )}
+            <View className="word-example">
+              <Text className="example-header">
+                <Text className="header-icon">💡</Text>
+                例句
+              </Text>
+
+              <View className="example-content">
+                <Text className="english-sentence">
+                  {currentWord.example.english
+                    .split(currentWord.word)
+                    .map((part, index, array) => (
+                      <Text key={index}>
+                        {part}
+                        {index < array.length - 1 && (
+                          <Text className="highlight-word">
+                            {currentWord.word}
+                          </Text>
+                        )}
+                      </Text>
+                    ))}
+                </Text>
+
+                <Text className="chinese-sentence">
+                  {currentWord.example.chinese}
+                </Text>
+
+                <View className="audio-control">
+                  <View
+                    className={`sentence-play-btn ${playingAudio === `${currentWord.id}-sentence` ? 'playing' : ''}`}
+                    onClick={() => playAudio('sentence')}
+                  >
+                    <AtIcon
+                      value={
+                        playingAudio === `${currentWord.id}-sentence`
+                          ? 'pause'
+                          : 'sound'
+                      }
+                    />
+                    <Text>朗读例句</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* 测试模式选项 */}
+            {session.mode === 'test' && !showMeaning && (
+              <View className="options-list">
+                {[
+                  currentWord.meaning,
+                  'adj. 普通的，一般的',
+                  'adj. 复杂的，困难的',
+                  'adj. 简单的，容易的',
+                ].map((option, index) => (
+                  <View
+                    key={index}
+                    className={`option-item ${selectedOption === index ? 'selected' : ''} ${
+                      showAnswer
+                        ? option === currentWord.meaning
+                          ? 'correct'
+                          : selectedOption === index
+                            ? 'incorrect'
+                            : ''
+                        : ''
+                    }`}
+                    onClick={() => {
+                      if (!showAnswer) {
+                        setSelectedOption(index)
+                        setShowAnswer(true)
+                        setTimeout(() => {
+                          handleAnswer(
+                            option === currentWord.meaning ? 'know' : 'unknown'
+                          )
+                        }, 1500)
+                      }
+                    }}
+                  >
+                    <Text className="option-text">{option}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* 学习和复习模式的操作按钮 */}
+            {(session.mode === 'new' || session.mode === 'review') && (
+              <View className="word-actions">
+                <View
+                  className="action-btn know-btn"
+                  onClick={() => handleAnswer('know')}
+                >
+                  <AtIcon value="check" className="btn-icon" />
+                  <Text>认识</Text>
+                </View>
+                <View
+                  className="action-btn unknown-btn"
+                  onClick={() => handleAnswer('unknown')}
+                >
+                  <AtIcon value="close" className="btn-icon" />
+                  <Text>不认识</Text>
+                </View>
+                <View
+                  className="action-btn hard-btn"
+                  onClick={() => handleAnswer('hard')}
+                >
+                  <AtIcon value="help" className="btn-icon" />
+                  <Text>有点难</Text>
+                </View>
+              </View>
+            )}
+
+            {/* 挑战模式的快速操作 */}
+            {session.mode === 'challenge' && (
+              <View className="word-actions">
+                <View
+                  className="action-btn know-btn"
+                  onClick={() => handleAnswer('know')}
+                >
+                  <AtIcon value="check" className="btn-icon" />
+                  <Text>认识</Text>
+                </View>
+                <View
+                  className="action-btn unknown-btn"
+                  onClick={() => handleAnswer('unknown')}
+                >
+                  <AtIcon value="close" className="btn-icon" />
+                  <Text>不认识</Text>
+                </View>
+              </View>
+            )}
+          </View>
+        </View>
       </View>
+
+      {/* 底部控制区 */}
+      <View className="study-controls">
+        <View className="control-stats">
+          <View className="stat-item">
+            <Text className="stat-number correct">{session.correctCount}</Text>
+            <Text className="stat-label">正确</Text>
+          </View>
+          <View className="stat-item">
+            <Text className="stat-number incorrect">
+              {session.incorrectCount}
+            </Text>
+            <Text className="stat-label">错误</Text>
+          </View>
+          <View className="stat-item">
+            <Text className="stat-number remaining">
+              {session.wordCount - session.currentIndex - 1}
+            </Text>
+            <Text className="stat-label">剩余</Text>
+          </View>
+        </View>
+
+        <View className="control-buttons">
+          <View className="control-btn pause-btn" onClick={togglePause}>
+            {isPaused ? '继续' : '暂停'}
+          </View>
+          <View className="control-btn continue-btn" onClick={nextWord}>
+            下一个
+          </View>
+        </View>
+      </View>
+
+      {/* 完成总结弹窗 */}
+      {isCompleted && (
+        <View className="completion-summary">
+          <View className="summary-content">
+            <Text className="summary-icon">🎉</Text>
+            <Text className="summary-title">学习完成！</Text>
+            <Text className="summary-subtitle">
+              恭喜你完成了{session.wordCount}个单词的学习
+            </Text>
+
+            <View className="summary-stats">
+              <View className="summary-stat">
+                <Text className="stat-number accuracy">
+                  {Math.round((session.correctCount / session.wordCount) * 100)}
+                  %
+                </Text>
+                <Text className="stat-label">正确率</Text>
+              </View>
+              <View className="summary-stat">
+                <Text className="stat-number time">
+                  {Math.round((Date.now() - session.startTime) / 60000)}
+                </Text>
+                <Text className="stat-label">分钟</Text>
+              </View>
+              <View className="summary-stat">
+                <Text className="stat-number words">{session.wordCount}</Text>
+                <Text className="stat-label">单词数</Text>
+              </View>
+            </View>
+
+            <View className="summary-actions">
+              <View className="summary-btn retry-btn" onClick={restartSession}>
+                重新学习
+              </View>
+              <View
+                className="summary-btn continue-btn"
+                onClick={continueLearning}
+              >
+                返回词汇
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   )
 }
 
-export default withPageErrorBoundary(VocabularyStudy, {
-  pageName: '单词学习',
-  enableErrorReporting: true,
-  showRetry: true,
-  onError: (error, errorInfo) => {
-    console.log('单词学习页面发生错误:', error, errorInfo)
-  },
-})
+export default VocabularyStudyPage

@@ -20,12 +20,15 @@ export type UserLevel =
 export interface ChatMessage {
   id: string
   content: string
-  type: 'text' | 'voice'
-  sender: 'user' | 'ai'
+  type: 'user' | 'ai'
   timestamp: number
-  voiceUrl?: string
+  audioUrl?: string
   duration?: number
   translation?: string
+  helpContent?: {
+    original: string
+    corrected: string
+  }
 }
 
 // 话题相关类型

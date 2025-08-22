@@ -1,8 +1,8 @@
 export default {
   navigationBarTitleText: '翻译历史',
-  navigationBarBackgroundColor: '#4A90E2',
+  navigationBarBackgroundColor: '#8b5cf6',
   navigationBarTextStyle: 'white',
-  backgroundColor: '#F5F7FA',
-  // 确保显示返回按钮
+  backgroundColor: '#f8fafc',
   enablePullDownRefresh: true,
+  disableScroll: false,
 }

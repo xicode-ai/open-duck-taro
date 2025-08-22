@@ -1,466 +1,484 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import Taro, { useRouter, useDidHide } from '@tarojs/taro'
-import { View, Text, ScrollView } from '@tarojs/components'
-import { AtIcon, AtButton, AtProgress } from 'taro-ui'
-import { useTopicStore } from '@/stores'
-import { formatDuration, safeAsync, safeEventHandler } from '@/utils'
-import type { Topic, Dialogue, PronunciationScore } from '@/types'
-import { withPageErrorBoundary } from '@/components/ErrorBoundary/PageErrorBoundary'
+import { useState, useEffect } from 'react'
+import { View, Text } from '@tarojs/components'
+import Taro from '@tarojs/taro'
+import { AtIcon } from 'taro-ui'
+import { useUserStore } from '../../stores/user'
 import './index.scss'
 
-const TopicChat = () => {
-  const router = useRouter()
-  const { topics } = useTopicStore()
+interface Dialogue {
+  id: string
+  speaker: 'A' | 'B'
+  english: string
+  chinese: string
+  audioUrl?: string
+}
 
-  const [currentTopic, setCurrentTopic] = useState<Topic | null>(null)
+interface TopicData {
+  id: string
+  title: string
+  description: string
+  difficulty: 'easy' | 'medium' | 'hard'
+  dialogues: Dialogue[]
+  totalDialogues: number
+  estimatedTime: number
+}
+
+const TopicChatPage = () => {
+  const { updateDailyUsage } = useUserStore()
+
+  // 状态管理
+  const [topicData, setTopicData] = useState<TopicData | null>(null)
+  const [currentMode, setCurrentMode] = useState<'study' | 'practice'>('study')
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null)
   const [isRecording, setIsRecording] = useState(false)
-  const [recordDuration, setRecordDuration] = useState(0)
-  const [showTranslation, setShowTranslation] = useState(false)
-  const [pronunciationScore, setPronunciationScore] =
-    useState<PronunciationScore | null>(null)
-  const [progress, setProgress] = useState(0)
+  const [completedDialogues, setCompletedDialogues] = useState<string[]>([])
+  const [showCompletionModal, setShowCompletionModal] = useState(false)
+  const [favorites, setFavorites] = useState<string[]>([])
 
-  const innerAudioContextRef = useRef<Taro.InnerAudioContext | null>(null)
-  const recorderManagerRef = useRef<Taro.RecorderManager | null>(null)
-  const recordTimerRef = useRef<NodeJS.Timeout | null>(null)
-
-  // 页面隐藏时清理资源
-  useDidHide(() => {
-    // 停止录音
-    if (isRecording) {
-      recorderManagerRef.current?.stop()
-    }
-
-    // 停止播放
-    if (isPlaying) {
-      innerAudioContextRef.current?.stop()
-    }
-
-    // 清理定时器
-    if (recordTimerRef.current) {
-      clearInterval(recordTimerRef.current)
-      recordTimerRef.current = null
-    }
-  })
-
-  const handleRecordComplete = useCallback(
-    (...args: [string, number]) => {
-      safeAsync(async (_filePath: string, _duration: number) => {
-        Taro.showLoading({ title: '评分中...', mask: true })
-
-        // 这里应该调用真实的语音评分API
-        // const score = await api.post('/pronunciation/score', { audioFile: filePath })
-
-        // 模拟评分结果
-        setTimeout(() => {
-          const mockScore: PronunciationScore = {
-            overall: Math.floor(Math.random() * 30) + 70, // 70-100
-            accuracy: Math.floor(Math.random() * 30) + 70,
-            fluency: Math.floor(Math.random() * 30) + 70,
-            completeness: Math.floor(Math.random() * 30) + 70,
-            feedback: '发音总体不错，可以多注意一下重音的位置。',
-          }
-
-          setPronunciationScore(mockScore)
-          Taro.hideLoading()
-        }, 2000)
-      }, 'api')(...args)
-    },
-    [setPronunciationScore]
-  )
-
+  // 页面初始化
   useEffect(() => {
-    const { topicId } = router.params
-    if (topicId) {
-      const topic = topics.find(t => t.id === topicId)
-      if (topic) {
-        setCurrentTopic(topic)
-        setProgress(0)
-      }
+    // 从路由参数获取话题ID和标题
+    const instance = Taro.getCurrentInstance()
+    const { topicId, topicTitle } = instance.router?.params || {}
+
+    if (topicId && topicTitle) {
+      loadTopicData(topicId, decodeURIComponent(topicTitle))
+    } else {
+      // 如果没有参数，返回话题列表
+      Taro.navigateBack()
     }
+  }, [])
 
-    // 初始化音频播放器
-    const innerAudioContext = Taro.createInnerAudioContext()
-    innerAudioContextRef.current = innerAudioContext
+  // 加载话题数据
+  const loadTopicData = async (topicId: string, topicTitle: string) => {
+    try {
+      // 模拟API调用
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
-    innerAudioContext.onPlay(() => {
-      setIsPlaying(true)
-    })
-
-    innerAudioContext.onStop(() => {
-      setIsPlaying(false)
-    })
-
-    innerAudioContext.onEnded(() => {
-      setIsPlaying(false)
-    })
-
-    innerAudioContext.onError(() => {
-      setIsPlaying(false)
-      Taro.showToast({ title: '播放失败', icon: 'none' })
-    })
-
-    // 初始化录音管理器（仅在支持的环境中）
-    const env = Taro.getEnv()
-    if (env !== Taro.ENV_TYPE.WEB) {
-      try {
-        const recorderManager = Taro.getRecorderManager()
-        if (recorderManager && typeof recorderManager.onStart === 'function') {
-          recorderManagerRef.current = recorderManager
-
-          recorderManager.onStart(() => {
-            setIsRecording(true)
-            startRecordTimer()
-          })
-
-          recorderManager.onStop(res => {
-            setIsRecording(false)
-            stopRecordTimer()
-            handleRecordComplete(res.tempFilePath, res.duration / 1000)
-          })
-
-          recorderManager.onError(() => {
-            setIsRecording(false)
-            stopRecordTimer()
-            Taro.showToast({ title: '录音失败', icon: 'none' })
-          })
-        }
-      } catch (error) {
-        console.warn('录音管理器初始化失败:', error)
-      }
-    }
-
-    return () => {
-      innerAudioContext.destroy()
-    }
-  }, [router.params, topics, handleRecordComplete])
-
-  const startRecordTimer = () => {
-    setRecordDuration(0)
-    recordTimerRef.current = setInterval(() => {
-      setRecordDuration(prev => prev + 1)
-    }, 1000)
-  }
-
-  const stopRecordTimer = () => {
-    if (recordTimerRef.current) {
-      clearInterval(recordTimerRef.current)
-      recordTimerRef.current = null
-    }
-    setRecordDuration(0)
-  }
-
-  const handlePlayDialogue = safeEventHandler((_dialogue: Dialogue) => {
-    if (isPlaying) {
-      innerAudioContextRef.current?.stop()
-      return
-    }
-
-    // 这里应该播放真实的音频文件
-    // innerAudioContextRef.current!.src = dialogue.audioUrl
-    // innerAudioContextRef.current?.play()
-
-    // 模拟播放
-    setIsPlaying(true)
-    setTimeout(() => {
-      setIsPlaying(false)
-    }, 3000)
-  }, 'play-dialogue')
-
-  const handleStartRecord = safeEventHandler(() => {
-    const env = Taro.getEnv()
-
-    // 检查是否在H5环境中
-    if (env === Taro.ENV_TYPE.WEB) {
-      Taro.showModal({
-        title: '提示',
-        content: 'H5环境暂不支持录音功能，请在小程序或APP中使用语音练习',
-        showCancel: false,
-      })
-      return
-    }
-
-    // 检查录音管理器是否可用
-    if (!recorderManagerRef.current) {
-      Taro.showModal({
-        title: '提示',
-        content: '录音功能初始化失败，请重新进入页面或重启应用',
-        showCancel: false,
-      })
-      return
-    }
-
-    Taro.authorize({
-      scope: 'scope.record',
-      success: () => {
-        recorderManagerRef.current?.start({
-          duration: 30000,
-          sampleRate: 16000,
-          numberOfChannels: 1,
-          encodeBitRate: 96000,
-          format: 'mp3',
-        })
-      },
-      fail: () => {
-        Taro.showModal({
-          title: '提示',
-          content: '需要获取麦克风权限才能进行语音练习',
-          success: res => {
-            if (res.confirm) {
-              Taro.openSetting()
-            }
+      // 模拟话题数据
+      const mockTopicData: TopicData = {
+        id: topicId,
+        title: topicTitle,
+        description: '在咖啡厅的日常对话场景，学习点餐和闲聊的表达方式',
+        difficulty: 'easy',
+        totalDialogues: 8,
+        estimatedTime: 15,
+        dialogues: [
+          {
+            id: '1',
+            speaker: 'A',
+            english: 'Good morning! What can I get for you today?',
+            chinese: '早上好！今天要点什么？',
           },
+          {
+            id: '2',
+            speaker: 'B',
+            english: "I'd like a large coffee with milk, please.",
+            chinese: '我要一大杯加奶的咖啡，谢谢。',
+          },
+          {
+            id: '3',
+            speaker: 'A',
+            english: 'Would you like anything else? We have fresh pastries.',
+            chinese: '还需要别的吗？我们有新鲜的糕点。',
+          },
+          {
+            id: '4',
+            speaker: 'B',
+            english: 'That sounds great! What do you recommend?',
+            chinese: '听起来不错！你推荐什么？',
+          },
+          {
+            id: '5',
+            speaker: 'A',
+            english: 'Our chocolate croissant is very popular.',
+            chinese: '我们的巧克力牛角包很受欢迎。',
+          },
+          {
+            id: '6',
+            speaker: 'B',
+            english: "Perfect! I'll take one of those too.",
+            chinese: '太好了！我也要一个。',
+          },
+          {
+            id: '7',
+            speaker: 'A',
+            english: 'Great choice! That will be $8.50 total.',
+            chinese: '很好的选择！总共8.50美元。',
+          },
+          {
+            id: '8',
+            speaker: 'B',
+            english: 'Here you go. Thank you so much!',
+            chinese: '给你。非常感谢！',
+          },
+        ],
+      }
+
+      setTopicData(mockTopicData)
+    } catch (_error) {
+      console.error('加载话题数据失败:', _error)
+      Taro.showToast({
+        title: '加载失败',
+        icon: 'error',
+      })
+    }
+  }
+
+  // 播放音频
+  const playAudio = (dialogueId: string) => {
+    if (playingAudio === dialogueId) {
+      // 停止播放
+      setPlayingAudio(null)
+      Taro.stopBackgroundAudio()
+    } else {
+      // 开始播放
+      setPlayingAudio(dialogueId)
+
+      // 模拟音频播放
+      setTimeout(() => {
+        setPlayingAudio(null)
+      }, 3000)
+
+      Taro.showToast({
+        title: '播放中',
+        icon: 'none',
+      })
+    }
+  }
+
+  // 开始录音练习
+  const startRecording = async () => {
+    try {
+      const { authSetting } = await Taro.getSetting()
+
+      if (!authSetting['scope.record']) {
+        await Taro.authorize({ scope: 'scope.record' })
+      }
+
+      setIsRecording(true)
+      updateDailyUsage('practice')
+
+      // 模拟录音3秒后自动停止
+      setTimeout(() => {
+        setIsRecording(false)
+
+        Taro.showToast({
+          title: '练习完成',
+          icon: 'success',
         })
-      },
-    })
-  }, 'start-record')
 
-  const handleStopRecord = safeEventHandler(() => {
-    recorderManagerRef.current?.stop()
-  }, 'stop-record')
+        // 标记当前对话为已完成
+        if (topicData) {
+          const currentDialogue = topicData.dialogues[currentDialogueIndex]
+          if (
+            currentDialogue &&
+            !completedDialogues.includes(currentDialogue.id)
+          ) {
+            setCompletedDialogues([...completedDialogues, currentDialogue.id])
+          }
+        }
+      }, 3000)
+    } catch (_error) {
+      setIsRecording(false)
+      Taro.showModal({
+        title: '需要录音权限',
+        content: '请在设置中开启录音权限',
+        showCancel: false,
+      })
+    }
+  }
 
-  const handleNextDialogue = safeEventHandler(() => {
-    if (!currentTopic) return
+  // 下一个对话
+  const nextDialogue = () => {
+    if (!topicData) return
 
-    if (currentDialogueIndex < currentTopic.dialogues.length - 1) {
-      setCurrentDialogueIndex(prev => prev + 1)
-      setProgress(
-        ((currentDialogueIndex + 1) / currentTopic.dialogues.length) * 100
-      )
-      setPronunciationScore(null)
+    if (currentDialogueIndex < topicData.dialogues.length - 1) {
+      setCurrentDialogueIndex(currentDialogueIndex + 1)
     } else {
       // 完成所有对话
-      Taro.showModal({
-        title: '恭喜！',
-        content: '您已完成本话题的所有对话练习！',
-        showCancel: false,
-        success: () => {
-          Taro.navigateBack()
-        },
-      })
+      setShowCompletionModal(true)
     }
-  }, 'next-dialogue')
-
-  const handlePrevDialogue = safeEventHandler(() => {
-    if (currentDialogueIndex > 0) {
-      setCurrentDialogueIndex(prev => prev - 1)
-      setProgress(
-        ((currentDialogueIndex - 1) / (currentTopic?.dialogues.length || 1)) *
-          100
-      )
-      setPronunciationScore(null)
-    }
-  }, 'prev-dialogue')
-
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return '#50C878'
-    if (score >= 80) return '#4A90E2'
-    if (score >= 70) return '#FF9500'
-    return '#E74C3C'
   }
 
-  if (!currentTopic) {
-    return (
-      <View className="loading-page">
-        <Text>加载中...</Text>
-      </View>
-    )
+  // 跳过当前对话
+  const skipDialogue = () => {
+    nextDialogue()
   }
 
-  const currentDialogue = currentTopic.dialogues[currentDialogueIndex]
+  // 收藏对话
+  const toggleFavorite = (dialogueId: string) => {
+    if (favorites.includes(dialogueId)) {
+      setFavorites(favorites.filter(id => id !== dialogueId))
+    } else {
+      setFavorites([...favorites, dialogueId])
+    }
+  }
 
-  // 安全检查：如果没有对话数据，显示错误提示
-  if (!currentDialogue) {
+  // 重新开始练习
+  const restartPractice = () => {
+    setCurrentDialogueIndex(0)
+    setCompletedDialogues([])
+    setShowCompletionModal(false)
+  }
+
+  // 继续学习
+  const continueLearning = () => {
+    setShowCompletionModal(false)
+    Taro.navigateBack()
+  }
+
+  if (!topicData) {
     return (
-      <View className="error-page">
-        <Text className="error-title">对话数据加载失败</Text>
-        <Text className="error-message">
-          话题 &ldquo;{currentTopic.title}&rdquo; 暂无对话内容，请稍后再试
-        </Text>
-        <View className="error-actions">
-          <AtButton type="primary" onClick={() => Taro.navigateBack()}>
-            返回话题列表
-          </AtButton>
+      <View className="topic-chat-page">
+        <View style={{ padding: '200rpx 0', textAlign: 'center' }}>
+          <AtIcon value="loading-3" size="32" color="#10b981" />
+          <Text
+            style={{ display: 'block', marginTop: '20rpx', color: '#6b7280' }}
+          >
+            加载中...
+          </Text>
         </View>
       </View>
     )
   }
+
+  const currentDialogue = topicData.dialogues[currentDialogueIndex]
+  const progress = Math.round(
+    ((currentDialogueIndex + 1) / topicData.dialogues.length) * 100
+  )
 
   return (
     <View className="topic-chat-page">
-      {/* 进度条 */}
-      <View className="progress-section">
-        <AtProgress
-          percent={progress}
-          strokeWidth={6}
-          color="#4A90E2"
-          className="progress-bar"
-        />
-        <Text className="progress-text">
-          {currentDialogueIndex + 1} / {currentTopic.dialogues.length}
-        </Text>
-      </View>
-
-      {/* 对话内容 */}
-      <ScrollView className="dialogue-section" scrollY>
-        <View className="dialogue-card">
-          <View className="speaker-info">
-            <View
-              className={`speaker-avatar ${currentDialogue.speaker.toLowerCase()}`}
-            >
-              <Text className="speaker-text">{currentDialogue.speaker}</Text>
-            </View>
-            <Text className="speaker-label">
-              {currentDialogue.speaker === 'A' ? '对话者A' : '对话者B'}
-            </Text>
+      {/* 话题头部信息 */}
+      <View className="topic-header">
+        <View className="header-content">
+          <View className="topic-info">
+            <Text className="topic-title">{topicData.title}</Text>
+            <Text className="topic-desc">{topicData.description}</Text>
           </View>
 
-          <View className="dialogue-content">
-            <View className="english-text">
-              <Text className="text">{currentDialogue.english}</Text>
-              <View
-                className="play-btn"
-                onClick={() => handlePlayDialogue(currentDialogue)}
-              >
-                <AtIcon
-                  value={isPlaying ? 'pause' : 'play'}
-                  size="20"
-                  color="#4A90E2"
-                />
-              </View>
+          <View className="topic-stats">
+            <View className="stat-item">
+              <Text className="stat-number">{topicData.totalDialogues}</Text>
+              <Text className="stat-label">对话数</Text>
             </View>
-
-            <View
-              className="translation-toggle"
-              onClick={() => setShowTranslation(!showTranslation)}
-            >
-              <Text className="toggle-text">
-                {showTranslation ? '隐藏' : '显示'}中文翻译
-              </Text>
-              <AtIcon
-                value={showTranslation ? 'chevron-up' : 'chevron-down'}
-                size="16"
-                color="#666"
-              />
+            <View className="stat-item">
+              <Text className="stat-number">{topicData.estimatedTime}</Text>
+              <Text className="stat-label">分钟</Text>
             </View>
+            <View className="stat-item">
+              <Text className="stat-number">{completedDialogues.length}</Text>
+              <Text className="stat-label">已完成</Text>
+            </View>
+          </View>
+        </View>
+      </View>
 
-            {showTranslation && (
-              <View className="chinese-text fade-in">
-                <Text className="text">{currentDialogue.chinese}</Text>
-              </View>
-            )}
+      {/* 主要内容区域 */}
+      <View className="dialogue-container">
+        {/* 模式切换 */}
+        <View className="dialogue-mode-tabs">
+          <View
+            className={`mode-tab ${currentMode === 'study' ? 'active' : ''}`}
+            onClick={() => setCurrentMode('study')}
+          >
+            学习模式
+          </View>
+          <View
+            className={`mode-tab ${currentMode === 'practice' ? 'active' : ''}`}
+            onClick={() => setCurrentMode('practice')}
+          >
+            练习模式
           </View>
         </View>
 
-        {/* 跟读练习区域 */}
-        <View className="practice-section">
-          <Text className="practice-title">跟读练习</Text>
-          <Text className="practice-tip">点击录音按钮，跟读上面的英文句子</Text>
-
-          <View className="record-area">
-            {isRecording ? (
-              <View className="recording-state">
-                <View className="stop-record-btn" onClick={handleStopRecord}>
-                  <AtIcon value="stop" size="24" color="white" />
-                </View>
-                <Text className="recording-text">
-                  录音中... {formatDuration(recordDuration)}
-                </Text>
+        {/* 对话内容 */}
+        <View className={`dialogue-content ${currentMode}-mode`}>
+          <View className="dialogue-header">
+            <Text className="dialogue-title">
+              {currentMode === 'study' ? '完整对话' : '跟读练习'}
+            </Text>
+            <View className="dialogue-controls">
+              <View
+                className={`control-btn ${playingAudio ? 'playing' : ''}`}
+                onClick={() => playAudio('all')}
+              >
+                <AtIcon value={playingAudio ? 'pause' : 'play'} />
               </View>
-            ) : (
-              <View className="start-record-btn" onClick={handleStartRecord}>
-                <AtIcon value="microphone" size="24" color="white" />
-                <Text className="record-text">点击录音</Text>
-              </View>
-            )}
+            </View>
           </View>
 
-          {/* 评分结果 */}
-          {pronunciationScore && (
-            <View className="score-section fade-in">
-              <Text className="score-title">发音评分</Text>
+          {currentMode === 'study' ? (
+            /* 学习模式 - 显示所有对话 */
+            <View className="dialogue-list">
+              {topicData.dialogues.map((dialogue, index) => (
+                <View key={dialogue.id} className="dialogue-item">
+                  <View className="speaker-info">
+                    <Text className="speaker-label">
+                      <View className="speaker-icon">{dialogue.speaker}</View>
+                      {dialogue.speaker === 'A' ? '服务员' : '顾客'}
+                    </Text>
+                    <View
+                      className={`play-audio ${playingAudio === dialogue.id ? 'playing' : ''}`}
+                      onClick={() => playAudio(dialogue.id)}
+                    >
+                      <AtIcon
+                        value={playingAudio === dialogue.id ? 'pause' : 'sound'}
+                      />
+                    </View>
+                  </View>
 
-              <View className="score-grid">
-                <View className="score-item">
-                  <Text className="score-label">总分</Text>
-                  <Text
-                    className="score-value"
-                    style={{ color: getScoreColor(pronunciationScore.overall) }}
-                  >
-                    {pronunciationScore.overall}
+                  <View className="dialogue-text">
+                    <Text className="english-text">{dialogue.english}</Text>
+                    <Text className="chinese-text">{dialogue.chinese}</Text>
+                  </View>
+
+                  <View className="dialogue-actions">
+                    <View
+                      className={`action-btn favorite-btn ${favorites.includes(dialogue.id) ? 'active' : ''}`}
+                      onClick={() => toggleFavorite(dialogue.id)}
+                    >
+                      <AtIcon value="heart" />
+                      <Text>收藏</Text>
+                    </View>
+                    <View
+                      className="action-btn practice-btn"
+                      onClick={() => {
+                        setCurrentDialogueIndex(index)
+                        setCurrentMode('practice')
+                      }}
+                    >
+                      <AtIcon value="sound" />
+                      <Text>练习</Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : (
+            /* 练习模式 - 逐句练习 */
+            <View className="practice-area">
+              <View className="current-dialogue">
+                <View className="role-indicator">
+                  <View className="role-icon">{currentDialogue?.speaker}</View>
+                  <Text>
+                    {currentDialogue?.speaker === 'A' ? '服务员说:' : '顾客说:'}
                   </Text>
                 </View>
-                <View className="score-item">
-                  <Text className="score-label">准确度</Text>
-                  <Text
-                    className="score-value"
-                    style={{
-                      color: getScoreColor(pronunciationScore.accuracy),
-                    }}
-                  >
-                    {pronunciationScore.accuracy}
+
+                <View className="dialogue-text">
+                  <Text className="english-text">
+                    {currentDialogue?.english}
+                  </Text>
+                  <Text className="chinese-text">
+                    {currentDialogue?.chinese}
                   </Text>
                 </View>
-                <View className="score-item">
-                  <Text className="score-label">流利度</Text>
-                  <Text
-                    className="score-value"
-                    style={{ color: getScoreColor(pronunciationScore.fluency) }}
+
+                <View className="audio-controls">
+                  <View
+                    className={`play-btn ${playingAudio === currentDialogue?.id ? 'playing' : ''}`}
+                    onClick={() =>
+                      currentDialogue && playAudio(currentDialogue.id)
+                    }
                   >
-                    {pronunciationScore.fluency}
-                  </Text>
-                </View>
-                <View className="score-item">
-                  <Text className="score-label">完整度</Text>
-                  <Text
-                    className="score-value"
-                    style={{
-                      color: getScoreColor(pronunciationScore.completeness),
-                    }}
-                  >
-                    {pronunciationScore.completeness}
-                  </Text>
+                    <AtIcon
+                      value={
+                        playingAudio === currentDialogue?.id ? 'pause' : 'play'
+                      }
+                    />
+                  </View>
+
+                  <View className="playback-info">
+                    <Text className="speed-control">正常语速播放</Text>
+                    <View className="progress-bar">
+                      <View className="progress-fill"></View>
+                    </View>
+                  </View>
                 </View>
               </View>
 
-              <View className="feedback-section">
-                <Text className="feedback-title">改进建议</Text>
-                <Text className="feedback-text">
-                  {pronunciationScore.feedback}
-                </Text>
+              <View className="practice-controls">
+                <View className="recording-area">
+                  <View
+                    className={`record-btn ${isRecording ? 'recording' : ''}`}
+                    onClick={startRecording}
+                  >
+                    <AtIcon value="sound" />
+                  </View>
+                  <Text className="record-hint">
+                    {isRecording ? '录音中...' : '点击开始跟读练习'}
+                  </Text>
+                </View>
+
+                <View className="action-buttons">
+                  <View className="action-btn skip-btn" onClick={skipDialogue}>
+                    跳过
+                  </View>
+                  <View className="action-btn next-btn" onClick={nextDialogue}>
+                    下一个
+                  </View>
+                </View>
               </View>
             </View>
           )}
         </View>
-      </ScrollView>
 
-      {/* 底部导航 */}
-      <View className="bottom-navigation">
-        <AtButton
-          size="small"
-          disabled={currentDialogueIndex === 0}
-          onClick={handlePrevDialogue}
-        >
-          上一句
-        </AtButton>
-
-        <AtButton type="primary" size="small" onClick={handleNextDialogue}>
-          {currentDialogueIndex === currentTopic.dialogues.length - 1
-            ? '完成'
-            : '下一句'}
-        </AtButton>
+        {/* 进度指示器 */}
+        <View className="progress-indicator">
+          <View className="progress-header">
+            <Text className="progress-title">学习进度</Text>
+            <Text className="progress-text">
+              {currentDialogueIndex + 1} / {topicData.dialogues.length}
+            </Text>
+          </View>
+          <View className="progress-bar">
+            <View className="progress-fill" style={{ width: `${progress}%` }} />
+          </View>
+        </View>
       </View>
+
+      {/* 完成弹窗 */}
+      {showCompletionModal && (
+        <View className="completion-modal">
+          <View className="modal-content">
+            <Text className="completion-icon">🎉</Text>
+            <Text className="completion-title">恭喜完成！</Text>
+            <Text className="completion-desc">
+              你已经完成了《{topicData.title}》的所有对话练习！
+            </Text>
+
+            <View className="completion-stats">
+              <View className="stat-item">
+                <Text className="stat-number">
+                  {topicData.dialogues.length}
+                </Text>
+                <Text className="stat-label">完成对话</Text>
+              </View>
+              <View className="stat-item">
+                <Text className="stat-number">{completedDialogues.length}</Text>
+                <Text className="stat-label">练习次数</Text>
+              </View>
+            </View>
+
+            <View className="completion-actions">
+              <View className="action-btn retry-btn" onClick={restartPractice}>
+                重新练习
+              </View>
+              <View
+                className="action-btn continue-btn"
+                onClick={continueLearning}
+              >
+                继续学习
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   )
 }
 
-export default withPageErrorBoundary(TopicChat, {
-  pageName: '话题对话',
-  enableErrorReporting: true,
-  showRetry: true,
-  onError: (error, errorInfo) => {
-    console.log('话题对话页面发生错误:', error, errorInfo)
-  },
-})
+export default TopicChatPage

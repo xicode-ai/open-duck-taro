@@ -21,6 +21,10 @@ interface ChatState {
   setTyping: (typing: boolean) => void
   setCurrentChatId: (chatId: string | null) => void
 
+  // 录音操作
+  startRecording: () => void
+  stopRecording: () => void
+
   // 批量操作
   addMessages: (messages: ChatMessage[]) => void
   getMessagesByType: (type: ChatMessage['type']) => ChatMessage[]
@@ -60,6 +64,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setTyping: (typing: boolean) => set({ isTyping: typing }),
 
   setCurrentChatId: (chatId: string | null) => set({ currentChatId: chatId }),
+
+  startRecording: () => set({ isRecording: true }),
+
+  stopRecording: () => set({ isRecording: false }),
 
   addMessages: (messages: ChatMessage[]) =>
     set(state => ({

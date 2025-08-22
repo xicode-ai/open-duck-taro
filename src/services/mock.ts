@@ -1,4 +1,11 @@
-import type { User, ChatMessage, Topic, Vocabulary, TranslationResult, PhotoStory } from '@/types'
+import type {
+  User,
+  ChatMessage,
+  Topic,
+  Vocabulary,
+  TranslationResult,
+  PhotoStory,
+} from '@/types'
 
 // 模拟用户数据
 export const mockUser: User = {
@@ -334,34 +341,37 @@ export const mockChatMessages: ChatMessage[] = [
   {
     id: '1',
     content: 'Hello! How can I help you practice English today?',
-    type: 'text',
-    sender: 'ai',
+    type: 'user',
+    // sender: 'ai', // 不再需要sender字段
     timestamp: Date.now() - 300000, // 5分钟前
     translation: '你好！今天我能帮你练习英语吗？',
   },
   {
     id: '2',
     content: 'I want to practice speaking English',
-    type: 'text',
-    sender: 'user',
+    type: 'user',
+    // sender: 'user', // 不再需要sender字段
     timestamp: Date.now() - 240000, // 4分钟前
     translation: '我想练习说英语',
   },
   {
     id: '3',
-    content: "Great! Let's start with some basic conversation. What's your name?",
-    type: 'text',
-    sender: 'ai',
+    content:
+      "Great! Let's start with some basic conversation. What's your name?",
+    type: 'user',
+    // sender: 'ai', // 不再需要sender字段
     timestamp: Date.now() - 180000, // 3分钟前
     translation: '很好！让我们从基本对话开始。你叫什么名字？',
   },
 ]
 
 // 模拟API响应延迟
-export const mockApiDelay = (ms = 1000) => new Promise(resolve => setTimeout(resolve, ms))
+export const mockApiDelay = (ms = 1000) =>
+  new Promise(resolve => setTimeout(resolve, ms))
 
 // 模拟API错误
-export const mockApiError = (message = '请求失败') => Promise.reject(new Error(message))
+export const mockApiError = (message = '请求失败') =>
+  Promise.reject(new Error(message))
 
 // 模拟成功响应
 export const mockApiSuccess = <T>(data: T, delay = 1000) =>

@@ -1,255 +1,517 @@
 import { useState, useRef } from 'react'
-import Taro from '@tarojs/taro'
 import { View, Text, Textarea } from '@tarojs/components'
-import { AtButton, AtIcon } from 'taro-ui'
-import { safeAsync, safeEventHandler } from '@/utils'
-import type { TranslationResult } from '@/types'
-import { withPageErrorBoundary } from '@/components/ErrorBoundary/PageErrorBoundary'
-import { CustomNavBar } from '@/components/common'
+import Taro from '@tarojs/taro'
+import { AtIcon } from 'taro-ui'
+import { useUserStore } from '../../stores/user'
 import './index.scss'
 
+interface TranslateResult {
+  standard: string
+  colloquial: string
+  audioUrl?: string
+}
+
+interface TranslateHistory {
+  id: string
+  original: string
+  result: TranslateResult
+  timestamp: number
+  sourceLanguage: 'zh' | 'en'
+}
+
 const TranslatePage = () => {
+  const { updateDailyUsage, checkUsage } = useUserStore()
+
+  // 状态管理
   const [inputText, setInputText] = useState('')
-  const [translationResult, setTranslationResult] =
-    useState<TranslationResult | null>(null)
+  const [sourceLanguage, setSourceLanguage] = useState<'zh' | 'en'>('zh')
   const [isTranslating, setIsTranslating] = useState(false)
-  const [activeTranslationType, setActiveTranslationType] = useState<
-    'formal' | 'casual'
-  >('formal')
+  const [isRecording, setIsRecording] = useState(false)
+  const [translateResult, setTranslateResult] =
+    useState<TranslateResult | null>(null)
+  const [activeTab, setActiveTab] = useState<'standard' | 'colloquial'>(
+    'standard'
+  )
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null)
 
-  const _innerAudioContextRef = useRef<Taro.InnerAudioContext | null>(null)
+  // 历史记录(模拟数据)
+  const [history] = useState<TranslateHistory[]>([
+    {
+      id: '1',
+      original: '你好，很高兴认识你',
+      result: {
+        standard: 'Hello, nice to meet you',
+        colloquial: 'Hi there! Great to meet you!',
+      },
+      timestamp: Date.now() - 3600000,
+      sourceLanguage: 'zh',
+    },
+    {
+      id: '2',
+      original: '今天天气真不错',
+      result: {
+        standard: 'The weather is really nice today',
+        colloquial: 'What a beautiful day!',
+      },
+      timestamp: Date.now() - 7200000,
+      sourceLanguage: 'zh',
+    },
+  ])
 
-  // 实用短语数据
-  const usefulPhrases = [
-    {
-      chinese: '请给我一杯拿铁，好吗？',
-      english: 'Can I have a latte, please?',
-    },
-    {
-      chinese: '我想点一杯咖啡。',
-      english: "I'd like to order a coffee.",
-    },
-    {
-      chinese: '你推荐什么？',
-      english: 'What would you recommend?',
-    },
+  // 常用短语
+  const quickPhrases = [
+    { icon: '👋', text: '问候语', template: '你好，很高兴认识你' },
+    { icon: '🍽️', text: '点餐', template: '我想点一杯咖啡' },
+    { icon: '🛣️', text: '问路', template: '请问洗手间在哪里？' },
+    { icon: '🛒', text: '购物', template: '这个多少钱？' },
   ]
 
-  // 语音输入处理
-  const handleVoiceInput = safeEventHandler(() => {
-    Taro.showToast({ title: '语音输入功能开发中', icon: 'none' })
-  }, 'voice-input')
+  const recordingTimer = useRef<NodeJS.Timeout | null>(null)
 
-  // 拍照识别处理
-  const handlePhotoInput = safeEventHandler(() => {
-    Taro.chooseMedia({
-      count: 1,
-      mediaType: ['image'],
-      sourceType: ['album', 'camera'],
-      success: () => {
-        Taro.showToast({ title: '拍照识别功能开发中', icon: 'none' })
-      },
-    })
-  }, 'photo-input')
+  // 切换语言
+  const toggleLanguage = () => {
+    setSourceLanguage(sourceLanguage === 'zh' ? 'en' : 'zh')
+    setInputText('')
+    setTranslateResult(null)
+  }
 
-  // 历史记录页面处理
-  const handleHistoryClick = safeEventHandler(() => {
-    Taro.navigateTo({ url: '/pages/translate-history/index' })
-  }, 'history-click')
-
-  // 处理翻译
-  const handleTranslate = safeAsync(async () => {
+  // 检查输入限制
+  const checkInputLimit = () => {
     if (!inputText.trim()) {
-      Taro.showToast({ title: '请输入要翻译的内容', icon: 'none' })
+      Taro.showToast({
+        title: '请输入要翻译的内容',
+        icon: 'none',
+      })
+      return false
+    }
+
+    const usage = checkUsage('translate')
+    if (!usage.canUse) {
+      Taro.showModal({
+        title: '使用次数已用完',
+        content: '今日翻译功能使用次数已用完，开通会员可无限使用',
+        confirmText: '开通会员',
+        cancelText: '取消',
+        success: res => {
+          if (res.confirm) {
+            Taro.navigateTo({ url: '/pages/membership/index' })
+          }
+        },
+      })
+      return false
+    }
+
+    return true
+  }
+
+  // 翻译功能
+  const handleTranslate = async () => {
+    if (!checkInputLimit()) return
+
+    setIsTranslating(true)
+    updateDailyUsage('translate')
+
+    try {
+      // 模拟API调用延迟
+      await new Promise(resolve => setTimeout(resolve, 1500))
+
+      // 模拟翻译结果
+      const result: TranslateResult = {
+        standard:
+          sourceLanguage === 'zh'
+            ? 'This is a standard translation result'
+            : '这是一个标准翻译结果',
+        colloquial:
+          sourceLanguage === 'zh'
+            ? "Hey! This is how we'd actually say it!"
+            : '嘿！我们平时会这么说！',
+      }
+
+      setTranslateResult(result)
+
+      Taro.showToast({
+        title: '翻译完成',
+        icon: 'success',
+      })
+    } catch (error) {
+      console.error('翻译失败:', error)
+      Taro.showToast({
+        title: '翻译失败，请重试',
+        icon: 'error',
+      })
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
+  // 语音输入
+  const handleVoiceInput = async () => {
+    if (isRecording) {
+      stopVoiceInput()
       return
     }
 
-    setIsTranslating(true)
+    try {
+      // 检查录音权限
+      const { authSetting } = await Taro.getSetting()
 
-    // 模拟翻译结果
-    await new Promise(resolve => setTimeout(resolve, 1500))
+      if (!authSetting['scope.record']) {
+        await Taro.authorize({ scope: 'scope.record' })
+      }
 
-    const mockResult: TranslationResult = {
-      original: inputText,
-      formal: getFormalTranslation(inputText),
-      casual: getCasualTranslation(inputText),
-      audioUrl: 'mock-audio-url',
+      setIsRecording(true)
+
+      Taro.startRecord({
+        success: res => {
+          console.log('开始录音', res)
+        },
+        fail: err => {
+          console.error('录音失败', err)
+          setIsRecording(false)
+          Taro.showToast({
+            title: '录音失败',
+            icon: 'error',
+          })
+        },
+      })
+
+      // 最多录音30秒
+      recordingTimer.current = setTimeout(() => {
+        stopVoiceInput()
+      }, 30000)
+    } catch (error) {
+      console.error('语音输入错误:', error)
+      Taro.showModal({
+        title: '需要录音权限',
+        content: '请在设置中开启录音权限',
+        showCancel: false,
+      })
     }
-
-    setTranslationResult(mockResult)
-    setIsTranslating(false)
-  }, 'api')
-
-  // 获取正式翻译
-  const getFormalTranslation = (text: string): string => {
-    const examples: Record<string, string> = {
-      '我想去咖啡店买一杯拿铁，但是我不知道怎么用英语点餐。':
-        "I want to go to a coffee shop to buy a latte, but I don't know how to order in English.",
-      你好: 'Hello',
-      谢谢: 'Thank you',
-      再见: 'Goodbye',
-    }
-    return examples[text] || 'This is a formal translation of your input text.'
   }
 
-  // 获取地道口语翻译
-  const getCasualTranslation = (text: string): string => {
-    const examples: Record<string, string> = {
-      '我想去咖啡店买一杯拿铁，但是我不知道怎么用英语点餐。':
-        "Hey, I'd like to grab a latte from the coffee shop, but I'm not sure how to order it in English.",
-      你好: 'Hey there!',
-      谢谢: 'Thanks!',
-      再见: 'See ya!',
+  // 停止语音输入
+  const stopVoiceInput = () => {
+    if (!isRecording) return
+
+    if (recordingTimer.current) {
+      clearTimeout(recordingTimer.current)
+      recordingTimer.current = null
     }
-    return examples[text] || 'This is a casual translation of your input text.'
+
+    setIsRecording(false)
+
+    Taro.stopRecord({
+      success: res => {
+        console.log(
+          '录音结束',
+          (res as unknown as { tempFilePath: string }).tempFilePath
+        )
+
+        // 模拟语音识别结果
+        const recognizedText =
+          sourceLanguage === 'zh'
+            ? '这是语音识别的结果'
+            : 'This is the voice recognition result'
+
+        setInputText(recognizedText)
+
+        Taro.showToast({
+          title: '语音识别完成',
+          icon: 'success',
+        })
+      },
+      fail: err => {
+        console.error('停止录音失败', err)
+        Taro.showToast({
+          title: '录音失败',
+          icon: 'error',
+        })
+      },
+    })
   }
 
-  // 播放语音
-  const handlePlayAudio = safeEventHandler(() => {
-    Taro.showToast({ title: '语音播放功能开发中', icon: 'none' })
-  }, 'play-audio')
+  // 清空输入
+  const clearInput = () => {
+    setInputText('')
+    setTranslateResult(null)
+  }
 
   // 复制文本
-  const handleCopyText = safeEventHandler((text: string) => {
+  const copyText = (text: string) => {
     Taro.setClipboardData({
       data: text,
       success: () => {
-        Taro.showToast({ title: '已复制', icon: 'success' })
+        Taro.showToast({
+          title: '已复制到剪贴板',
+          icon: 'success',
+        })
       },
     })
-  }, 'copy-text')
+  }
 
-  // 收藏功能
-  const handleFavorite = safeEventHandler(() => {
-    Taro.showToast({ title: '已收藏', icon: 'success' })
-  }, 'favorite')
+  // 播放音频
+  const playAudio = (text: string, type: string) => {
+    const audioId = `${type}-audio`
+
+    if (playingAudio === audioId) {
+      // 停止播放
+      Taro.stopBackgroundAudio()
+      setPlayingAudio(null)
+    } else {
+      // 开始播放 - 这里应该调用TTS API
+      setPlayingAudio(audioId)
+
+      // 模拟播放完成
+      setTimeout(() => {
+        setPlayingAudio(null)
+      }, 3000)
+
+      Taro.showToast({
+        title: '播放中',
+        icon: 'success',
+      })
+    }
+  }
+
+  // 使用快速短语 - 已移除，直接使用 setInputText
+
+  // 格式化时间
+  const formatTime = (timestamp: number) => {
+    const now = Date.now()
+    const diff = now - timestamp
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+
+    if (hours < 1) {
+      const minutes = Math.floor(diff / (1000 * 60))
+      return `${minutes}分钟前`
+    } else if (hours < 24) {
+      return `${hours}小时前`
+    } else {
+      const days = Math.floor(hours / 24)
+      return `${days}天前`
+    }
+  }
 
   return (
-    <View className="page-container">
-      <CustomNavBar
-        title="智能翻译"
-        backgroundColor="#4A90E2"
-        renderRight={
-          <View onClick={handleHistoryClick}>
-            <AtIcon value="clock" size="22" color="white" />
-          </View>
-        }
-      />
-      <View className="content-area translate-page">
+    <View className="translate-page">
+      {/* 页面头部 */}
+      <View className="page-header">
+        <Text className="header-title">智能翻译</Text>
+        <Text className="header-desc">中英互译，地道口语表达</Text>
+      </View>
+
+      {/* 翻译卡片 */}
+      <View className="translate-card">
         {/* 输入区域 */}
         <View className="input-section">
-          <Text className="section-title">输入中文</Text>
-          <Textarea
-            className="input-textarea"
-            value={inputText}
-            onInput={e => setInputText(e.detail.value)}
-            placeholder="我想去咖啡店买一杯拿铁，但是我不知道怎么用英语点餐。"
-            maxlength={500}
-            showConfirmBar={false}
-          />
+          <View className="section-header">
+            <Text className="section-title">
+              <Text className="flag-icon">
+                {sourceLanguage === 'zh' ? '🇨🇳' : '🇺🇸'}
+              </Text>
+              {sourceLanguage === 'zh' ? '中文' : 'English'}
+            </Text>
+            <View className="language-switch" onClick={toggleLanguage}>
+              <AtIcon value="reload" size="16" />
+            </View>
+          </View>
 
-          {/* 输入功能按钮 */}
-          <View className="input-actions">
-            <View className="action-btns">
-              <View className="action-btn voice" onClick={handleVoiceInput}>
-                <AtIcon value="sound" size="16" color="white" />
-                <Text className="btn-text">语音输入</Text>
-              </View>
-              <View className="action-btn photo" onClick={handlePhotoInput}>
-                <AtIcon value="camera" size="16" color="white" />
-                <Text className="btn-text">拍照识别</Text>
+          <View className="input-container">
+            <Textarea
+              className="text-input"
+              value={inputText}
+              onInput={(e: { detail: { value: string } }) =>
+                setInputText(e.detail.value)
+              }
+              placeholder={
+                sourceLanguage === 'zh'
+                  ? '请输入要翻译的中文...'
+                  : 'Please enter English text...'
+              }
+              maxlength={1000}
+              autoHeight
+            />
+
+            <View className="input-actions">
+              {inputText && (
+                <View className="action-btn clear-btn" onClick={clearInput}>
+                  <AtIcon value="close" />
+                </View>
+              )}
+
+              <View
+                className={`action-btn voice-btn ${isRecording ? 'recording' : ''}`}
+                onClick={handleVoiceInput}
+              >
+                <AtIcon value="sound" />
               </View>
             </View>
 
-            <AtButton
-              type="primary"
-              size="normal"
-              loading={isTranslating}
-              onClick={handleTranslate}
-              disabled={!inputText.trim()}
-              className="translate-btn"
+            <Text
+              className={`char-count ${inputText.length > 800 ? 'warning' : inputText.length > 900 ? 'error' : ''}`}
             >
-              {isTranslating ? '翻译中...' : '翻译'}
-            </AtButton>
+              {inputText.length}/1000
+            </Text>
           </View>
         </View>
 
+        {/* 翻译按钮 */}
+        <View
+          className={`translate-button ${isTranslating ? 'loading' : ''}`}
+          onClick={handleTranslate}
+        >
+          <AtIcon
+            value={isTranslating ? 'loading-3' : 'reload'}
+            className="translate-icon"
+          />
+          <Text>{isTranslating ? '翻译中...' : '开始翻译'}</Text>
+        </View>
+
         {/* 翻译结果 */}
-        {translationResult && (
-          <View className="result-section">
+        {translateResult && (
+          <View className="result-section show">
             <View className="result-tabs">
               <View
-                className={`tab-item ${activeTranslationType === 'formal' ? 'active' : ''}`}
-                onClick={() => setActiveTranslationType('formal')}
+                className={`tab-item ${activeTab === 'standard' ? 'active' : ''}`}
+                onClick={() => setActiveTab('standard')}
               >
-                <Text className="tab-text">标准翻译</Text>
+                标准翻译
               </View>
               <View
-                className={`tab-item ${activeTranslationType === 'casual' ? 'active' : ''}`}
-                onClick={() => setActiveTranslationType('casual')}
+                className={`tab-item ${activeTab === 'colloquial' ? 'active' : ''}`}
+                onClick={() => setActiveTab('colloquial')}
               >
-                <Text className="tab-text">地道口语</Text>
+                地道口语
               </View>
             </View>
 
             <View className="result-content">
-              <View className="result-header">
-                <Text className="result-text">
-                  {activeTranslationType === 'formal'
-                    ? translationResult.formal
-                    : translationResult.casual}
-                </Text>
-                <View className="result-actions">
-                  <View className="result-btn" onClick={handlePlayAudio}>
-                    <AtIcon value="play" size="16" color="#6366f1" />
-                  </View>
-                  <View
-                    className="result-btn"
-                    onClick={() =>
-                      handleCopyText(
-                        activeTranslationType === 'formal'
-                          ? translationResult.formal
-                          : translationResult.casual
-                      )
-                    }
-                  >
-                    <AtIcon value="copy" size="16" color="#6366f1" />
-                  </View>
-                  <View className="result-btn" onClick={handleFavorite}>
-                    <AtIcon value="heart" size="16" color="#6366f1" />
+              <View className="result-item">
+                <View className="result-header">
+                  <Text className="result-title">
+                    <Text className={`title-icon ${activeTab}`}>
+                      {activeTab === 'standard' ? '📖' : '💬'}
+                    </Text>
+                    {activeTab === 'standard' ? '标准翻译' : '地道表达'}
+                  </Text>
+
+                  <View className="result-actions">
+                    <View
+                      className="action-btn copy-btn"
+                      onClick={() =>
+                        copyText(
+                          activeTab === 'standard'
+                            ? translateResult.standard
+                            : translateResult.colloquial
+                        )
+                      }
+                    >
+                      <AtIcon value="copy" />
+                      <Text>复制</Text>
+                    </View>
+
+                    <View
+                      className={`action-btn play-btn ${playingAudio === `${activeTab}-audio` ? 'playing' : ''}`}
+                      onClick={() =>
+                        playAudio(
+                          activeTab === 'standard'
+                            ? translateResult.standard
+                            : translateResult.colloquial,
+                          activeTab
+                        )
+                      }
+                    >
+                      <AtIcon
+                        value={
+                          playingAudio === `${activeTab}-audio`
+                            ? 'pause'
+                            : 'play'
+                        }
+                      />
+                      <Text>
+                        {playingAudio === `${activeTab}-audio`
+                          ? '停止'
+                          : '朗读'}
+                      </Text>
+                    </View>
                   </View>
                 </View>
+
+                <Text className={`result-text ${activeTab}`}>
+                  {activeTab === 'standard'
+                    ? translateResult.standard
+                    : translateResult.colloquial}
+                </Text>
               </View>
             </View>
           </View>
         )}
+      </View>
 
-        {/* 实用短语推荐 */}
-        <View className="phrases-section">
-          <Text className="section-title">实用短语</Text>
-          <View className="phrases-list">
-            {usefulPhrases.map((phrase, index) => (
-              <View
-                key={index}
-                className="phrase-item"
-                onClick={() => setInputText(phrase.chinese)}
-              >
-                <Text className="phrase-chinese">{phrase.chinese}</Text>
-                <Text className="phrase-english">{phrase.english}</Text>
-              </View>
-            ))}
+      {/* 快速短语 */}
+      <View className="quick-phrases">
+        <Text className="section-title">
+          <Text className="title-icon">⚡</Text>
+          常用短语
+        </Text>
+
+        <View className="phrases-grid">
+          {quickPhrases.map((phrase, index) => (
+            <View
+              key={index}
+              className="phrase-item"
+              onClick={() => setInputText(phrase.template)}
+            >
+              <Text className="phrase-icon">{phrase.icon}</Text>
+              <Text className="phrase-text">{phrase.text}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* 翻译历史 */}
+      <View className="history-section">
+        <View className="section-header">
+          <Text className="section-title">
+            <Text className="title-icon">📝</Text>
+            翻译历史
+          </Text>
+
+          <View
+            className="view-all-btn"
+            onClick={() =>
+              Taro.navigateTo({ url: '/pages/translate-history/index' })
+            }
+          >
+            查看全部
           </View>
+        </View>
+
+        <View className="history-list">
+          {history.slice(0, 3).map(item => (
+            <View key={item.id} className="history-item">
+              <View className="history-content">
+                <Text className="original-text">{item.original}</Text>
+                <Text className="translated-text">{item.result.standard}</Text>
+                <Text className="history-time">
+                  {formatTime(item.timestamp)}
+                </Text>
+              </View>
+
+              <View className="history-actions">
+                <View
+                  className="history-action-btn"
+                  onClick={() => setInputText(item.original)}
+                >
+                  重新翻译
+                </View>
+              </View>
+            </View>
+          ))}
         </View>
       </View>
     </View>
   )
 }
 
-export default withPageErrorBoundary(TranslatePage, {
-  pageName: '智能翻译',
-  enableErrorReporting: true,
-  showRetry: true,
-  onError: (error, errorInfo) => {
-    console.log('智能翻译页面发生错误:', error, errorInfo)
-  },
-})
+export default TranslatePage

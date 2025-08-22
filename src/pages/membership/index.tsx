@@ -1,314 +1,374 @@
 import { useState } from 'react'
+import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { View, Text, ScrollView } from '@tarojs/components'
-import { AtIcon, AtButton, AtModal } from 'taro-ui'
-import { safeAsync, safeEventHandler } from '@/utils'
-import { withPageErrorBoundary } from '@/components/ErrorBoundary/PageErrorBoundary'
-import { CustomNavBar, GradientCard } from '../../components/common'
+import { AtIcon } from 'taro-ui'
+import { useUserStore } from '../../stores/user'
 import './index.scss'
 
-interface MembershipPlan {
+interface Plan {
   id: string
   name: string
+  description: string
   price: number
   originalPrice?: number
   period: string
+  discount?: string
   features: string[]
-  popular?: boolean
-  badge?: string
-  gradient: 'primary' | 'orange' | 'purple'
+  recommended?: boolean
 }
 
-const Membership = () => {
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState<MembershipPlan | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [currentPlan] = useState('free')
+const MembershipPage = () => {
+  const { upgradeMembership } = useUserStore()
 
-  const membershipPlans: MembershipPlan[] = [
-    {
-      id: 'monthly',
-      name: '月度Pro',
-      price: 39,
-      period: '月',
-      features: [
-        '无限次AI对话',
-        '专业发音评分',
-        '全部话题解锁',
-        '学习数据分析',
-      ],
-      gradient: 'primary',
-    },
-    {
-      id: 'yearly',
-      name: '年度Pro',
-      price: 199,
-      originalPrice: 468,
-      period: '年',
-      features: [
-        '月度Pro所有功能',
-        '离线学习模式',
-        '专属客服支持',
-        '优先新功能体验',
-        '学习成就徽章',
-      ],
-      popular: true,
-      badge: '最受欢迎',
-      gradient: 'orange',
-    },
-    {
-      id: 'lifetime',
-      name: '终身Pro',
-      price: 999,
-      period: '终身',
-      features: [
-        '永久享受所有功能',
-        '终身免费更新',
-        '专属学习顾问',
-        'VIP学习社群',
-        '个人定制课程',
-      ],
-      gradient: 'purple',
-    },
-  ]
+  const [selectedPlan, setSelectedPlan] = useState('yearly')
+  const [selectedPayment, setSelectedPayment] = useState('wechat')
+  const [isPurchasing, setIsPurchasing] = useState(false)
 
-  // 会员权益对比数据
-  const memberBenefits = [
+  // 会员权益
+  const benefits = [
     {
-      icon: '💬',
-      title: '无限AI对话',
-      free: '每日5次',
-      pro: '无限制',
+      icon: '🚀',
+      title: '无限使用',
+      description: '所有功能无限制使用',
     },
     {
       icon: '🎯',
-      title: '发音评分',
-      free: '基础版',
-      pro: '专业版',
-    },
-    {
-      icon: '📚',
-      title: '话题课程',
-      free: '基础话题',
-      pro: '全部话题',
+      title: '自定义话题',
+      description: '创建专属对话话题',
     },
     {
       icon: '📊',
-      title: '学习报告',
-      free: '简单统计',
-      pro: '详细分析',
+      title: '详细报告',
+      description: '专业学习分析报告',
     },
     {
-      icon: '💾',
-      title: '离线功能',
-      free: '不支持',
-      pro: '完全支持',
+      icon: '🎓',
+      title: '专属计划',
+      description: '个性化学习计划',
+    },
+    {
+      icon: '⚡',
+      title: '优先支持',
+      description: '专属客服优先响应',
+    },
+    {
+      icon: '🔄',
+      title: '数据同步',
+      description: '多设备数据同步',
     },
   ]
 
-  const handlePlanSelect = safeEventHandler((plan: MembershipPlan) => {
-    setSelectedPlan(plan)
-    setShowPurchaseModal(true)
-  }, 'plan-select')
+  // 功能对比数据
+  const comparisonFeatures = [
+    { feature: '每日对话次数', free: '10次', premium: '无限制' },
+    { feature: '翻译功能', free: '3次/天', premium: '无限制' },
+    { feature: '拍照短文', free: '3次/天', premium: '无限制' },
+    { feature: '自定义话题', free: '✗', premium: '✓' },
+    { feature: '学习报告', free: '基础版', premium: '专业版' },
+    { feature: '广告', free: '有广告', premium: '无广告' },
+    { feature: '客服支持', free: '普通', premium: '优先' },
+  ]
 
-  const handlePurchase = safeAsync(async () => {
-    if (!selectedPlan) return
+  // 套餐计划
+  const plans: Plan[] = [
+    {
+      id: 'monthly',
+      name: '月度会员',
+      description: '按月订阅，随时取消',
+      price: 29,
+      period: '月',
+      features: [
+        '所有功能无限使用',
+        '创建自定义话题',
+        '详细学习报告',
+        '无广告体验',
+        '优先客服支持',
+      ],
+    },
+    {
+      id: 'yearly',
+      name: '年度会员',
+      description: '性价比最高，推荐选择',
+      price: 198,
+      originalPrice: 348,
+      period: '年',
+      discount: '限时43%OFF',
+      recommended: true,
+      features: [
+        '所有月度会员权益',
+        '专属学习计划定制',
+        '多设备数据同步',
+        '学习成果认证',
+        '专属学习社群',
+        '定期功能更新抢先体验',
+      ],
+    },
+    {
+      id: 'lifetime',
+      name: '终身会员',
+      description: '一次购买，终身享用',
+      price: 599,
+      originalPrice: 999,
+      period: '终身',
+      discount: '限时40%OFF',
+      features: [
+        '所有会员权益永久享用',
+        'AI学习助手个性化训练',
+        '专业口语水平认证',
+        '定期线上学习活动',
+        '终身免费功能更新',
+        '专属VIP客服通道',
+      ],
+    },
+  ]
 
-    setIsLoading(true)
-    // 模拟购买流程
-    await new Promise(resolve => setTimeout(resolve, 2000))
+  // 支付方式
+  const paymentMethods = [
+    { id: 'wechat', name: '微信支付', icon: '💚' },
+    { id: 'alipay', name: '支付宝', icon: '💙' },
+  ]
 
-    Taro.showToast({ title: '购买成功！', icon: 'success' })
-    setShowPurchaseModal(false)
-    setIsLoading(false)
-  }, 'api')
+  // 选择套餐
+  const handleSelectPlan = (planId: string) => {
+    setSelectedPlan(planId)
+  }
 
-  // 返回上一页
-  const _handleBack = safeEventHandler(() => {
-    Taro.navigateBack()
-  }, 'back')
+  // 选择支付方式
+  const handleSelectPayment = (paymentId: string) => {
+    setSelectedPayment(paymentId)
+  }
+
+  // 购买会员
+  const handlePurchase = async () => {
+    const plan = plans.find(p => p.id === selectedPlan)
+    if (!plan) return
+
+    setIsPurchasing(true)
+
+    try {
+      // 模拟支付流程
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      // 模拟支付成功
+      const success = Math.random() > 0.2 // 80% 成功率
+
+      if (success) {
+        // 升级会员
+        await upgradeMembership({
+          isPremium: true,
+          type: selectedPlan as 'monthly' | 'yearly' | 'lifetime',
+          expiredAt:
+            selectedPlan === 'lifetime'
+              ? Date.now() + 100 * 365 * 24 * 60 * 60 * 1000 // 100年后
+              : selectedPlan === 'yearly'
+                ? Date.now() + 365 * 24 * 60 * 60 * 1000 // 1年后
+                : Date.now() + 30 * 24 * 60 * 60 * 1000, // 1个月后
+        })
+
+        Taro.showModal({
+          title: '购买成功！',
+          content: `恭喜您成功开通${plan.name}！现在可以无限制使用所有功能了。`,
+          showCancel: false,
+          confirmText: '开始体验',
+          success: () => {
+            Taro.switchTab({ url: '/pages/index/index' })
+          },
+        })
+      } else {
+        throw new Error('支付失败')
+      }
+    } catch (error) {
+      console.error('购买会员失败:', error)
+      Taro.showModal({
+        title: '购买失败',
+        content: '支付过程中发生错误，请稍后重试。如有问题请联系客服。',
+        showCancel: false,
+        confirmText: '知道了',
+      })
+    } finally {
+      setIsPurchasing(false)
+    }
+  }
+
+  const selectedPlanData = plans.find(p => p.id === selectedPlan)
 
   return (
     <View className="membership-page">
-      <CustomNavBar title="开通会员" backgroundColor="#FFD700" />
-      <ScrollView className="content-area" scrollY>
-        {/* Hero区域 */}
-        <View className="hero-section">
-          <View className="hero-icon">
-            <Text className="crown-emoji">👑</Text>
-          </View>
-          <Text className="hero-title">升级Pro会员</Text>
-          <Text className="hero-subtitle">解锁全部功能，让英语学习更高效</Text>
+      {/* 页面头部 */}
+      <View className="membership-header">
+        <View className="header-content">
+          <Text className="crown-icon">👑</Text>
+          <Text className="header-title">开通会员</Text>
+          <Text className="header-subtitle">
+            解锁所有高级功能{'\n'}享受更好的学习体验
+          </Text>
+        </View>
+      </View>
+
+      {/* 会员权益 */}
+      <View className="benefits-section">
+        <Text className="section-title">会员专享权益</Text>
+        <Text className="section-subtitle">让学习更高效，体验更完美</Text>
+
+        <View className="benefits-grid">
+          {benefits.map((benefit, index) => (
+            <View key={index} className="benefit-item">
+              <Text className="benefit-icon">{benefit.icon}</Text>
+              <Text className="benefit-title">{benefit.title}</Text>
+              <Text className="benefit-desc">{benefit.description}</Text>
+            </View>
+          ))}
         </View>
 
-        {/* 当前状态卡片 */}
-        <View className="status-section">
-          <View className="status-card">
-            <View className="status-content">
-              <Text className="status-label">当前版本</Text>
-              <Text className="status-value">
-                {currentPlan === 'free' ? '免费版' : 'Pro版'}
-              </Text>
-              {currentPlan === 'free' && (
-                <Text className="status-desc">升级Pro解锁更多功能</Text>
-              )}
-            </View>
-            <View className="status-icon">
-              <Text className="status-emoji">
-                {currentPlan === 'free' ? '🔒' : '🔓'}
-              </Text>
-            </View>
-          </View>
-        </View>
+        {/* 功能对比 */}
+        <View className="comparison-card">
+          <Text className="comparison-title">功能对比</Text>
 
-        {/* 会员权益对比 */}
-        <View className="benefits-section">
-          <Text className="section-title">Pro会员权益</Text>
-          <View className="benefits-list">
-            {memberBenefits.map((benefit, index) => (
-              <View key={index} className="benefit-item">
-                <View className="benefit-icon">
-                  <Text className="benefit-emoji">{benefit.icon}</Text>
-                </View>
-                <View className="benefit-content">
-                  <Text className="benefit-title">{benefit.title}</Text>
-                  <View className="benefit-comparison">
-                    <Text className="benefit-free">免费：{benefit.free}</Text>
-                    <Text className="benefit-pro">Pro：{benefit.pro}</Text>
+          <View className="comparison-table">
+            <View className="table-header">
+              <Text className="header-cell feature">功能特性</Text>
+              <Text className="header-cell free">免费版</Text>
+              <Text className="header-cell premium">会员版</Text>
+            </View>
+
+            <View className="table-rows">
+              {comparisonFeatures.map((item, index) => (
+                <View key={index} className="table-row">
+                  <Text className="row-cell feature">{item.feature}</Text>
+                  <View className="row-cell free">
+                    {item.free === '✗' ? (
+                      <AtIcon value="close" className="close-icon" />
+                    ) : (
+                      <Text>{item.free}</Text>
+                    )}
+                  </View>
+                  <View className="row-cell premium">
+                    {item.premium === '✓' ? (
+                      <AtIcon value="check" className="check-icon" />
+                    ) : item.premium === '无限制' ? (
+                      <View
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8rpx',
+                        }}
+                      >
+                        <Text className="crown-icon">👑</Text>
+                        <Text>无限</Text>
+                      </View>
+                    ) : (
+                      <Text>{item.premium}</Text>
+                    )}
                   </View>
                 </View>
+              ))}
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* 套餐选择 */}
+      <View className="plans-section">
+        <Text className="plans-title">选择套餐</Text>
+
+        <View className="plans-grid">
+          {plans.map(plan => (
+            <View
+              key={plan.id}
+              className={`plan-card ${plan.recommended ? 'recommended' : ''} ${selectedPlan === plan.id ? 'selected' : ''}`}
+              onClick={() => handleSelectPlan(plan.id)}
+            >
+              {plan.recommended && (
+                <View className="recommend-badge">推荐</View>
+              )}
+
+              <View className="plan-header">
+                <Text className="plan-name">{plan.name}</Text>
+                <Text className="plan-desc">{plan.description}</Text>
+              </View>
+
+              <View className="plan-price">
+                <View className="price-container">
+                  <Text className="currency">¥</Text>
+                  <Text className="amount">{plan.price}</Text>
+                  <Text className="period">/{plan.period}</Text>
+                </View>
+
+                {plan.originalPrice && (
+                  <Text className="original-price">
+                    原价 ¥{plan.originalPrice}
+                  </Text>
+                )}
+
+                {plan.discount && (
+                  <Text className="discount-label">{plan.discount}</Text>
+                )}
+              </View>
+
+              <View className="plan-features">
+                {plan.features.map((feature, index) => (
+                  <View key={index} className="feature-item">
+                    <AtIcon value="check" className="feature-icon" />
+                    <Text>{feature}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <View
+                className={`select-btn ${selectedPlan === plan.id ? 'primary' : 'secondary'}`}
+              >
+                {selectedPlan === plan.id ? '已选择' : '选择此套餐'}
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* 支付区域 */}
+      <View className="payment-section">
+        <View className="payment-methods">
+          <Text className="methods-title">支付方式</Text>
+
+          <View className="methods-list">
+            {paymentMethods.map(method => (
+              <View
+                key={method.id}
+                className={`method-item ${selectedPayment === method.id ? 'selected' : ''}`}
+                onClick={() => handleSelectPayment(method.id)}
+              >
+                <Text className="method-icon">{method.icon}</Text>
+                <Text className="method-name">{method.name}</Text>
               </View>
             ))}
           </View>
         </View>
 
-        {/* 价格方案 */}
-        <View className="plans-section">
-          <Text className="section-title">选择订阅方案</Text>
-          <View className="plans-container">
-            {membershipPlans.map(plan => (
-              <GradientCard
-                key={plan.id}
-                className={`plan-card ${plan.popular ? 'popular' : ''}`}
-                gradient={plan.gradient}
-              >
-                {plan.badge && (
-                  <View className="plan-badge">
-                    <Text className="badge-text">{plan.badge}</Text>
-                  </View>
-                )}
-
-                <View className="plan-header">
-                  <Text className="plan-name">{plan.name}</Text>
-                  <View className="plan-price">
-                    <Text className="price-symbol">¥</Text>
-                    <Text className="price-amount">{plan.price}</Text>
-                    <Text className="price-period">/{plan.period}</Text>
-                  </View>
-                  {plan.originalPrice && (
-                    <Text className="original-price">
-                      原价 ¥{plan.originalPrice}
-                    </Text>
-                  )}
-                </View>
-
-                <View className="plan-features">
-                  {plan.features.map((feature, index) => (
-                    <View key={index} className="feature-item">
-                      <AtIcon value="check" size="14" color="white" />
-                      <Text className="feature-text">{feature}</Text>
-                    </View>
-                  ))}
-                </View>
-
-                <View className="plan-action">
-                  <AtButton
-                    className="plan-btn"
-                    onClick={() => handlePlanSelect(plan)}
-                  >
-                    选择此方案
-                  </AtButton>
-                </View>
-              </GradientCard>
-            ))}
-          </View>
+        <View
+          className="purchase-btn"
+          onClick={handlePurchase}
+          style={{
+            opacity: isPurchasing ? 0.7 : 1,
+            pointerEvents: isPurchasing ? 'none' : 'auto',
+          }}
+        >
+          <Text className="crown-icon">👑</Text>
+          <Text>
+            {isPurchasing
+              ? '处理中...'
+              : `立即开通 ¥${selectedPlanData?.price}`}
+          </Text>
         </View>
 
-        {/* 特色功能展示 */}
-        <View className="features-showcase">
-          <Text className="section-title">Pro版专享功能</Text>
-          <View className="showcase-grid">
-            <View className="showcase-item">
-              <Text className="showcase-icon">🎯</Text>
-              <Text className="showcase-title">智能学习计划</Text>
-              <Text className="showcase-desc">
-                基于你的水平制定个性化学习路径
-              </Text>
-            </View>
-            <View className="showcase-item">
-              <Text className="showcase-icon">📊</Text>
-              <Text className="showcase-title">详细学习报告</Text>
-              <Text className="showcase-desc">
-                深度分析学习数据，追踪进步轨迹
-              </Text>
-            </View>
-            <View className="showcase-item">
-              <Text className="showcase-icon">🏆</Text>
-              <Text className="showcase-title">成就系统</Text>
-              <Text className="showcase-desc">获得学习徽章，激励持续进步</Text>
-            </View>
-            <View className="showcase-item">
-              <Text className="showcase-icon">💬</Text>
-              <Text className="showcase-title">专属客服</Text>
-              <Text className="showcase-desc">7x24小时专业客服支持</Text>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* 购买确认弹窗 */}
-      <AtModal
-        isOpened={showPurchaseModal}
-        onClose={() => setShowPurchaseModal(false)}
-      >
-        <View className="purchase-modal">
-          <View className="modal-header">
-            <Text className="modal-title">确认购买</Text>
-          </View>
-          <View className="modal-content">
-            <Text className="plan-name">{selectedPlan?.name}</Text>
-            <View className="price-info">
-              <Text className="price-text">¥{selectedPlan?.price}</Text>
-              <Text className="period-text">/{selectedPlan?.period}</Text>
-            </View>
-          </View>
-          <View className="modal-actions">
-            <AtButton
-              className="cancel-btn"
-              onClick={() => setShowPurchaseModal(false)}
-            >
-              取消
-            </AtButton>
-            <AtButton
-              type="primary"
-              className="confirm-btn"
-              onClick={handlePurchase}
-              loading={isLoading}
-            >
-              确认支付
-            </AtButton>
-          </View>
-        </View>
-      </AtModal>
+        <Text className="terms-text">
+          点击购买即表示同意
+          <Text className="link">《用户协议》</Text>和
+          <Text className="link">《隐私政策》</Text>
+          {'\n'}
+          7天无理由退款，随时可取消自动续费
+        </Text>
+      </View>
     </View>
   )
 }
 
-export default withPageErrorBoundary(Membership, {
-  pageName: '会员中心',
-  enableErrorReporting: true,
-  showRetry: true,
-  onError: (error, errorInfo) => {
-    console.log('会员中心页面发生错误:', error, errorInfo)
-  },
-})
+export default MembershipPage

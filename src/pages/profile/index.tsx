@@ -1,255 +1,414 @@
 import { useState } from 'react'
+import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { View, Text, Image, ScrollView, Switch } from '@tarojs/components'
-import { AtIcon, AtModal } from 'taro-ui'
-import { useUserStore, useSettingsStore } from '@/stores'
-import { safeEventHandler } from '@/utils'
-import { withPageErrorBoundary } from '@/components/ErrorBoundary/PageErrorBoundary'
-import { GradientCard, StatCard } from '../../components/common'
+import {
+  AtIcon,
+  AtModal,
+  AtModalHeader,
+  AtModalContent,
+  AtModalAction,
+  AtButton,
+} from 'taro-ui'
+import { useUserStore } from '../../stores/user'
 import './index.scss'
 
-const Profile = () => {
-  const { user, logout } = useUserStore()
-  const { autoPlay: _autoPlay, notifications: _notifications } =
-    useSettingsStore()
+const ProfilePage = () => {
+  const { profile, membership, logout } = useUserStore()
 
   const [showLogoutModal, setShowLogoutModal] = useState(false)
-  const [studyReminder, setStudyReminder] = useState(true)
-  const [voiceFeedback, setVoiceFeedback] = useState(false)
-  const [studyLevel] = useState('中级')
+  const [notifications, setNotifications] = useState(true)
+  const [autoPlay, setAutoPlay] = useState(true)
 
-  // 学习成就数据
-  const achievements = [
+  // 菜单数据
+  const menuSections = [
     {
-      icon: '📅',
-      number: '15',
-      label: '连续打卡',
-      color: '#6366f1',
+      title: '学习工具',
+      items: [
+        {
+          id: 'vocabulary',
+          title: '背单词',
+          desc: '智能记忆，高效背词',
+          icon: 'book',
+          iconClass: 'blue',
+          page: '/pages/vocabulary/index',
+        },
+        {
+          id: 'translate-history',
+          title: '翻译历史',
+          desc: '查看翻译记录',
+          icon: 'clock',
+          iconClass: 'green',
+          page: '/pages/translate-history/index',
+        },
+        {
+          id: 'photo-story',
+          title: '拍照短文',
+          desc: '图片描述练习',
+          icon: 'camera',
+          iconClass: 'purple',
+          page: '/pages/photo-story/index',
+        },
+      ],
     },
     {
-      icon: '💬',
-      number: '128',
-      label: '对话次数',
-      color: '#10b981',
+      title: '学习设置',
+      items: [
+        {
+          id: 'study-plan',
+          title: '学习计划',
+          desc: '制定专属学习计划',
+          icon: 'calendar',
+          iconClass: 'orange',
+          action: 'navigate',
+        },
+        {
+          id: 'difficulty',
+          title: '难度设置',
+          desc: '调整学习难度',
+          icon: 'settings',
+          iconClass: 'indigo',
+          action: 'navigate',
+        },
+        {
+          id: 'reminders',
+          title: '学习提醒',
+          desc: '设置学习提醒时间',
+          icon: 'bell',
+          iconClass: 'yellow',
+          action: 'toggle',
+          value: notifications,
+          onChange: setNotifications,
+        },
+        {
+          id: 'auto-play',
+          title: '自动播放',
+          desc: '自动播放语音内容',
+          icon: 'sound',
+          iconClass: 'pink',
+          action: 'toggle',
+          value: autoPlay,
+          onChange: setAutoPlay,
+        },
+      ],
     },
     {
-      icon: '⏰',
-      number: '36',
-      label: '学习时长',
-      unit: 'h',
-      color: '#f97316',
+      title: '其他',
+      items: [
+        {
+          id: 'feedback',
+          title: '意见反馈',
+          desc: '帮助我们改进产品',
+          icon: 'message',
+          iconClass: 'blue',
+          action: 'feedback',
+        },
+        {
+          id: 'about',
+          title: '关于我们',
+          desc: '了解开口鸭',
+          icon: 'help',
+          iconClass: 'gray',
+          action: 'about',
+        },
+        {
+          id: 'privacy',
+          title: '隐私政策',
+          desc: '查看隐私条款',
+          icon: 'lock',
+          iconClass: 'gray',
+          action: 'privacy',
+        },
+      ],
     },
   ]
 
-  // 功能菜单项
-  const menuItems = [
-    {
-      title: '个人信息',
-      icon: '👤',
-      path: '/pages/profile/info',
-    },
-    {
-      title: '学习记录',
-      icon: '🕐',
-      path: '/pages/profile/records',
-    },
-    {
-      title: '我的收藏',
-      icon: '⭐',
-      path: '/pages/profile/favorites',
-    },
-    {
-      title: '帮助中心',
-      icon: '❓',
-      path: '/pages/profile/help',
-    },
-  ]
+  // 处理菜单点击
+  const handleMenuClick = (item: {
+    id: string
+    action?: string
+    page?: string
+    value?: boolean
+    onChange?: (value: boolean) => void
+  }) => {
+    switch (item.action) {
+      case 'navigate':
+        if (item.page) {
+          Taro.navigateTo({ url: item.page })
+        } else {
+          Taro.showToast({
+            title: '功能开发中',
+            icon: 'none',
+          })
+        }
+        break
 
-  const handleMenuClick = safeEventHandler((path: string) => {
-    Taro.navigateTo({ url: path })
-  }, 'menu-click')
+      case 'toggle':
+        // 切换开关状态
+        if (item.onChange) {
+          item.onChange(!item.value)
+        }
+        break
 
-  const handleMembershipClick = safeEventHandler(() => {
-    Taro.navigateTo({ url: '/pages/membership/index' })
-  }, 'membership-click')
+      case 'feedback':
+        handleFeedback()
+        break
 
-  const handleAvatarClick = safeEventHandler(() => {
-    Taro.chooseMedia({
+      case 'about':
+        handleAbout()
+        break
+
+      case 'privacy':
+        handlePrivacy()
+        break
+
+      default:
+        if (item.page) {
+          Taro.navigateTo({ url: item.page })
+        }
+        break
+    }
+  }
+
+  // 编辑头像
+  const handleEditAvatar = () => {
+    Taro.chooseImage({
       count: 1,
-      mediaType: ['image'],
+      sizeType: ['compressed'],
       sourceType: ['album', 'camera'],
-      success: () => {
-        Taro.showToast({ title: '头像更新成功', icon: 'success' })
+      success: res => {
+        console.log('选择头像:', res.tempFilePaths[0])
+        Taro.showToast({
+          title: '头像上传功能开发中',
+          icon: 'none',
+        })
       },
     })
-  }, 'avatar-click')
+  }
 
-  const handleStudyLevelClick = safeEventHandler(() => {
-    Taro.showActionSheet({
-      itemList: ['初级', '中级', '高级'],
-      success: () => {
-        Taro.showToast({ title: '学习难度已更新', icon: 'success' })
-      },
+  // 会员相关操作
+  const handleMembershipAction = (action: string) => {
+    switch (action) {
+      case 'upgrade':
+        Taro.navigateTo({ url: '/pages/membership/index' })
+        break
+      case 'manage':
+        Taro.showToast({
+          title: '会员管理功能开发中',
+          icon: 'none',
+        })
+        break
+      default:
+        break
+    }
+  }
+
+  // 意见反馈
+  const handleFeedback = () => {
+    Taro.showModal({
+      title: '意见反馈',
+      content: '请通过微信客服或邮件联系我们:\nservice@openduck.com',
+      showCancel: false,
+      confirmText: '知道了',
     })
-  }, 'study-level-click')
+  }
+
+  // 关于我们
+  const handleAbout = () => {
+    Taro.showModal({
+      title: '关于开口鸭',
+      content: '开口鸭 v1.0.0\n让英语学习更有趣\n\n© 2024 OpenDuck Team',
+      showCancel: false,
+      confirmText: '知道了',
+    })
+  }
+
+  // 隐私政策
+  const handlePrivacy = () => {
+    Taro.showToast({
+      title: '隐私政策页面开发中',
+      icon: 'none',
+    })
+  }
+
+  // 退出登录
+  const handleLogout = () => {
+    setShowLogoutModal(true)
+  }
+
+  // 确认退出
+  const confirmLogout = () => {
+    logout()
+    setShowLogoutModal(false)
+    Taro.reLaunch({ url: '/pages/index/index' })
+  }
 
   return (
     <View className="profile-page">
-      <ScrollView className="content-area" scrollY>
-        {/* 用户信息卡片 */}
-        <View className="user-card">
-          <View className="user-background" />
-          <View className="user-content">
-            <View className="avatar-container" onClick={handleAvatarClick}>
-              <Image
-                className="avatar"
-                src={
-                  user?.avatar ||
-                  'https://img.icons8.com/color/96/000000/duck.png'
-                }
-              />
-              <View className="edit-icon">
-                <AtIcon value="edit" size="12" color="white" />
+      {/* 用户信息头部 */}
+      <View className="profile-header">
+        <View className="header-content">
+          <View className="avatar-container">
+            <View className="user-avatar" onClick={handleEditAvatar}>
+              <Text>🦆</Text>
+            </View>
+            <View className="edit-avatar">
+              <AtIcon value="edit" />
+            </View>
+            {membership.isPremium && (
+              <View className="membership-crown">👑</View>
+            )}
+          </View>
+
+          <View className="user-info">
+            <Text className="user-name">{profile.nickname}</Text>
+
+            <View className="user-level">
+              <Text className="level-badge">Lv.{profile.level}</Text>
+              <View className="level-progress">
+                <View className="progress-fill"></View>
               </View>
             </View>
 
-            <View className="user-info">
-              <Text className="username">{user?.nickname || '小明同学'}</Text>
-              <Text className="user-type">普通用户</Text>
-
-              <View className="level-info">
-                <View className="level-badge">
-                  <Text className="level-icon">⭐</Text>
-                  <Text className="level-text">等级</Text>
-                  <Text className="level-value">Lv.5</Text>
-                </View>
-                <View className="exp-info">
-                  <Text className="exp-icon">🔥</Text>
-                  <Text className="exp-text">经验</Text>
-                  <Text className="exp-value">1250/2000</Text>
-                </View>
+            <View className="user-stats">
+              <View className="stat-item">
+                <Text className="stat-number">{profile.studyDays}</Text>
+                <Text className="stat-label">学习天数</Text>
               </View>
-
-              <View className="exp-progress">
-                <View className="progress-bar" style={{ width: '62.5%' }} />
+              <View className="stat-item">
+                <Text className="stat-number">{profile.totalWords}</Text>
+                <Text className="stat-label">掌握单词</Text>
+              </View>
+              <View className="stat-item">
+                <Text className="stat-number">{profile.totalMinutes}</Text>
+                <Text className="stat-label">学习时长</Text>
               </View>
             </View>
           </View>
         </View>
+      </View>
 
-        {/* 会员推广卡片 */}
-        <GradientCard className="membership-promotion" gradient="orange">
-          <View className="membership-content" onClick={handleMembershipClick}>
-            <Text className="membership-title">成为开口鸭会员</Text>
-            <Text className="membership-subtitle">
-              解锁全部功能，无限次练习！
+      <View className="profile-content">
+        {/* 会员卡片 */}
+        <View
+          className={`membership-card ${membership.isPremium ? 'premium' : ''}`}
+        >
+          <View className="membership-content">
+            <View className="membership-title">
+              <Text className="crown-icon">👑</Text>
+              <Text className="title-text">
+                {membership.isPremium ? '会员用户' : '免费用户'}
+              </Text>
+            </View>
+
+            <Text className="membership-desc">
+              {membership.isPremium
+                ? '感谢您的支持！享受所有高级功能，学习无限制。'
+                : '升级会员，解锁所有功能，享受更好的学习体验。'}
             </Text>
-            <View className="membership-btn">
-              <Text className="btn-text">立即开通</Text>
-            </View>
-          </View>
-        </GradientCard>
 
-        {/* 学习成就 */}
-        <View className="achievements-section">
-          <View className="achievements-header">
-            <Text className="achievements-icon">🏆</Text>
-            <Text className="achievements-title">学习成就</Text>
-          </View>
-          <View className="achievements-grid">
-            {achievements.map((item, index) => (
-              <StatCard
-                key={index}
-                icon={item.icon}
-                number={`${item.number}${item.unit || ''}`}
-                label={item.label}
-                color={item.color}
-              />
-            ))}
-          </View>
-        </View>
-
-        {/* 学习设置 */}
-        <View className="settings-section">
-          <View className="settings-header">
-            <Text className="settings-icon">🎓</Text>
-            <Text className="settings-title">学习设置</Text>
-          </View>
-
-          <View className="setting-item">
-            <Text className="setting-label">每日学习提醒</Text>
-            <Switch
-              checked={studyReminder}
-              onChange={e => setStudyReminder(e.detail.value)}
-              color="#6366f1"
-            />
-          </View>
-
-          <View className="setting-item">
-            <Text className="setting-label">语音反馈</Text>
-            <Switch
-              checked={voiceFeedback}
-              onChange={e => setVoiceFeedback(e.detail.value)}
-              color="#6366f1"
-            />
-          </View>
-
-          <View
-            className="setting-item clickable"
-            onClick={handleStudyLevelClick}
-          >
-            <Text className="setting-label">学习难度</Text>
-            <View className="setting-value">
-              <Text className="value-text">{studyLevel}</Text>
-              <Text className="arrow-icon">›</Text>
+            <View className="membership-actions">
+              {membership.isPremium ? (
+                <>
+                  <View
+                    className="membership-btn"
+                    onClick={() => handleMembershipAction('manage')}
+                  >
+                    管理会员
+                  </View>
+                  <View
+                    className="membership-btn primary"
+                    onClick={() => handleMembershipAction('upgrade')}
+                  >
+                    续费会员
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View
+                    className="membership-btn"
+                    onClick={() => handleMembershipAction('upgrade')}
+                  >
+                    了解详情
+                  </View>
+                  <View
+                    className="membership-btn primary"
+                    onClick={() => handleMembershipAction('upgrade')}
+                  >
+                    立即升级
+                  </View>
+                </>
+              )}
             </View>
           </View>
         </View>
 
-        {/* 功能菜单 */}
-        <View className="menu-section">
-          {menuItems.map((item, index) => (
-            <View
-              key={index}
-              className="menu-item"
-              onClick={() => handleMenuClick(item.path)}
-            >
-              <View className="menu-icon">
-                <Text style={{ fontSize: '20px' }}>{item.icon}</Text>
+        {/* 菜单列表 */}
+        <View className="menu-sections">
+          {menuSections.map((section, sectionIndex) => (
+            <View key={sectionIndex} className="menu-section">
+              <Text className="section-title">{section.title}</Text>
+
+              <View className="menu-items">
+                {section.items.map(item => (
+                  <View
+                    key={item.id}
+                    className="menu-item"
+                    onClick={() => handleMenuClick(item)}
+                  >
+                    <View className={`menu-icon ${item.iconClass}`}>
+                      <AtIcon value={item.icon} />
+                    </View>
+
+                    <View className="menu-info">
+                      <Text className="menu-title">{item.title}</Text>
+                      <Text className="menu-desc">{item.desc}</Text>
+                    </View>
+
+                    <View className="menu-extra">
+                      {'action' in item && item.action === 'toggle' ? (
+                        <View
+                          className={`switch ${'value' in item && item.value ? 'active' : ''}`}
+                        >
+                          <View className="switch-handle"></View>
+                        </View>
+                      ) : (
+                        <AtIcon value="chevron-right" className="arrow-icon" />
+                      )}
+                    </View>
+                  </View>
+                ))}
               </View>
-              <Text className="menu-title">{item.title}</Text>
-              <Text className="menu-arrow">›</Text>
             </View>
           ))}
         </View>
-      </ScrollView>
+
+        {/* 退出登录 */}
+        <View className="logout-section">
+          <View className="logout-btn" onClick={handleLogout}>
+            <AtIcon value="blocked" />
+            <Text>退出登录</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 版本信息 */}
+      <Text className="version-info">开口鸭 v1.0.0</Text>
 
       {/* 退出登录确认弹窗 */}
-      <AtModal
-        isOpened={showLogoutModal}
-        title="确认退出"
-        content="确定要退出登录吗？"
-        onCancel={() => setShowLogoutModal(false)}
-        onConfirm={() => {
-          logout()
-          setShowLogoutModal(false)
-          Taro.showToast({ title: '已退出登录', icon: 'success' })
-          setTimeout(() => {
-            Taro.reLaunch({ url: '/pages/index/index' })
-          }, 1000)
-        }}
-        cancelText="取消"
-        confirmText="确定"
-      />
+      <AtModal isOpened={showLogoutModal}>
+        <AtModalHeader>确认退出登录？</AtModalHeader>
+        <AtModalContent>
+          退出登录后，本地的学习数据将被清除，确定要退出吗？
+        </AtModalContent>
+        <AtModalAction>
+          <AtButton onClick={() => setShowLogoutModal(false)}>取消</AtButton>
+          <AtButton type="primary" onClick={confirmLogout}>
+            确认退出
+          </AtButton>
+        </AtModalAction>
+      </AtModal>
     </View>
   )
 }
 
-export default withPageErrorBoundary(Profile, {
-  pageName: '个人中心',
-  enableErrorReporting: true,
-  showRetry: true,
-  onError: (error, errorInfo) => {
-    console.log('个人中心页面发生错误:', error, errorInfo)
-  },
-})
+export default ProfilePage
