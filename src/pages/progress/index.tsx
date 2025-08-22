@@ -1,166 +1,177 @@
 import { View, Text, ScrollView } from '@tarojs/components'
-import { AtIcon, AtProgress } from 'taro-ui'
-import { useUserStore, useVocabularyStore } from '@/stores'
-import { getUserLevelName, getUserLevelColor } from '@/utils'
+import { withPageErrorBoundary } from '@/components/ErrorBoundary/PageErrorBoundary'
+import { StatCard, ProgressRing } from '../../components/common'
 import './index.scss'
 
 const Progress = () => {
-  const { user } = useUserStore()
-  const { studiedWords } = useVocabularyStore()
+  // 今日概览数据
+  const todayOverview = {
+    dialogPractice: { count: 12, target: 20, percentage: 60 },
+    studyTime: { count: 25, target: 30, unit: '分钟' },
+    targetProgress: 70,
+  }
 
-  const progressData = [
+  // 本周学习数据
+  const weekData = [
+    { day: '一', completed: true, active: false },
+    { day: '二', completed: true, active: false },
+    { day: '三', completed: true, active: false },
+    { day: '四', completed: false, active: true },
+    { day: '五', completed: false, active: false },
+    { day: '六', completed: false, active: false },
+    { day: '日', completed: false, active: false },
+  ]
+
+  // 学习统计数据
+  const studyStats = [
     {
       title: '对话练习',
-      icon: 'message',
-      progress: 65,
-      total: 50,
-      completed: 32,
-      color: '#4A90E2',
+      icon: '💬',
+      count: 128,
+      progress: 85,
+      color: '#6366f1',
     },
     {
       title: '话题学习',
-      icon: 'bookmark',
-      progress: 40,
-      total: 25,
-      completed: 10,
-      color: '#50C878',
+      icon: '📚',
+      count: 45,
+      progress: 65,
+      color: '#10b981',
     },
-    {
-      title: '单词掌握',
-      icon: 'book',
-      progress: 78,
-      total: 200,
-      completed: 156,
-      color: '#FF9500',
-    },
-    {
-      title: '发音练习',
-      icon: 'sound',
-      progress: 55,
-      total: 100,
-      completed: 55,
-      color: '#9B59B6',
-    },
-  ]
-
-  const achievements = [
-    { title: '初学者', description: '完成第一次对话', icon: '🏆', unlocked: true },
-    { title: '单词达人', description: '学习100个单词', icon: '📚', unlocked: true },
-    { title: '口语新星', description: '发音评分超过80分', icon: '🎤', unlocked: false },
-    { title: '坚持不懈', description: '连续学习7天', icon: '💪', unlocked: false },
   ]
 
   return (
     <View className="progress-page">
       <ScrollView className="content-area" scrollY>
-        {/* 用户等级卡片 */}
-        <View className="level-card">
-          <View className="level-header">
-            <Text className="level-title">当前等级</Text>
-            <Text
-              className="level-name"
-              style={{ color: getUserLevelColor(user?.level || 'elementary') }}
-            >
-              {getUserLevelName(user?.level || 'elementary')}
-            </Text>
-          </View>
-
-          <View className="level-progress">
-            <AtProgress
-              percent={75}
-              strokeWidth={8}
-              color={getUserLevelColor(user?.level || 'elementary')}
-            />
-            <Text className="progress-text">距离下一等级还需 250 积分</Text>
-          </View>
-
-          <View className="level-stats">
-            <View className="stat-item">
-              <Text className="stat-number">{user?.points || 0}</Text>
-              <Text className="stat-label">总积分</Text>
-            </View>
-            <View className="stat-item">
-              <Text className="stat-number">{user?.studyDays || 0}</Text>
-              <Text className="stat-label">学习天数</Text>
-            </View>
-            <View className="stat-item">
-              <Text className="stat-number">{studiedWords.length}</Text>
-              <Text className="stat-label">已学单词</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* 学习进度 */}
-        <View className="progress-section">
-          <Text className="section-title">学习进度</Text>
-          {progressData.map((item, index) => (
-            <View key={index} className="progress-item">
-              <View className="item-header">
-                <View className="item-info">
-                  <AtIcon value={item.icon} size="20" color={item.color} />
-                  <Text className="item-title">{item.title}</Text>
-                </View>
-                <Text className="item-percent">{item.progress}%</Text>
+        {/* 今日概览卡片 */}
+        <View className="today-overview">
+          <View className="overview-header">
+            <View className="header-left">
+              <View className="calendar-icon">
+                <Text style={{ fontSize: '16px' }}>📅</Text>
               </View>
-
-              <AtProgress
-                percent={item.progress}
-                strokeWidth={6}
-                color={item.color}
-                className="item-progress"
-              />
-
-              <Text className="item-stats">
-                已完成 {item.completed} / {item.total}
-              </Text>
+              <Text className="overview-title">今日概览</Text>
             </View>
-          ))}
+          </View>
+
+          <View className="overview-content">
+            <View className="overview-stats">
+              <StatCard
+                number={todayOverview.dialogPractice.count}
+                label="对话练习"
+                icon="💬"
+                color="#6366f1"
+              />
+              <StatCard
+                number={`${todayOverview.studyTime.count}`}
+                label="学习时长(分)"
+                icon="⏰"
+                color="#10b981"
+              />
+            </View>
+
+            <View className="target-progress">
+              <View className="progress-info">
+                <ProgressRing
+                  percentage={todayOverview.targetProgress}
+                  size={60}
+                  color="#6366f1"
+                />
+                <View className="progress-text">
+                  <Text className="progress-label">目标</Text>
+                </View>
+              </View>
+            </View>
+          </View>
         </View>
 
-        {/* 成就系统 */}
-        <View className="achievement-section">
-          <Text className="section-title">成就徽章</Text>
-          <View className="achievement-grid">
-            {achievements.map((achievement, index) => (
-              <View
-                key={index}
-                className={`achievement-item ${achievement.unlocked ? 'unlocked' : 'locked'}`}
-              >
-                <Text className="achievement-icon">{achievement.icon}</Text>
-                <Text className="achievement-title">{achievement.title}</Text>
-                <Text className="achievement-description">{achievement.description}</Text>
-                {!achievement.unlocked && (
-                  <View className="locked-overlay">
-                    <AtIcon value="lock" size="16" color="#cccccc" />
-                  </View>
-                )}
+        {/* 本周进度 */}
+        <View className="week-progress">
+          <View className="week-header">
+            <View className="header-left">
+              <View className="chart-icon">
+                <Text style={{ fontSize: '16px' }}>📊</Text>
+              </View>
+              <Text className="week-title">本周进度</Text>
+            </View>
+            <Text className="week-subtitle">第3周</Text>
+          </View>
+
+          <View className="week-calendar">
+            {weekData.map((item, index) => (
+              <View key={index} className="calendar-day">
+                <View
+                  className={`day-indicator ${item.completed ? 'completed' : ''} ${item.active ? 'active' : ''}`}
+                >
+                  <Text className="day-number">{index + 1}</Text>
+                </View>
+                <Text className="day-label">{item.day}</Text>
               </View>
             ))}
+          </View>
+
+          <View className="week-legend">
+            <View className="legend-item">
+              <View className="legend-dot completed"></View>
+              <Text className="legend-text">已完成</Text>
+            </View>
+            <View className="legend-item">
+              <View className="legend-dot active"></View>
+              <Text className="legend-text">今天</Text>
+            </View>
+            <View className="legend-item">
+              <View className="legend-dot"></View>
+              <Text className="legend-text">未完成</Text>
+            </View>
           </View>
         </View>
 
         {/* 学习统计 */}
-        <View className="stats-section">
-          <Text className="section-title">本周学习</Text>
-          <View className="week-stats">
-            {['一', '二', '三', '四', '五', '六', '日'].map((day, index) => (
-              <View key={index} className="day-stat">
-                <View
-                  className={`day-bar ${index < 5 ? 'active' : ''}`}
-                  style={{
-                    height: `${Math.random() * 60 + 20}px`,
-                    backgroundColor: index < 5 ? '#4A90E2' : '#e0e0e0',
-                  }}
-                />
-                <Text className="day-label">{day}</Text>
+        <View className="study-statistics">
+          <View className="stats-header">
+            <View className="header-left">
+              <View className="stats-icon">
+                <Text style={{ fontSize: '16px' }}>📈</Text>
+              </View>
+              <Text className="stats-title">学习统计</Text>
+            </View>
+          </View>
+
+          <View className="stats-list">
+            {studyStats.map((stat, index) => (
+              <View key={index} className="stat-item">
+                <View className="stat-info">
+                  <View className="stat-icon-container">
+                    <Text style={{ fontSize: '18px' }}>{stat.icon}</Text>
+                  </View>
+                  <Text className="stat-title">{stat.title}</Text>
+                </View>
+                <View className="stat-data">
+                  <Text className="stat-count">{stat.count}次</Text>
+                  <View className="stat-progress-bar">
+                    <View
+                      className="progress-fill"
+                      style={{
+                        width: `${stat.progress}%`,
+                        backgroundColor: stat.color,
+                      }}
+                    />
+                  </View>
+                </View>
               </View>
             ))}
           </View>
-          <Text className="stats-summary">本周已学习 5 天，累计 180 分钟</Text>
         </View>
       </ScrollView>
     </View>
   )
 }
 
-export default Progress
+export default withPageErrorBoundary(Progress, {
+  pageName: '学习进度',
+  enableErrorReporting: true,
+  showRetry: true,
+  onError: (error, errorInfo) => {
+    console.log('学习进度页面发生错误:', error, errorInfo)
+  },
+})

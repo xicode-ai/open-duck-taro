@@ -81,6 +81,7 @@ export default [
       '.eslintrc.*',
       '*.min.js',
       '*.bundle.js',
+      'src/setupTests.ts',
     ],
   },
 ]

@@ -1,15 +1,15 @@
 export default {
   pages: [
     'pages/index/index',
+    'pages/translate/index',
+    'pages/vocabulary/index',
+    'pages/profile/index',
     'pages/chat/index',
     'pages/topics/index',
     'pages/topic-chat/index',
-    'pages/translate/index',
     'pages/translate-history/index',
     'pages/photo-story/index',
-    'pages/vocabulary/index',
     'pages/vocabulary-study/index',
-    'pages/profile/index',
     'pages/progress/index',
     'pages/membership/index',
   ],
@@ -22,7 +22,7 @@ export default {
   },
   tabBar: {
     color: '#999999',
-    selectedColor: '#4A90E2',
+    selectedColor: '#6366f1',
     backgroundColor: '#FFFFFF',
     borderStyle: 'white',
     list: [
@@ -33,16 +33,10 @@ export default {
         selectedIconPath: 'assets/icons/home-active.svg',
       },
       {
-        pagePath: 'pages/translate/index',
-        text: '翻译',
-        iconPath: 'assets/icons/translate.svg',
-        selectedIconPath: 'assets/icons/translate-active.svg',
-      },
-      {
-        pagePath: 'pages/vocabulary/index',
-        text: '单词',
-        iconPath: 'assets/icons/vocabulary.svg',
-        selectedIconPath: 'assets/icons/vocabulary-active.svg',
+        pagePath: 'pages/progress/index',
+        text: '进度',
+        iconPath: 'assets/icons/progress.svg',
+        selectedIconPath: 'assets/icons/progress-active.svg',
       },
       {
         pagePath: 'pages/profile/index',

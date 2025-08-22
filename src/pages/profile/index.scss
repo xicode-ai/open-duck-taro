@@ -1,160 +1,316 @@
 .profile-page {
-  height: 100vh;
-  background: var(--bg-secondary);
+  background-color: var(--bg-secondary);
+  min-height: 100vh;
+
+  .content-area {
+    padding: var(--spacing-md);
+    height: 100vh;
+  }
 }
 
-.content-area {
-  height: 100%;
-  padding-bottom: 120px;
-}
-
-.user-section {
-  position: relative;
-  background: white;
+/* 用户信息卡片 */
+.user-card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-medium);
   margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-light);
   overflow: hidden;
+  position: relative;
 
   .user-background {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 200px;
-    background: linear-gradient(135deg, #4a90e2 0%, #6ba3f0 100%);
+    height: 100%;
+    background: var(--gradient-primary);
   }
 
   .user-content {
     position: relative;
     z-index: 1;
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    gap: var(--spacing-md);
 
     .avatar-container {
       position: relative;
-      margin-right: var(--spacing-lg);
 
       .avatar {
-        width: 120px;
-        height: 120px;
-        border-radius: var(--radius-round);
-        border: 4px solid rgb(255 255 255 / 90%);
-        box-shadow: var(--shadow-medium);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.2);
       }
 
-      .avatar-edit {
+      .edit-icon {
         position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 36px;
-        height: 36px;
+        bottom: -2px;
+        right: -2px;
+        width: 20px;
+        height: 20px;
         background: var(--primary-color);
-        border-radius: var(--radius-round);
-        border: 2px solid white;
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: var(--shadow-light);
+        border: 2px solid white;
       }
     }
 
     .user-info {
+      flex: 1;
+
       .username {
-        display: block;
-        font-size: 36px;
+        font-size: 18px;
         font-weight: 600;
         color: white;
+        margin-bottom: 2px;
+      }
+
+      .user-type {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.8);
         margin-bottom: var(--spacing-sm);
-        text-shadow: 0 2px 8px rgb(0 0 0 / 20%);
       }
 
-      .user-level {
+      .level-info {
         display: flex;
-        align-items: center;
-        gap: var(--spacing-xs);
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-sm);
 
-        .level-text {
-          font-size: 28px;
-          font-weight: 500;
-          padding: var(--spacing-xs) var(--spacing-sm);
-          background: rgb(255 255 255 / 90%);
-          border-radius: var(--radius-small);
+        .level-badge,
+        .exp-info {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+
+          .level-icon,
+          .exp-icon {
+            font-size: 12px;
+          }
+
+          .level-text,
+          .exp-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.9);
+          }
+
+          .level-value,
+          .exp-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+          }
         }
+      }
 
-        .level-description {
-          font-size: 24px;
-          color: rgb(255 255 255 / 80%);
+      .exp-progress {
+        width: 100%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        overflow: hidden;
+
+        .progress-bar {
+          height: 100%;
+          background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+          border-radius: 2px;
+          transition: width 0.3s ease;
         }
       }
-    }
-  }
-
-  .stats-section {
-    display: flex;
-    padding: var(--spacing-lg);
-    background: rgb(255 255 255 / 95%);
-    backdrop-filter: blur(10px);
-
-    .stat-item {
-      flex: 1;
-      text-align: center;
-
-      .stat-number {
-        display: block;
-        font-size: 48px;
-        font-weight: 700;
-        color: var(--primary-color);
-        margin-bottom: var(--spacing-xs);
-      }
-
-      .stat-label {
-        display: block;
-        font-size: 24px;
-        color: var(--text-secondary);
-      }
-    }
-
-    .stat-divider {
-      width: 1px;
-      background: var(--border-light);
-      margin: var(--spacing-sm) 0;
     }
   }
 }
 
-.menu-section,
-.settings-section,
-.about-section {
+/* 会员推广卡片 */
+.membership-promotion {
+  background: var(--gradient-orange) !important;
   margin-bottom: var(--spacing-md);
 
-  .section-title {
-    font-size: 28px;
-    font-weight: 600;
-    color: var(--text-primary);
-    padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm);
+  .membership-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+
+    .membership-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .membership-subtitle {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.4;
+    }
+
+    .membership-btn {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      padding: 6px 16px;
+      backdrop-filter: blur(10px);
+
+      .btn-text {
+        font-size: 12px;
+        color: white;
+        font-weight: 500;
+      }
+    }
   }
 }
 
-.logout-section {
+/* 学习成就 */
+.achievements-section {
+  background: var(--bg-primary);
+  border-radius: var(--radius-medium);
   padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-light);
 
-  .logout-btn {
-    background: white;
-    border-radius: var(--radius-medium);
-    padding: var(--spacing-lg);
-    text-align: center;
-    box-shadow: var(--shadow-light);
-    transition: all 0.2s ease;
+  .achievements-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+
+    .achievements-icon {
+      font-size: 16px;
+    }
+
+    .achievements-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+  }
+
+  .achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+  }
+}
+
+/* 学习设置 */
+.settings-section {
+  background: var(--bg-primary);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-light);
+
+  .settings-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+
+    .settings-icon {
+      font-size: 16px;
+    }
+
+    .settings-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+  }
+
+  .setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) 0;
+    border-bottom: 1px solid var(--border-light);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &.clickable {
+      transition: background-color 0.2s;
+
+      &:active {
+        background-color: var(--bg-secondary);
+      }
+    }
+
+    .setting-label {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .setting-value {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+
+      .value-text {
+        font-size: 14px;
+        color: var(--primary-color);
+        font-weight: 500;
+      }
+
+      .arrow-icon {
+        font-size: 16px;
+        color: var(--text-tertiary);
+      }
+    }
+  }
+}
+
+/* 功能菜单 */
+.menu-section {
+  background: var(--bg-primary);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-light);
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-small);
+    transition: background-color 0.2s;
 
     &:active {
-      transform: scale(0.98);
-      background: #fff5f5;
+      background-color: var(--bg-secondary);
     }
 
-    .logout-text {
-      font-size: 32px;
-      color: #f44;
-      font-weight: 500;
+    .menu-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: var(--spacing-md);
+    }
+
+    .menu-title {
+      flex: 1;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .menu-arrow {
+      font-size: 16px;
+      color: var(--text-tertiary);
     }
   }
 }
+
+/* 渐变卡片样式增强 */
+.gradient-card {
+  &.membership-promotion {
+    background: var(--gradient-orange) !important;
+  }
+}
+
+/* 所有媒体查询已删除，使用 Taro 自动适配 */

@@ -12,17 +12,26 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
   const baseConfig: UserConfigExport<'webpack5'> = {
     projectName: 'open-duck',
     date: '2024-1-1',
-    designWidth: 750,
+    designWidth: 375,
     deviceRatio: {
       640: 2.34 / 2,
       750: 1,
-      375: 2,
+      375: 1,
+      414: 375 / 414,
+      428: 375 / 428,
+      390: 375 / 390,
+      393: 375 / 393,
+      360: 375 / 360,
       828: 1.81 / 2,
     },
     sourceRoot: 'src',
     outputRoot: 'dist',
     entry: 'src/app.ts',
-    plugins: ['@tarojs/plugin-framework-react', '@tarojs/plugin-platform-h5'],
+    plugins: [
+      '@tarojs/plugin-framework-react',
+      '@tarojs/plugin-platform-h5',
+      '@tarojs/plugin-platform-weapp',
+    ],
     defineConstants: {},
     copy: {
       patterns: [],
@@ -63,6 +72,18 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
         chunkFilename: 'css/[name].[chunkhash].css',
       },
       postcss: {
+        pxtransform: {
+          enable: true,
+          config: {
+            baseFontSize: 20,
+            unitPrecision: 5,
+            propList: ['*'],
+            selectorBlackList: [],
+            replace: true,
+            mediaQuery: false,
+            minPixelValue: 0,
+          },
+        },
         autoprefixer: {
           enable: true,
           config: {},

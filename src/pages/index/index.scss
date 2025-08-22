@@ -1,328 +1,469 @@
-.index-page {
+/* 首页主容器 - 参照截图优化布局 */
+.home-page {
   min-height: 100vh;
-  background: #f5f7fa;
-  padding: 24px 24px 120px;
+  background: #f5f5f7;
+  padding: 16px;
+  padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0) + 24px);
+  box-sizing: border-box;
 }
 
-/* 用户状态卡片 */
+/* 顶部用户状态卡片 - 参照截图优化：缩小高度 */
 .user-status-card {
   background: white;
-  border-radius: 24px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f0f1f5;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: none;
 
   .status-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
+    align-items: center;
+    margin-bottom: 16px; /* 从20px减少到16px */
 
     .status-title {
-      font-size: 14px;
+      font-size: 17px;
       font-weight: 600;
-      color: #333;
+      color: #000000;
     }
 
-    .membership-badge {
-      padding: 4px 8px;
+    .user-badge {
+      background: #f2f2f7;
+      color: #8e8e93;
+      font-size: 13px;
+      padding: 4px 10px;
       border-radius: 12px;
-      font-size: 12px;
+      font-weight: 400;
 
-      &.normal {
-        background: #f5f5f5;
-
-        .badge-text {
-          color: #999;
-        }
-      }
-
-      &.member {
-        background: #fff3cd;
-
-        .badge-text {
-          color: #856404;
-        }
+      .badge-text {
+        font-size: 13px;
       }
     }
   }
 
+  /* 使用统计三个小卡片 - 参照截图优化：优化布局和间距 */
   .usage-stats {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
 
-    .stat-item {
-      flex: 1;
+    .usage-item {
       text-align: center;
-      padding: 12px 6px;
-      border-radius: 12px;
+      padding: 16px 12px;
+      background: #f8f8f8;
+      border-radius: 16px;
+      transition: all 0.2s ease;
+      border: none;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80px;
 
-      &.orange {
-        background: #fff3e0;
+      &:active {
+        transform: scale(0.96);
       }
 
-      &.purple {
-        background: #f3e5f5;
+      .usage-icon-wrapper {
+        margin: 0 auto 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        color: white;
+        font-size: 18px;
+        font-weight: 600;
       }
 
-      &.blue {
-        background: #e3f2fd;
-      }
-
-      .stat-name {
+      .usage-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #000000;
+        margin-bottom: 4px;
         display: block;
-        font-size: 12px;
-        font-weight: 500;
-        color: #333;
-        margin: 2px 0;
+        line-height: 1.2;
       }
 
-      .stat-value {
-        display: block;
+      .usage-remaining {
         font-size: 12px;
-        color: #666;
+        color: #8e8e93;
+        display: block;
+        font-weight: 400;
+        line-height: 1.2;
       }
     }
   }
 
+  /* 会员开通提示 - 参照截图优化：淡黄色卡片 + 渐变按钮，按钮上下居中 */
   .membership-tip {
-    background: linear-gradient(90deg, #fff8dc, #ffedcc);
-    border-radius: 12px;
-    padding: 12px;
-    border: 1px solid #ffe066;
+    padding: 20px; /* 增加内边距，让按钮有更好的居中效果 */
+    background: #fffbf0;
+    border-radius: 16px;
+    border: 1px solid #ffd23f;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(255, 210, 63, 0.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 160px; /* 设置最小高度确保按钮居中效果 */
 
     .tip-header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+
+      .crown-icon {
+        margin-right: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
       .tip-title {
-        font-size: 12px;
+        font-size: 16px;
         font-weight: 600;
-        color: #333;
+        color: #000000;
+        line-height: 1.3;
       }
     }
 
-    .tip-subtitle {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 8px;
-      line-height: 1.4;
+    .tip-features {
+      margin-bottom: 20px; /* 增加底部间距，让按钮更居中 */
+      position: relative;
+      z-index: 1;
+      flex: 1; /* 让功能列表占据剩余空间 */
+
+      .feature-item {
+        font-size: 14px;
+        color: rgba(0, 0, 0, 0.75);
+        display: block;
+        margin-bottom: 4px;
+        line-height: 1.4;
+        letter-spacing: 0.2px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
     }
 
     .membership-btn {
-      width: 100%;
-      background: linear-gradient(90deg, #ffb800, #ff9500);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      padding: 6px 12px;
-      font-size: 12px;
+      background: linear-gradient(135deg, #ffc83a 0%, #ff8a00 100%);
+      padding: 14px 0; /* 增加按钮高度，让按钮更突出 */
+      border-radius: 22px;
+      font-size: 16px;
       font-weight: 600;
+      width: 100%;
+      text-align: center;
+      border: none;
+      transition: all 0.2s ease;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 2px 8px rgba(255, 138, 0, 0.25);
+      margin-top: auto; /* 让按钮自动推到底部，实现居中效果 */
+
+      &:active {
+        transform: scale(0.96);
+      }
+
+      .button-text {
+        color: #ffffff;
+        font-weight: 600;
+        display: block;
+        line-height: 1.2;
+      }
     }
   }
 }
 
-/* 功能导航 */
-.functions-section {
+/* 主要功能模块 - 参照截图优化：优化图标和文字排版，确保美观 */
+.main-functions {
+  margin-bottom: 20px;
+
   .function-item {
+    background: white;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
-    background: white;
-    border-radius: 24px;
-    padding: 24px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border: 1px solid #f0f1f5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: none;
     transition: all 0.2s ease;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
 
     &:active {
       transform: scale(0.98);
-      background: #f8f9fa;
+      background: #f8f8f8;
     }
 
     .function-icon {
       width: 48px;
       height: 48px;
-      border-radius: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 16px;
-
-      &.blue {
-        background: #4a90e2;
-      }
-
-      &.green {
-        background: #50c878;
-      }
-
-      &.purple {
-        background: #9b59b6;
-      }
-
-      &.orange {
-        background: #ff9500;
-      }
-
-      &.red {
-        background: #e74c3c;
-      }
-    }
-
-    .function-content {
-      flex: 1;
-
-      .function-title {
-        display: block;
-        font-size: 18px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 4px;
-      }
-
-      .function-subtitle {
-        display: block;
-        font-size: 14px;
-        color: #666;
-      }
-    }
-  }
-}
-
-/* 每日推荐 */
-.daily-section {
-  margin: 32px 0;
-
-  .section-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 16px;
-  }
-
-  .daily-quote-card {
-    background: linear-gradient(135deg, #ff6b9d, #9b59b6);
-    border-radius: 24px;
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    .quote-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 24px;
-      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      margin-left: 20px;
+      margin-top: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
     }
 
-    .quote-content {
+    .function-content {
       flex: 1;
+      min-width: 0;
+      padding-left: 0;
+      margin-left: -20px;
 
-      .quote-label {
-        display: block;
-        font-size: 14px;
+      .function-title {
+        font-size: 17px;
         font-weight: 600;
-        color: white;
+        color: #000000;
         margin-bottom: 4px;
+        display: block;
+        line-height: 1.3;
       }
 
-      .quote-english {
+      .function-subtitle {
+        font-size: 13px;
+        color: #8e8e93;
         display: block;
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.9);
-        margin-bottom: 4px;
         line-height: 1.4;
       }
+    }
 
-      .quote-chinese {
+    .function-arrow {
+      margin-left: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+/* 今日推荐部分 - 参照截图优化：粉色到紫色渐变背景 */
+.daily-recommendation {
+  margin-bottom: 20px;
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #000000;
+      margin-left: 8px;
+    }
+  }
+
+  .recommendation-card {
+    background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    color: white;
+    box-shadow: 0 4px 16px rgba(255, 107, 157, 0.25);
+
+    .recommendation-icon {
+      width: 52px;
+      height: 52px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 20px;
+      flex-shrink: 0;
+    }
+
+    .recommendation-content {
+      flex: 1;
+      min-width: 0;
+
+      .recommendation-title {
+        font-size: 15px;
+        font-weight: 500;
+        margin-bottom: 10px;
         display: block;
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.8);
+        color: #ffffff;
+        opacity: 0.9;
+      }
+
+      .english-sentence {
+        font-size: 18px;
+        color: #ffffff;
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      .chinese-sentence {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.85);
+        display: block;
+        font-weight: 400;
+        line-height: 1.3;
       }
     }
   }
 }
 
-/* 学习统计 */
-.stats-section {
-  .section-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
+/* 今日学习部分 - 参照截图优化：优化数字显示和布局 */
+.learning-stats {
+  margin-bottom: 20px;
+
+  .section-header {
+    display: flex;
+    align-items: center;
     margin-bottom: 16px;
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #000000;
+      margin-left: 8px;
+    }
   }
 
   .stats-grid {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
     display: flex;
-    gap: 16px;
+    align-items: center;
+    justify-content: space-around;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
-    .stats-item {
-      flex: 1;
-      background: white;
-      border-radius: 24px;
-      padding: 16px;
+    .stat-item {
       text-align: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      border: 1px solid #f0f1f5;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
 
-      .stats-number {
-        display: block;
-        font-size: 32px;
+      .stat-number {
+        font-size: 42px;
         font-weight: 700;
-        color: #4a90e2;
-        margin-bottom: 4px;
-      }
-
-      .stats-label {
+        margin-bottom: 12px;
         display: block;
-        font-size: 14px;
-        color: #666;
+        line-height: 1;
       }
+
+      .stat-footer {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 24px;
+        height: 24px;
+      }
+
+      &:nth-child(1) .stat-number {
+        color: #007aff;
+      }
+
+      &:nth-child(3) .stat-number {
+        color: #34c759;
+      }
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 48px;
+      background: #e5e5ea;
+      margin: 0 24px;
     }
   }
 }
 
-/* 适配不同屏幕尺寸 */
-@media (max-width: 375px) {
-  .functions-section .section-title {
-    font-size: 32px;
+/* 页面底部间距 */
+.page-footer {
+  height: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  min-height: 24px;
+  flex-shrink: 0;
+}
+
+/* 响应式适配 */
+@media (max-height: 667px) {
+  .home-page {
+    padding: 12px 16px 0;
+  }
+
+  .user-status-card {
+    padding: 20px 16px;
+    margin-bottom: 20px;
+  }
+
+  .main-functions {
+    margin-bottom: 20px;
+
+    .function-item {
+      padding: 20px 16px;
+      margin-bottom: 16px;
+    }
+  }
+
+  .daily-recommendation,
+  .learning-stats {
+    margin-bottom: 20px;
+
+    .recommendation-card {
+      padding: 20px;
+    }
+
+    .stats-grid .stat-item {
+      padding: 20px;
+    }
   }
 }
 
-/* 为 taro-ui 组件自定义样式 */
-:global {
-  .at-card {
-    .at-card__header {
-      .at-card__header-title {
-        font-size: 32px !important;
-        font-weight: 600 !important;
-        color: var(--primary-color) !important;
-      }
+@media (min-height: 812px) {
+  .home-page {
+    padding: 20px 16px 0;
+  }
+
+  .user-status-card {
+    padding: 28px 24px;
+    margin-bottom: 28px;
+  }
+
+  .main-functions {
+    margin-bottom: 28px;
+
+    .function-item {
+      padding: 28px 24px;
+      margin-bottom: 24px;
     }
   }
 
-  .at-grid {
-    .at-grid-item {
-      &::after {
-        display: none !important;
-      }
-    }
-  }
+  .daily-recommendation,
+  .learning-stats {
+    margin-bottom: 28px;
 
-  .at-button {
-    &.at-button--small {
-      height: auto !important;
-      line-height: 1.5 !important;
-      padding: 6px 12px !important;
+    .recommendation-card {
+      padding: 28px;
+    }
+
+    .stats-grid .stat-item {
+      padding: 28px;
     }
   }
 }

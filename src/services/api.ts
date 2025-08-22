@@ -1,6 +1,5 @@
-import Taro from '@tarojs/taro'
+import httpClient from './http'
 import type {
-  ApiResponse,
   User,
   ChatMessage,
   Topic,
@@ -9,133 +8,88 @@ import type {
   PhotoStory,
 } from '@/types'
 
-// API基础配置
-const API_BASE_URL =
-  process.env.NODE_ENV === 'production'
-    ? 'https://api.openduck.com'
-    : 'https://dev-api.openduck.com'
-
-// 请求拦截器
-const request = async <T = unknown>(
-  url: string,
-  options: RequestInit = {}
-): Promise<ApiResponse<T>> => {
-  const token = Taro.getStorageSync('token')
-
-  const config: RequestInit = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    },
-    ...options,
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}${url}`, config)
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-    return data
-  } catch (error) {
-    // 使用Taro的日志系统替代console
-    Taro.showToast({ title: '网络请求失败', icon: 'error' })
-    throw error
-  }
-}
-
 // 用户相关API
 export const userApi = {
   // 用户登录
   login: (code: string) =>
-    request<User>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ code }),
-    }),
+    httpClient.post<User>('/auth/login', { code }, { showLoading: true }),
 
   // 获取用户信息
-  getUserInfo: () => request<User>('/user/profile'),
+  getUserInfo: () => httpClient.get<User>('/user/profile', { cache: true }),
 
   // 更新用户信息
   updateUserInfo: (userInfo: Partial<User>) =>
-    request<User>('/user/profile', {
-      method: 'PUT',
-      body: JSON.stringify(userInfo),
-    }),
+    httpClient.put<User>('/user/profile', userInfo, { showLoading: true }),
 
   // 获取学习统计
   getStudyStats: () =>
-    request<{
+    httpClient.get<{
       totalStudyDays: number
       totalPoints: number
       currentStreak: number
       totalConversations: number
       totalWords: number
-    }>('/user/stats'),
+    }>('/user/stats', { cache: true }),
 }
 
 // 聊天相关API
 export const chatApi = {
   // 发送消息
   sendMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) =>
-    request<ChatMessage>('/chat/message', {
-      method: 'POST',
-      body: JSON.stringify(message),
+    httpClient.post<ChatMessage>('/chat/message', message, {
+      showLoading: true,
     }),
 
   // 获取聊天历史
-  getChatHistory: (chatId: string) => request<ChatMessage[]>(`/chat/history/${chatId}`),
+  getChatHistory: (chatId: string) =>
+    httpClient.get<ChatMessage[]>(`/chat/history/${chatId}`, { cache: true }),
 
   // 获取AI回复
   getAIResponse: (message: string, context?: string) =>
-    request<{
+    httpClient.post<{
       reply: string
       translation?: string
       suggestions?: string[]
-    }>('/chat/ai-response', {
-      method: 'POST',
-      body: JSON.stringify({ message, context }),
-    }),
+    }>('/chat/ai-response', { message, context }, { showLoading: true }),
 }
 
 // 话题相关API
 export const topicApi = {
   // 获取话题列表
-  getTopics: (category?: string, level?: string) =>
-    request<Topic[]>(
-      `/topics?${new URLSearchParams({
-        ...(category && { category }),
-        ...(level && { level }),
-      })}`
-    ),
+  getTopics: (category?: string, level?: string) => {
+    const params = new URLSearchParams({
+      ...(category && { category }),
+      ...(level && { level }),
+    })
+    return httpClient.get<Topic[]>(`/topics?${params}`, { cache: true })
+  },
 
   // 获取话题详情
-  getTopicDetail: (topicId: string) => request<Topic>(`/topics/${topicId}`),
+  getTopicDetail: (topicId: string) =>
+    httpClient.get<Topic>(`/topics/${topicId}`, { cache: true }),
 
   // 获取推荐话题
-  getRecommendedTopics: (userId: string) => request<Topic[]>(`/topics/recommended/${userId}`),
+  getRecommendedTopics: (userId: string) =>
+    httpClient.get<Topic[]>(`/topics/recommended/${userId}`, { cache: true }),
 }
 
 // 翻译相关API
 export const translateApi = {
   // 文本翻译
   translate: (text: string, from = 'zh', to = 'en') =>
-    request<TranslationResult>('/translate', {
-      method: 'POST',
-      body: JSON.stringify({ text, from, to }),
-    }),
+    httpClient.post<TranslationResult>(
+      '/translate',
+      { text, from, to },
+      { showLoading: true }
+    ),
 
   // 获取翻译历史
-  getTranslationHistory: () => request<TranslationResult[]>('/translate/history'),
+  getTranslationHistory: () =>
+    httpClient.get<TranslationResult[]>('/translate/history', { cache: true }),
 
   // 删除翻译历史
   deleteTranslationHistory: (id: string) =>
-    request(`/translate/history/${id}`, {
-      method: 'DELETE',
-    }),
+    httpClient.delete(`/translate/history/${id}`, { showLoading: true }),
 }
 
 // 拍照短文相关API
@@ -148,55 +102,58 @@ export const photoStoryApi = {
       formData.append('prompt', prompt)
     }
 
-    return request<PhotoStory>('/photo-story/generate', {
+    return httpClient.request<PhotoStory>({
+      url: '/photo-story/generate',
       method: 'POST',
       body: formData,
-      headers: {
-        // 移除Content-Type，让浏览器自动设置multipart/form-data
-      },
+      showLoading: true,
     })
   },
 
   // 获取短文历史
-  getStoryHistory: () => request<PhotoStory[]>('/photo-story/history'),
+  getStoryHistory: () =>
+    httpClient.get<PhotoStory[]>('/photo-story/history', { cache: true }),
 
   // 删除短文
   deleteStory: (id: string) =>
-    request(`/photo-story/${id}`, {
-      method: 'DELETE',
-    }),
+    httpClient.delete(`/photo-story/${id}`, { showLoading: true }),
 }
 
 // 单词相关API
 export const vocabularyApi = {
   // 获取单词列表
-  getVocabularies: (level: string, page = 1, size = 20) =>
-    request<{
+  getVocabularies: (level: string, page = 1, size = 20) => {
+    const params = new URLSearchParams({
+      level,
+      page: page.toString(),
+      size: size.toString(),
+    })
+    return httpClient.get<{
       words: Vocabulary[]
       total: number
       hasMore: boolean
-    }>(`/vocabulary?level=${level}&page=${page}&size=${size}`),
+    }>(`/vocabulary?${params}`, { cache: true })
+  },
 
   // 获取单词详情
-  getWordDetail: (wordId: string) => request<Vocabulary>(`/vocabulary/${wordId}`),
+  getWordDetail: (wordId: string) =>
+    httpClient.get<Vocabulary>(`/vocabulary/${wordId}`, { cache: true }),
 
   // 标记单词为已学
   markAsStudied: (wordId: string) =>
-    request(`/vocabulary/${wordId}/studied`, {
-      method: 'POST',
+    httpClient.post(`/vocabulary/${wordId}/studied`, null, {
+      showLoading: true,
     }),
 
   // 添加到收藏
   addToFavorites: (wordId: string) =>
-    request(`/vocabulary/${wordId}/favorite`, {
-      method: 'POST',
+    httpClient.post(`/vocabulary/${wordId}/favorite`, null, {
+      showLoading: true,
     }),
 
   // 从收藏移除
   removeFromFavorites: (wordId: string) =>
-    request(`/vocabulary/${wordId}/favorite`, {
-      method: 'DELETE',
-    }),
+    httpClient.delete(`/vocabulary/${wordId}/favorite`, { showLoading: true }),
 }
 
 // 发音评分相关API
@@ -207,18 +164,17 @@ export const pronunciationApi = {
     formData.append('audio', audioFile)
     formData.append('text', text)
 
-    return request<{
+    return httpClient.request<{
       score: number
       accuracy: number
       fluency: number
       completeness: number
       feedback: string
-    }>('/pronunciation/score', {
+    }>({
+      url: '/pronunciation/score',
       method: 'POST',
       body: formData,
-      headers: {
-        // 移除Content-Type，让浏览器自动设置multipart/form-data
-      },
+      showLoading: true,
     })
   },
 }
@@ -227,31 +183,28 @@ export const pronunciationApi = {
 export const membershipApi = {
   // 获取会员信息
   getMembershipInfo: () =>
-    request<{
+    httpClient.get<{
       level: 'free' | 'basic' | 'pro' | 'premium'
       expireDate: string
       features: string[]
       price: number
-    }>('/membership/info'),
+    }>('/membership/info', { cache: true }),
 
   // 购买会员
   purchaseMembership: (plan: string, paymentMethod: string) =>
-    request<{
+    httpClient.post<{
       orderId: string
       paymentUrl: string
-    }>('/membership/purchase', {
-      method: 'POST',
-      body: JSON.stringify({ plan, paymentMethod }),
-    }),
+    }>('/membership/purchase', { plan, paymentMethod }, { showLoading: true }),
 
   // 获取会员权益
   getMembershipBenefits: () =>
-    request<{
+    httpClient.get<{
       free: string[]
       basic: string[]
       pro: string[]
       premium: string[]
-    }>('/membership/benefits'),
+    }>('/membership/benefits', { cache: true }),
 }
 
 // 导出所有API

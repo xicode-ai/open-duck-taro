@@ -8,7 +8,13 @@ export interface User {
   studyDays: number
 }
 
-export type UserLevel = 'preschool' | 'elementary' | 'middle' | 'high' | 'university' | 'master'
+export type UserLevel =
+  | 'preschool'
+  | 'elementary'
+  | 'middle'
+  | 'high'
+  | 'university'
+  | 'master'
 
 // 对话相关类型
 export interface ChatMessage {
@@ -30,6 +36,8 @@ export interface Topic {
   category: string
   level: UserLevel
   icon: string
+  color?: string
+  dialogCount?: number
   dialogues: Dialogue[]
 }
 

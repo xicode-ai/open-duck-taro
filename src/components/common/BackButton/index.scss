@@ -1,0 +1,52 @@
+.back-button {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-radius: 22px;
+  transition: all 0.2s ease;
+  background-color: rgba(255, 255, 255, 0.1);
+
+  &:active {
+    transform: scale(0.95);
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  &--no-bg {
+    background-color: transparent;
+    padding: 4px;
+    &:active {
+      background-color: transparent;
+      opacity: 0.8;
+    }
+  }
+
+  &--absolute {
+    position: absolute;
+    top: 50%;
+    left: 16px;
+    transform: translateY(-50%);
+    z-index: 100;
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__text {
+    margin-left: 4px;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  // 深色主题适配
+  @media (prefers-color-scheme: dark) {
+    background-color: rgba(0, 0, 0, 0.1);
+
+    &:active {
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+  }
+}

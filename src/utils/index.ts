@@ -1,32 +1,27 @@
+// 工具函数统一导出
+export * from './date'
+export * from './storage'
+export * from './format'
+export * from './validation'
+export * from './performance'
+export * from './errorHandler'
+
+// 重新导出常用工具
+export { dateUtils } from './date'
+export { storageUtils, cacheManager } from './storage'
+export { formatUtils } from './format'
+export { validationUtils, FormValidator } from './validation'
+export { performanceUtils, performanceMonitor } from './performance'
+export {
+  asyncErrorHandler,
+  handleApiError,
+  handleEventError,
+  handleStorageError,
+  safeAsync,
+  safeEventHandler,
+} from './errorHandler'
+
 import Taro from '@tarojs/taro'
-
-/**
- * 格式化时间戳
- */
-export const formatTime = (timestamp: number): string => {
-  const date = new Date(timestamp)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-
-  if (diff < 60000) {
-    return '刚刚'
-  } else if (diff < 3600000) {
-    return `${Math.floor(diff / 60000)}分钟前`
-  } else if (diff < 86400000) {
-    return `${Math.floor(diff / 3600000)}小时前`
-  } else {
-    return date.toLocaleDateString()
-  }
-}
-
-/**
- * 格式化音频时长
- */
-export const formatDuration = (seconds: number): string => {
-  const min = Math.floor(seconds / 60)
-  const sec = Math.floor(seconds % 60)
-  return `${min}:${sec.toString().padStart(2, '0')}`
-}
 
 /**
  * 显示加载中
@@ -84,40 +79,12 @@ export const checkNetwork = (): Promise<boolean> => {
 }
 
 /**
- * 保存到本地存储
- */
-export const setStorage = async (key: string, data: unknown): Promise<void> => {
-  await Taro.setStorage({ key, data })
-}
-
-/**
- * 从本地存储读取
- */
-export const getStorage = <T = unknown>(key: string): Promise<T | null> => {
-  return new Promise(resolve => {
-    Taro.getStorage({
-      key,
-      success: res => {
-        resolve(res.data)
-      },
-      fail: () => {
-        resolve(null)
-      },
-    })
-  })
-}
-
-/**
- * 清除本地存储
- */
-export const removeStorage = async (key: string): Promise<void> => {
-  await Taro.removeStorage({ key })
-}
-
-/**
  * 防抖函数
  */
-export const debounce = <T extends (...args: unknown[]) => unknown>(func: T, wait: number): T => {
+export const debounce = <T extends (...args: unknown[]) => unknown>(
+  func: T,
+  wait: number
+): T => {
   let timeout: NodeJS.Timeout | null = null
 
   return ((...args: Parameters<T>) => {
@@ -131,7 +98,10 @@ export const debounce = <T extends (...args: unknown[]) => unknown>(func: T, wai
 /**
  * 节流函数
  */
-export const throttle = <T extends (...args: unknown[]) => unknown>(func: T, limit: number): T => {
+export const throttle = <T extends (...args: unknown[]) => unknown>(
+  func: T,
+  limit: number
+): T => {
   let inThrottle = false
 
   return ((...args: Parameters<T>) => {
@@ -152,6 +122,7 @@ export const generateId = (): string => {
 
 /**
  * 获取用户级别显示名称
+ * @deprecated 请使用 formatUtils.formatLevelName
  */
 export const getUserLevelName = (level: string): string => {
   const levelMap: Record<string, string> = {

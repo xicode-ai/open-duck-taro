@@ -1,83 +1,231 @@
+@use '../../../app.scss' as *;
+
 .error-boundary {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: 40px 20px;
-  background-color: #f8f9fa;
-}
+  background-color: #f5f7fa;
+  z-index: 10000;
 
-.error-content {
-  text-align: center;
-  max-width: 400px;
-  width: 100%;
-}
+  .error-content {
+    text-align: center;
+    padding: 60px 40px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 40px;
 
-.error-icon {
-  font-size: 64px;
-  margin-bottom: 20px;
-}
+    .error-icon {
+      font-size: 120px;
+      margin-bottom: 32px;
+    }
 
-.error-title {
-  display: block;
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 12px;
-}
+    .error-title {
+      font-size: 40px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 24px;
+      display: block;
+    }
 
-.error-message {
-  display: block;
-  font-size: 16px;
-  color: #666;
-  margin-bottom: 32px;
-  line-height: 1.5;
-}
+    .error-message {
+      font-size: 32px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 24px;
+      display: block;
+    }
 
-.error-actions {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  margin-bottom: 32px;
+    .retry-count {
+      font-size: 28px;
+      color: #999;
+      margin-bottom: 32px;
+      display: block;
+    }
 
-  .retry-btn {
-    min-width: 80px;
+    .error-actions {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+
+      .action-btn {
+        min-width: 160px;
+
+        &.primary {
+          background: linear-gradient(135deg, #4a90e2, #357abd);
+          color: white;
+        }
+
+        &.secondary {
+          background: #f8f9fa;
+          color: #6c757d;
+          border-color: #dee2e6;
+        }
+      }
+    }
+
+    .error-details {
+      text-align: left;
+      background: #f8f8f8;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 32px;
+
+      .details-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 16px;
+        display: block;
+      }
+
+      .error-type {
+        font-size: 26px;
+        color: #4a90e2;
+        font-weight: 500;
+        margin-bottom: 16px;
+        display: block;
+      }
+
+      .error-stack,
+      .component-stack {
+        font-size: 24px;
+        color: #666;
+        font-family: 'Courier New', Courier, monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+        line-height: 1.4;
+        margin-bottom: 16px;
+        display: block;
+        background: white;
+        padding: 16px;
+        border-radius: 8px;
+        border-left: 4px solid #4a90e2;
+      }
+    }
   }
+}
 
-  .back-btn {
-    min-width: 80px;
+// 动画效果
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.error-details {
-  margin-top: 32px;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-  text-align: left;
+.error-boundary .error-content {
+  animation: fadeIn 0.3s ease-out;
+}
 
-  .details-title {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 16px;
+// 响应式设计
+@media (max-width: 750px) {
+  .error-boundary {
+    .error-content {
+      margin: 20px;
+      padding: 40px 24px;
+
+      .error-icon {
+        font-size: 80px;
+        margin-bottom: 24px;
+      }
+
+      .error-title {
+        font-size: 32px;
+        margin-bottom: 16px;
+      }
+
+      .error-message {
+        font-size: 28px;
+        margin-bottom: 16px;
+      }
+
+      .retry-count {
+        font-size: 24px;
+        margin-bottom: 24px;
+      }
+
+      .error-actions {
+        flex-direction: column;
+        gap: 16px;
+
+        .action-btn {
+          min-width: auto;
+          width: 100%;
+        }
+      }
+
+      .error-details {
+        padding: 16px;
+        margin-top: 24px;
+
+        .details-title {
+          font-size: 24px;
+          margin-bottom: 12px;
+        }
+
+        .error-type {
+          font-size: 22px;
+          margin-bottom: 12px;
+        }
+
+        .error-stack,
+        .component-stack {
+          font-size: 20px;
+          margin-bottom: 12px;
+          padding: 12px;
+        }
+      }
+    }
   }
+}
 
-  .error-stack,
-  .component-stack {
-    display: block;
-    font-size: 12px;
-    color: #666;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    background-color: #f8f9fa;
-    padding: 12px;
-    border-radius: 4px;
-    margin-bottom: 12px;
-    white-space: pre-wrap;
-    word-break: break-all;
-    max-height: 200px;
-    overflow-y: auto;
+// 暗色主题支持
+@media (prefers-color-scheme: dark) {
+  .error-boundary {
+    background-color: #1a1a1a;
+
+    .error-content {
+      background: #2d2d2d;
+      color: #fff;
+
+      .error-title {
+        color: #fff;
+      }
+
+      .error-message {
+        color: #ccc;
+      }
+
+      .retry-count {
+        color: #999;
+      }
+
+      .error-details {
+        background: #3d3d3d;
+
+        .details-title {
+          color: #fff;
+        }
+
+        .error-stack,
+        .component-stack {
+          background: #4d4d4d;
+          color: #ddd;
+        }
+      }
+    }
   }
 }

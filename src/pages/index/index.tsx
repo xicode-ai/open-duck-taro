@@ -1,146 +1,237 @@
 import React from 'react'
 import { View, Text } from '@tarojs/components'
-import { AtButton } from 'taro-ui'
+import Taro, { useDidShow, useDidHide, useShareAppMessage } from '@tarojs/taro'
+import { withPageErrorBoundary } from '../../components/ErrorBoundary/PageErrorBoundary'
+import SvgIcon from '../../components/SvgIcon'
 import './index.scss'
 
 const Index: React.FC = () => {
-  // 功能导航数据
-  const functionItems = [
+  // 使用 Taro 的生命周期 hooks
+  useDidShow(() => {
+    console.log('Index page show')
+  })
+
+  useDidHide(() => {
+    console.log('Index page hide')
+  })
+
+  useShareAppMessage(() => ({
+    title: '开口鸭 - AI英语学习助手',
+    path: '/pages/index/index',
+  }))
+
+  const handleNavigate = (path: string) => {
+    const tabPaths = [
+      '/pages/index/index',
+      '/pages/progress/index',
+      '/pages/vocabulary/index',
+      '/pages/profile/index',
+    ]
+    if (tabPaths.some(tabPath => path.startsWith(tabPath))) {
+      Taro.switchTab({ url: path })
+    } else {
+      Taro.navigateTo({ url: path })
+    }
+  }
+
+  // 今日使用情况数据 - 使用SVG图标替换emoji
+  const todayUsage = [
     {
-      icon: '💬',
-      title: 'AI 对话',
-      subtitle: '与 AI 进行真实的英语对话练习',
-      color: 'blue',
+      title: '求助',
+      remaining: 3,
+      icon: 'help',
+      iconBg: '#FF9500',
+      bgColor: '#FFF4E6',
+    },
+    {
+      title: '地道翻译',
+      remaining: 3,
+      icon: 'translate',
+      iconBg: '#AF52DE',
+      bgColor: '#F3E8FF',
+    },
+    {
+      title: '拍照短文',
+      remaining: 3,
+      icon: 'camera',
+      iconBg: '#007AFF',
+      bgColor: '#E8F2FF',
+    },
+  ]
+
+  // 主要功能模块 - 优化图标和描述
+  const mainFunctions = [
+    {
+      icon: 'chat',
+      title: '对话模式',
+      subtitle: '与AI外教语音对话练习',
+      iconBg: '#007AFF',
       path: '/pages/chat/index',
     },
     {
-      icon: '📚',
-      title: '话题学习',
-      subtitle: '多种生活场景话题，情境化学习',
-      color: 'green',
+      icon: 'list',
+      title: '话题模式',
+      subtitle: '选择话题进行场景对话',
+      iconBg: '#34C759',
       path: '/pages/topics/index',
     },
     {
-      icon: '🔄',
-      title: '智能翻译',
-      subtitle: '提供标准翻译和口语化表达',
-      color: 'purple',
+      icon: 'translate',
+      title: '翻译功能',
+      subtitle: '中英互译，地道口语表达',
+      iconBg: '#AF52DE',
       path: '/pages/translate/index',
     },
     {
-      icon: '📸',
+      icon: 'camera',
       title: '拍照短文',
-      subtitle: 'AI 分析图片生成英文短文',
-      color: 'orange',
+      subtitle: '拍照生成英文描述练习',
+      iconBg: '#FF9500',
       path: '/pages/photo-story/index',
     },
     {
-      icon: '📖',
+      icon: 'book',
       title: '背单词',
-      subtitle: '语境学习法，分阶段词汇学习',
-      color: 'red',
+      subtitle: '语境学习法，分阶段背单词',
+      iconBg: '#FF3B30',
       path: '/pages/vocabulary/index',
     },
   ]
 
-  // 每日推荐内容
-  const dailyQuote = {
-    english: 'The only way to do great work is to love what you do.',
-    chinese: '做出伟大工作的唯一方法就是热爱你所做的事情。',
-    author: 'Steve Jobs',
-  }
-
-  // 学习统计数据
-  const learningStats = [
-    { number: '127', label: '学习天数' },
-    { number: '1,234', label: '掌握单词' },
-    { number: '89', label: '完成对话' },
-  ]
-
   return (
-    <View className="index-page">
+    <View className="home-page">
       {/* 用户状态卡片 */}
       <View className="user-status-card">
+        {/* 状态标题栏 */}
         <View className="status-header">
-          <Text className="status-title">学习状态</Text>
-          <View className="membership-badge normal">
+          <Text className="status-title">今日使用情况</Text>
+          <View className="user-badge">
             <Text className="badge-text">普通用户</Text>
           </View>
         </View>
 
+        {/* 使用统计三个小卡片 */}
         <View className="usage-stats">
-          <View className="stat-item orange">
-            <Text className="stat-name">今日对话</Text>
-            <Text className="stat-value">3/10</Text>
-          </View>
-          <View className="stat-item purple">
-            <Text className="stat-name">单词学习</Text>
-            <Text className="stat-value">15/20</Text>
-          </View>
-          <View className="stat-item blue">
-            <Text className="stat-name">学习时长</Text>
-            <Text className="stat-value">25分钟</Text>
-          </View>
+          {todayUsage.map((item, index) => (
+            <View
+              key={index}
+              className="usage-item"
+              style={{ backgroundColor: item.bgColor }}
+            >
+              <View
+                className="usage-icon-wrapper"
+                style={{ backgroundColor: item.iconBg }}
+              >
+                <SvgIcon name={item.icon} size={20} color="white" />
+              </View>
+              <Text className="usage-name">{item.title}</Text>
+              <Text className="usage-remaining">剩余: {item.remaining}</Text>
+            </View>
+          ))}
         </View>
 
+        {/* 会员开通提示 */}
         <View className="membership-tip">
           <View className="tip-header">
-            <Text className="tip-title">🎯</Text>
-            <Text className="tip-title">升级会员</Text>
+            <View className="crown-icon">
+              <SvgIcon name="crown" size={24} color="#FFD700" />
+            </View>
+            <Text className="tip-title">开通会员解锁所有功能</Text>
           </View>
-          <Text className="tip-subtitle">
-            解锁无限对话次数、高级AI模型、专属学习计划等特权
-          </Text>
-          <AtButton className="membership-btn" size="small">
-            立即升级
-          </AtButton>
+          <View className="tip-features">
+            <Text className="feature-item">• 无限次使用所有功能</Text>
+            <Text className="feature-item">• 创建自定义话题·专属学习计划</Text>
+          </View>
+          <View
+            className="membership-btn"
+            onClick={() => handleNavigate('/pages/membership/index')}
+          >
+            <Text className="button-text">立即开通 ¥198/年</Text>
+          </View>
         </View>
       </View>
 
-      {/* 功能导航 */}
-      <View className="functions-section">
-        {functionItems.map((item, index) => (
-          <View key={index} className="function-item">
-            <View className={`function-icon ${item.color}`}>
-              <Text style={{ fontSize: '24px' }}>{item.icon}</Text>
+      {/* 主要功能模块 */}
+      <View className="main-functions">
+        {mainFunctions.map((func, index) => (
+          <View
+            key={index}
+            className="function-item"
+            onClick={() => handleNavigate(func.path)}
+          >
+            <View
+              className="function-icon"
+              style={{ backgroundColor: func.iconBg }}
+            >
+              <SvgIcon name={func.icon} size={24} color="white" />
             </View>
             <View className="function-content">
-              <Text className="function-title">{item.title}</Text>
-              <Text className="function-subtitle">{item.subtitle}</Text>
+              <Text className="function-title">{func.title}</Text>
+              <Text className="function-subtitle">{func.subtitle}</Text>
+            </View>
+            <View className="function-arrow">
+              <SvgIcon name="arrow-right" size={20} color="#C7C7CC" />
             </View>
           </View>
         ))}
       </View>
 
-      {/* 每日推荐 */}
-      <View className="daily-section">
-        <Text className="section-title">每日一句</Text>
-        <View className="daily-quote-card">
-          <View className="quote-icon">
-            <Text style={{ fontSize: '24px', color: 'white' }}>💡</Text>
+      {/* 今日推荐 */}
+      <View className="daily-recommendation">
+        <View className="section-header">
+          <SvgIcon name="star" size={20} color="#34C759" />
+          <Text className="section-title">今日推荐</Text>
+        </View>
+        <View className="recommendation-card">
+          <View className="recommendation-icon">
+            <SvgIcon name="lightbulb" size={24} color="#FF6B6B" />
           </View>
-          <View className="quote-content">
-            <Text className="quote-label">今日推荐</Text>
-            <Text className="quote-english">{dailyQuote.english}</Text>
-            <Text className="quote-chinese">{dailyQuote.chinese}</Text>
+          <View className="recommendation-content">
+            <Text className="recommendation-title">每日一句</Text>
+            <Text className="english-sentence">
+              &ldquo;Practice makes perfect!&rdquo;
+            </Text>
+            <Text className="chinese-sentence">熟能生巧！</Text>
           </View>
         </View>
       </View>
 
-      {/* 学习统计 */}
-      <View className="stats-section">
-        <Text className="section-title">学习统计</Text>
+      {/* 今日学习 */}
+      <View className="learning-stats">
+        <View className="section-header">
+          <SvgIcon name="analytics" size={20} color="#34C759" />
+          <Text className="section-title">今日学习</Text>
+        </View>
         <View className="stats-grid">
-          {learningStats.map((stat, index) => (
-            <View key={index} className="stats-item">
-              <Text className="stats-number">{stat.number}</Text>
-              <Text className="stats-label">{stat.label}</Text>
+          <View className="stat-item">
+            <Text className="stat-number">12</Text>
+            <View className="stat-footer">
+              <SvgIcon name="arrow-up" size={14} color="#007AFF" />
             </View>
-          ))}
+          </View>
+          <View className="stat-divider" />
+          <View className="stat-item">
+            <Text className="stat-number">5</Text>
+            <View className="stat-footer">
+              <SvgIcon name="analytics" size={14} color="#34C759" />
+            </View>
+          </View>
         </View>
       </View>
+
+      {/* 页面底部间距 */}
+      <View className="page-footer" />
     </View>
   )
 }
 
-export default Index
+// 使用 HOC 包装组件，添加页面级错误边界
+export default withPageErrorBoundary(Index, {
+  pageName: '首页',
+  enableErrorReporting: true,
+  showRetry: true,
+  onError: (error, errorInfo) => {
+    // 自定义错误处理逻辑
+    console.log('首页发生错误:', error, errorInfo)
+  },
+})

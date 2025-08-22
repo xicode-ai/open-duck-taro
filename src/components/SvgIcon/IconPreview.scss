@@ -1,0 +1,267 @@
+.icon-preview {
+  padding: 20px;
+  background: #f8f9fa;
+  min-height: 100vh;
+
+  .preview-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .preview-title {
+      display: block;
+      font-size: 24px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .preview-subtitle {
+      display: block;
+      font-size: 14px;
+      color: #666;
+    }
+  }
+
+  .preview-filters {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .filter-section {
+      margin-bottom: 20px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .filter-label {
+        display: block;
+        font-size: 16px;
+        font-weight: 500;
+        color: #1a1a1a;
+        margin-bottom: 12px;
+      }
+
+      .filter-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .filter-button {
+          padding: 8px 16px;
+          background: #f0f0f0;
+          border-radius: 20px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: #e0e0e0;
+          }
+
+          &.active {
+            background: #007aff;
+            color: white;
+          }
+
+          .filter-text {
+            font-size: 14px;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
+
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 16px;
+    margin-bottom: 30px;
+
+    .icon-item {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      .icon-display {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 48px;
+        margin-bottom: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      .icon-name {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        color: #007aff;
+        margin-bottom: 4px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      }
+
+      .icon-label {
+        display: block;
+        font-size: 12px;
+        color: #666;
+        line-height: 1.4;
+      }
+    }
+  }
+
+  .preview-stats {
+    text-align: center;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .stats-text {
+      font-size: 14px;
+      color: #666;
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .icon-preview {
+    padding: 16px;
+
+    .preview-header {
+      padding: 16px;
+      margin-bottom: 20px;
+
+      .preview-title {
+        font-size: 20px;
+      }
+    }
+
+    .preview-filters {
+      padding: 16px;
+      margin-bottom: 20px;
+
+      .filter-section {
+        .filter-buttons {
+          .filter-button {
+            padding: 6px 12px;
+
+            .filter-text {
+              font-size: 12px;
+            }
+          }
+        }
+      }
+    }
+
+    .icon-grid {
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 12px;
+
+      .icon-item {
+        padding: 12px;
+
+        .icon-display {
+          height: 40px;
+          margin-bottom: 8px;
+        }
+
+        .icon-name {
+          font-size: 11px;
+        }
+
+        .icon-label {
+          font-size: 11px;
+        }
+      }
+    }
+  }
+}
+
+// 深色模式支持
+@media (prefers-color-scheme: dark) {
+  .icon-preview {
+    background: #1a1a1a;
+
+    .preview-header,
+    .preview-filters,
+    .icon-item,
+    .preview-stats {
+      background: #2d2d2d;
+      color: #ffffff;
+    }
+
+    .preview-header {
+      .preview-title {
+        color: #ffffff;
+      }
+
+      .preview-subtitle {
+        color: #b0b0b0;
+      }
+    }
+
+    .preview-filters {
+      .filter-section {
+        .filter-label {
+          color: #ffffff;
+        }
+
+        .filter-buttons {
+          .filter-button {
+            background: #404040;
+            color: #ffffff;
+
+            &:hover {
+              background: #505050;
+            }
+
+            &.active {
+              background: #007aff;
+            }
+          }
+        }
+      }
+    }
+
+    .icon-grid {
+      .icon-item {
+        background: #2d2d2d;
+
+        .icon-display {
+          background: #404040;
+        }
+
+        .icon-name {
+          color: #007aff;
+        }
+
+        .icon-label {
+          color: #b0b0b0;
+        }
+      }
+    }
+
+    .preview-stats {
+      .stats-text {
+        color: #b0b0b0;
+      }
+    }
+  }
+}

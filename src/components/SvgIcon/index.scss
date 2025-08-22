@@ -1,0 +1,118 @@
+.svg-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  // 实心图标样式
+  &--solid {
+    svg {
+      fill: currentColor;
+      stroke: none;
+    }
+  }
+
+  // 描边图标样式
+  &--outline {
+    svg {
+      fill: none;
+      stroke: currentColor;
+    }
+  }
+
+  // 双色图标样式
+  &--duotone {
+    svg {
+      fill: currentColor;
+      stroke: currentColor;
+      stroke-width: 1;
+      opacity: 0.8;
+    }
+  }
+
+  // 悬停效果
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  // 禁用状态
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  // 加载状态
+  &.loading {
+    animation: spin 1s linear infinite;
+  }
+
+  // 不同尺寸的优化
+  &[style*='width: 16px'],
+  &[style*='width: 16px'] {
+    svg {
+      stroke-width: 1.5;
+    }
+  }
+
+  &[style*='width: 20px'],
+  &[style*='width: 20px'] {
+    svg {
+      stroke-width: 1.8;
+    }
+  }
+
+  &[style*='width: 24px'],
+  &[style*='width: 24px'] {
+    svg {
+      stroke-width: 2;
+    }
+  }
+
+  &[style*='width: 32px'],
+  &[style*='width: 32px'] {
+    svg {
+      stroke-width: 2.5;
+    }
+  }
+
+  &[style*='width: 48px'],
+  &[style*='width: 48px'] {
+    svg {
+      stroke-width: 3;
+    }
+  }
+}
+
+// 旋转动画
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 响应式图标
+@media (max-width: 768px) {
+  .svg-icon {
+    &[style*='width: 48px'],
+    &[style*='width: 48px'] {
+      svg {
+        stroke-width: 2.5;
+      }
+    }
+  }
+}

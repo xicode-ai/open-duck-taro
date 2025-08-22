@@ -1,0 +1,300 @@
+.usage-examples {
+  padding: 20px;
+  background: #f8f9fa;
+  min-height: 100vh;
+
+  .examples-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .examples-title {
+      display: block;
+      font-size: 24px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .examples-subtitle {
+      display: block;
+      font-size: 14px;
+      color: #666;
+    }
+  }
+
+  .example-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .section-title {
+      display: block;
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 20px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .example-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 16px;
+
+      .example-item {
+        text-align: center;
+        padding: 16px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: #e9ecef;
+          transform: translateY(-2px);
+        }
+
+        .example-label {
+          display: block;
+          font-size: 12px;
+          color: #666;
+          margin-top: 8px;
+          line-height: 1.4;
+        }
+      }
+    }
+
+    .size-comparison {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+
+      .size-item {
+        text-align: center;
+        padding: 16px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        min-width: 80px;
+
+        .size-label {
+          display: block;
+          font-size: 12px;
+          color: #666;
+          margin-top: 8px;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .color-themes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 16px;
+
+      .theme-item {
+        text-align: center;
+        padding: 16px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: #e9ecef;
+          transform: translateY(-2px);
+        }
+
+        .theme-label {
+          display: block;
+          font-size: 12px;
+          color: #666;
+          margin-top: 8px;
+          line-height: 1.4;
+        }
+      }
+    }
+  }
+
+  // 状态图标特殊样式
+  .success-icon {
+    animation: pulse 2s infinite;
+  }
+
+  .error-icon {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  .warning-icon {
+    animation: bounce 1s infinite;
+  }
+
+  .info-icon {
+    animation: fadeInOut 2s infinite;
+  }
+}
+
+// 动画效果
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes fadeInOut {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .usage-examples {
+    padding: 16px;
+
+    .examples-header {
+      padding: 16px;
+      margin-bottom: 20px;
+
+      .examples-title {
+        font-size: 20px;
+      }
+    }
+
+    .example-section {
+      padding: 16px;
+      margin-bottom: 20px;
+
+      .section-title {
+        font-size: 16px;
+        margin-bottom: 16px;
+      }
+
+      .example-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 12px;
+
+        .example-item {
+          padding: 12px;
+
+          .example-label {
+            font-size: 11px;
+          }
+        }
+      }
+
+      .size-comparison {
+        gap: 12px;
+
+        .size-item {
+          padding: 12px;
+          min-width: 60px;
+
+          .size-label {
+            font-size: 11px;
+          }
+        }
+      }
+
+      .color-themes {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 12px;
+
+        .theme-item {
+          padding: 12px;
+
+          .theme-label {
+            font-size: 11px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// 深色模式支持
+@media (prefers-color-scheme: dark) {
+  .usage-examples {
+    background: #1a1a1a;
+
+    .examples-header,
+    .example-section {
+      background: #2d2d2d;
+      color: #ffffff;
+    }
+
+    .examples-header {
+      .examples-title {
+        color: #ffffff;
+      }
+
+      .examples-subtitle {
+        color: #b0b0b0;
+      }
+    }
+
+    .example-section {
+      .section-title {
+        color: #ffffff;
+        border-bottom-color: #404040;
+      }
+
+      .example-grid,
+      .size-comparison,
+      .color-themes {
+        .example-item,
+        .size-item,
+        .theme-item {
+          background: #404040;
+
+          .example-label,
+          .size-label,
+          .theme-label {
+            color: #b0b0b0;
+          }
+
+          &:hover {
+            background: #505050;
+          }
+        }
+      }
+    }
+  }
+}

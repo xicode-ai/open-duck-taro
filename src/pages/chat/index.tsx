@@ -1,21 +1,27 @@
 import { useState, useEffect, useRef } from 'react'
-import Taro from '@tarojs/taro'
+import Taro, { useDidHide } from '@tarojs/taro'
 import { View, Text, ScrollView } from '@tarojs/components'
-import { AtIcon, AtActionSheet, AtActionSheetItem } from 'taro-ui'
+import { AtIcon } from 'taro-ui'
 import { useChatStore } from '@/stores'
-import { generateId, formatDuration } from '@/utils'
+import {
+  generateId,
+  formatDuration,
+  safeAsync,
+  safeEventHandler,
+} from '@/utils'
+import { formatRelativeTime } from '@/utils/format'
 import type { ChatMessage } from '@/types'
-import ErrorBoundary from '@/components/ErrorBoundary'
+import { withPageErrorBoundary } from '@/components/ErrorBoundary/PageErrorBoundary'
+import { CustomNavBar } from '@/components/common'
 import './index.scss'
 
 const Chat = () => {
-  const { messages, isRecording, addMessage, setRecording, setPlaying, updateMessage } =
+  const { messages, isRecording, addMessage, setRecording, setPlaying } =
     useChatStore()
 
-  const [longPressMessage, setLongPressMessage] = useState<ChatMessage | null>(null)
-  const [actionSheetOpen, setActionSheetOpen] = useState(false)
   const [recordDuration, setRecordDuration] = useState(0)
   const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null)
+  const [showMoreOptions, setShowMoreOptions] = useState(false)
 
   const scrollViewRef = useRef<{
     scrollIntoView: (id: string) => void
@@ -25,66 +31,109 @@ const Chat = () => {
   const recorderManagerRef = useRef<Taro.RecorderManager | null>(null)
   const innerAudioContextRef = useRef<Taro.InnerAudioContext | null>(null)
 
+  // 页面隐藏时清理资源
+  useDidHide(() => {
+    // 停止录音
+    if (isRecording) {
+      handleRecordEnd()
+    }
+
+    // 停止播放
+    if (currentPlayingId) {
+      innerAudioContextRef.current?.stop()
+    }
+
+    // 清理定时器
+    if (recordTimerRef.current) {
+      clearInterval(recordTimerRef.current)
+      recordTimerRef.current = null
+    }
+  })
+
   useEffect(() => {
-    // 初始化录音管理器
-    const recorderManager = Taro.getRecorderManager()
-    recorderManagerRef.current = recorderManager
+    // 检查当前运行环境是否支持录音功能
+    const env = Taro.getEnv()
 
-    recorderManager.onStart(() => {
-      // 开始录音
-      setRecording(true)
-      startRecordTimer()
-    })
+    // 初始化录音管理器（仅在支持的环境中）
+    if (env !== Taro.ENV_TYPE.WEB) {
+      try {
+        const recorderManager = Taro.getRecorderManager()
+        if (recorderManager && typeof recorderManager.onStart === 'function') {
+          recorderManagerRef.current = recorderManager
 
-    recorderManager.onStop(res => {
-      // 停止录音
-      setRecording(false)
-      stopRecordTimer()
-      handleRecordComplete(res.tempFilePath, res.duration / 1000)
-    })
+          recorderManager.onStart(() => {
+            // 开始录音
+            setRecording(true)
+            startRecordTimer()
+          })
 
-    recorderManager.onError(() => {
-      // 录音错误处理
-      setRecording(false)
-      stopRecordTimer()
-      Taro.showToast({ title: '录音失败', icon: 'none' })
-    })
+          recorderManager.onStop(res => {
+            // 停止录音
+            setRecording(false)
+            stopRecordTimer()
+            handleRecordComplete(res.tempFilePath, res.duration / 1000)
+          })
+
+          recorderManager.onError(() => {
+            // 录音错误处理
+            setRecording(false)
+            stopRecordTimer()
+            Taro.showToast({ title: '录音失败', icon: 'none' })
+          })
+        }
+      } catch (error) {
+        console.warn('录音管理器初始化失败:', error)
+      }
+    }
 
     // 初始化音频播放器
     const innerAudioContext = Taro.createInnerAudioContext()
     innerAudioContextRef.current = innerAudioContext
 
-    innerAudioContext.onPlay(() => {
-      setPlaying(true)
-    })
+    if (innerAudioContext && typeof innerAudioContext.onPlay === 'function') {
+      innerAudioContext.onPlay(() => {
+        setPlaying(true)
+      })
 
-    innerAudioContext.onStop(() => {
-      setPlaying(false)
-      setCurrentPlayingId(null)
-    })
+      innerAudioContext.onStop(() => {
+        setPlaying(false)
+        setCurrentPlayingId(null)
+      })
 
-    innerAudioContext.onEnded(() => {
-      setPlaying(false)
-      setCurrentPlayingId(null)
-    })
+      innerAudioContext.onEnded(() => {
+        setPlaying(false)
+        setCurrentPlayingId(null)
+      })
 
-    innerAudioContext.onError(() => {
-      setPlaying(false)
-      setCurrentPlayingId(null)
-      Taro.showToast({ title: '播放失败', icon: 'none' })
-    })
+      innerAudioContext.onError(() => {
+        setPlaying(false)
+        setCurrentPlayingId(null)
+        Taro.showToast({ title: '播放失败', icon: 'none' })
+      })
+    }
 
     return () => {
-      recorderManager.onStart(() => {
-        // 录音开始回调
-      })
-      recorderManager.onStop(() => {
-        // 录音结束回调
-      })
-      recorderManager.onError(() => {
-        // 录音错误回调
-      })
-      innerAudioContext.destroy()
+      // 清理录音管理器
+      if (
+        recorderManagerRef.current &&
+        typeof recorderManagerRef.current.onStart === 'function'
+      ) {
+        try {
+          recorderManagerRef.current.onStart(() => {})
+          recorderManagerRef.current.onStop(() => {})
+          recorderManagerRef.current.onError(() => {})
+        } catch (error) {
+          console.warn('清理录音管理器失败:', error)
+        }
+      }
+
+      // 清理音频播放器
+      if (
+        innerAudioContext &&
+        typeof innerAudioContext.destroy === 'function'
+      ) {
+        innerAudioContext.destroy()
+      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -103,7 +152,50 @@ const Chat = () => {
     setRecordDuration(0)
   }
 
-  const handleRecordStart = () => {
+  const handleRecordStart = safeEventHandler(() => {
+    const env = Taro.getEnv()
+
+    // 在H5环境中使用mock数据进行模拟（仅开发环境）
+    if (env === Taro.ENV_TYPE.WEB) {
+      if (process.env.NODE_ENV === 'development') {
+        // 开发环境使用mock数据
+        setRecording(true)
+        startRecordTimer()
+
+        // 模拟录音过程
+        setTimeout(
+          () => {
+            setRecording(false)
+            stopRecordTimer()
+
+            // 生成mock语音数据
+            const mockDuration = Math.floor(Math.random() * 5) + 2 // 2-6秒随机时长
+            handleRecordComplete('mock-voice-url', mockDuration)
+          },
+          Math.floor(Math.random() * 3000) + 1000
+        ) // 1-4秒随机录音时长
+
+        return
+      } else {
+        Taro.showModal({
+          title: '提示',
+          content: 'H5环境暂不支持录音功能，请在小程序或APP中使用语音对话',
+          showCancel: false,
+        })
+        return
+      }
+    }
+
+    // 检查录音管理器是否可用
+    if (!recorderManagerRef.current) {
+      Taro.showModal({
+        title: '提示',
+        content: '录音功能初始化失败，请重新进入页面或重启应用',
+        showCancel: false,
+      })
+      return
+    }
+
     Taro.authorize({
       scope: 'scope.record',
       success: () => {
@@ -127,116 +219,129 @@ const Chat = () => {
         })
       },
     })
-  }
+  }, 'record-start')
 
-  const handleRecordEnd = () => {
-    recorderManagerRef.current?.stop()
-  }
+  const handleRecordEnd = safeEventHandler(() => {
+    const env = Taro.getEnv()
 
-  const handleRecordComplete = async (filePath: string, duration: number) => {
-    // 创建用户消息
-    const userMessage: ChatMessage = {
-      id: generateId(),
-      content: '语音消息',
-      type: 'voice',
-      sender: 'user',
-      timestamp: Date.now(),
-      voiceUrl: filePath,
-      duration,
+    // 在H5环境中的处理
+    if (env === Taro.ENV_TYPE.WEB) {
+      if (process.env.NODE_ENV === 'development' && isRecording) {
+        // 开发环境下手动停止录音
+        setRecording(false)
+        stopRecordTimer()
+
+        // 生成mock语音数据
+        const mockDuration = Math.floor(Math.random() * 5) + 2
+        handleRecordComplete('mock-voice-url', mockDuration)
+      }
+      return
     }
 
-    addMessage(userMessage)
+    recorderManagerRef.current?.stop()
+  }, 'record-end')
 
-    // 模拟发送语音到后端并获取AI回复
-    Taro.showLoading({ title: '思考中...', mask: true })
-
-    // 这里应该调用真实的API
-    // const aiResponse = await api.post('/chat/voice', { audioFile: filePath })
-
-    // 模拟AI回复
-    setTimeout(() => {
-      const aiMessage: ChatMessage = {
+  const handleRecordComplete = safeAsync(
+    async (filePath: string, duration: number) => {
+      // 创建用户消息
+      const userMessage: ChatMessage = {
         id: generateId(),
-        content: 'Hello! How are you today?',
+        content: '',
         type: 'voice',
-        sender: 'ai',
+        sender: 'user',
         timestamp: Date.now(),
-        voiceUrl: 'mock-ai-voice-url',
-        duration: 3,
+        voiceUrl: filePath,
+        duration,
       }
 
-      addMessage(aiMessage)
-      Taro.hideLoading()
+      addMessage(userMessage)
+
+      // 模拟发送语音到后端并获取AI回复
+      Taro.showLoading({ title: '思考中...', mask: true })
+
+      // 模拟AI回复
+      setTimeout(() => {
+        // 随机选择AI回复内容（开发环境mock数据）
+        const mockResponses = [
+          { duration: 3, content: 'Hello! How are you today?' },
+          { duration: 4, content: "That's great! Tell me more about it." },
+          {
+            duration: 5,
+            content: 'I see. Can you practice saying that again?',
+          },
+          { duration: 2, content: 'Perfect pronunciation!' },
+          {
+            duration: 6,
+            content:
+              "Let's try a different sentence. How about describing your day?",
+          },
+          { duration: 4, content: 'Excellent! Your English is improving.' },
+        ]
+
+        const randomResponse =
+          mockResponses[Math.floor(Math.random() * mockResponses.length)]
+
+        const aiMessage: ChatMessage = {
+          id: generateId(),
+          content:
+            process.env.NODE_ENV === 'development'
+              ? randomResponse.content
+              : '',
+          type: 'voice',
+          sender: 'ai',
+          timestamp: Date.now(),
+          voiceUrl: 'mock-ai-voice-url',
+          duration: randomResponse.duration,
+        }
+
+        addMessage(aiMessage)
+        Taro.hideLoading()
+        scrollToBottom()
+      }, 2000)
+
       scrollToBottom()
-    }, 2000)
+    },
+    'api'
+  )
 
-    scrollToBottom()
-  }
-
-  const handlePlayVoice = (message: ChatMessage) => {
+  const handlePlayVoice = safeEventHandler((message: ChatMessage) => {
     if (currentPlayingId === message.id) {
-      innerAudioContextRef.current?.stop()
+      // 停止当前播放
+      if (
+        Taro.getEnv() === Taro.ENV_TYPE.WEB &&
+        process.env.NODE_ENV === 'development'
+      ) {
+        setCurrentPlayingId(null)
+        setPlaying(false)
+      } else {
+        innerAudioContextRef.current?.stop()
+      }
       return
     }
 
     if (message.voiceUrl) {
       setCurrentPlayingId(message.id)
-      if (innerAudioContextRef.current) {
-        innerAudioContextRef.current.src = message.voiceUrl
+      setPlaying(true)
+
+      if (
+        Taro.getEnv() === Taro.ENV_TYPE.WEB &&
+        process.env.NODE_ENV === 'development'
+      ) {
+        // 开发环境模拟播放
+        const duration = (message.duration || 3) * 1000
+        setTimeout(() => {
+          setCurrentPlayingId(null)
+          setPlaying(false)
+        }, duration)
+      } else {
+        // 真实环境播放
+        if (innerAudioContextRef.current) {
+          innerAudioContextRef.current.src = message.voiceUrl
+        }
+        innerAudioContextRef.current?.play()
       }
-      innerAudioContextRef.current?.play()
     }
-  }
-
-  const handleLongPress = (message: ChatMessage) => {
-    setLongPressMessage(message)
-    setActionSheetOpen(true)
-  }
-
-  const handleTranslate = async () => {
-    if (!longPressMessage) return
-
-    Taro.showLoading({ title: '翻译中...', mask: true })
-
-    // 这里应该调用真实的翻译API
-    // const translation = await api.post('/translate', { text: longPressMessage.content })
-
-    // 模拟翻译结果
-    setTimeout(() => {
-      const translation =
-        longPressMessage.sender === 'ai' ? '你好！你今天好吗？' : 'Hello! How are you today?'
-
-      updateMessage(longPressMessage.id, { translation })
-      Taro.hideLoading()
-      setActionSheetOpen(false)
-    }, 1000)
-  }
-
-  const handleGetHelp = async () => {
-    if (!longPressMessage) return
-
-    Taro.showLoading({ title: '分析中...', mask: true })
-
-    // 模拟求助结果
-    setTimeout(() => {
-      const helpMessage: ChatMessage = {
-        id: generateId(),
-        content: `
-原文翻译：Hello! How are you today?
-地道表达：Hey there! How's it going?
-说明：这是更加自然的日常问候方式
-        `,
-        type: 'text',
-        sender: 'ai',
-        timestamp: Date.now(),
-      }
-
-      addMessage(helpMessage)
-      Taro.hideLoading()
-      setActionSheetOpen(false)
-      scrollToBottom()
-    }, 1500)
-  }
+  }, 'play-voice')
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -244,92 +349,181 @@ const Chat = () => {
     }, 100)
   }
 
+  const handleAddFunction = safeEventHandler(() => {
+    setShowMoreOptions(!showMoreOptions)
+    Taro.showToast({ title: '更多功能开发中', icon: 'none' })
+  }, 'add-function')
+
+  const handleEmoji = safeEventHandler(() => {
+    Taro.showToast({ title: '表情功能开发中', icon: 'none' })
+  }, 'emoji')
+
   const renderMessage = (message: ChatMessage) => {
     const isUser = message.sender === 'user'
     const isPlaying = currentPlayingId === message.id
 
     return (
-      <View key={message.id} className={`message ${isUser ? 'user' : 'ai'}`}>
-        <View className="message-content">
-          {message.type === 'voice' ? (
-            <View
-              className={`voice-message ${isPlaying ? 'playing' : ''}`}
-              onClick={() => handlePlayVoice(message)}
-              onLongPress={() => handleLongPress(message)}
-            >
-              <AtIcon value={isPlaying ? 'pause' : 'play'} size="20" color="white" />
-              <Text className="duration">{formatDuration(message.duration || 0)}</Text>
-            </View>
-          ) : (
-            <View className="text-message" onLongPress={() => handleLongPress(message)}>
-              <Text>{message.content}</Text>
-            </View>
-          )}
+      <View
+        key={message.id}
+        className={`chat-message ${isUser ? 'user' : 'ai'}`}
+      >
+        {/* AI头像 */}
+        {!isUser && (
+          <View className="message-avatar ai-avatar">
+            <Text className="avatar-icon">👩</Text>
+          </View>
+        )}
 
-          {message.translation && (
-            <View className="translation">
-              <Text className="translation-text">{message.translation}</Text>
-            </View>
-          )}
+        {/* 消息内容 */}
+        <View className="message-content">
+          <View
+            className={`message-bubble ${isUser ? 'user-bubble' : 'ai-bubble'}`}
+          >
+            {message.type === 'voice' ? (
+              <View
+                className="voice-message"
+                onClick={() => handlePlayVoice(message)}
+              >
+                {/* 播放按钮 */}
+                <View className={`play-button ${isPlaying ? 'playing' : ''}`}>
+                  <AtIcon
+                    value={isPlaying ? 'pause' : 'play'}
+                    size="20"
+                    color={isUser ? '#ffffff' : '#7c3aed'}
+                  />
+                </View>
+
+                {/* 音频波形 */}
+                <View className="voice-waves">
+                  <View
+                    className={`wave wave-1 ${isPlaying ? 'animating' : ''}`}
+                  />
+                  <View
+                    className={`wave wave-2 ${isPlaying ? 'animating' : ''}`}
+                  />
+                  <View
+                    className={`wave wave-3 ${isPlaying ? 'animating' : ''}`}
+                  />
+                  <View
+                    className={`wave wave-4 ${isPlaying ? 'animating' : ''}`}
+                  />
+                </View>
+
+                {/* 时长 */}
+                <Text className="voice-duration">
+                  {message.duration ? `${message.duration}"` : ''}
+                </Text>
+              </View>
+            ) : (
+              <Text className="text-content">{message.content}</Text>
+            )}
+          </View>
+
+          {/* 消息时间 */}
+          <Text className="message-time">
+            {isUser ? formatRelativeTime(message.timestamp) : '刚刚'}
+          </Text>
         </View>
+
+        {/* 用户头像 */}
+        {isUser && (
+          <View className="message-avatar user-avatar">
+            <Text className="avatar-icon">😊</Text>
+          </View>
+        )}
       </View>
     )
   }
 
   return (
-    <ErrorBoundary>
-      <View className="chat-page">
-        {/* 聊天消息区域 */}
-        <ScrollView
-          ref={scrollViewRef}
-          className="messages-container"
-          scrollY
-          scrollIntoView="bottom"
-          enableBackToTop
-        >
-          {messages.map(renderMessage)}
-          <View id="bottom" />
-        </ScrollView>
+    <View className="chat-container">
+      {/* 自定义导航栏 */}
+      <View className="custom-chat-header">
+        <CustomNavBar title="Emma (AI外教)" backgroundColor="#7c3aed" />
+        <View className="online-status-bar">
+          <View className="status-dot" />
+          <Text className="status-text">在线</Text>
+        </View>
+      </View>
 
-        {/* 录音状态指示器 */}
-        {isRecording && (
-          <View className="recording-indicator">
-            <View className="recording-animation">
-              <View className="recording-dot" />
+      {/* 聊天消息区域 */}
+      <ScrollView
+        ref={scrollViewRef}
+        className={`chat-messages-area ${
+          messages.length === 0 ? 'is-empty' : ''
+        }`}
+        scrollY
+        scrollIntoView={`msg-${messages[messages.length - 1]?.id}`}
+        scrollWithAnimation
+      >
+        {/* 欢迎消息 */}
+        {messages.length === 0 && (
+          <View className="welcome-wrapper">
+            <View className="welcome-container">
+              <View className="welcome-avatar">
+                <Text className="welcome-emoji">🤖</Text>
+              </View>
+              <Text className="welcome-title">开始与AI对话吧！</Text>
+              <Text className="welcome-subtitle">
+                按住下方按钮说话，我会帮你练习英语口语
+              </Text>
             </View>
-            <Text className="recording-text">正在录音... {formatDuration(recordDuration)}</Text>
-            <Text className="recording-tip">松开发送，上滑取消</Text>
           </View>
         )}
 
-        {/* 底部录音按钮 */}
-        <View className="bottom-bar">
-          <View
-            className={`record-button ${isRecording ? 'recording' : ''}`}
-            onTouchStart={handleRecordStart}
-            onTouchEnd={handleRecordEnd}
-            onTouchCancel={handleRecordEnd}
-          >
-            <AtIcon value="microphone" size="24" color="white" />
-            <Text className="record-text">{isRecording ? '松开发送' : '按住说话'}</Text>
+        {/* 消息列表 */}
+        {messages.map(renderMessage)}
+        <View id="bottom" style={{ height: '20px' }} />
+      </ScrollView>
+
+      {/* 录音状态指示器 */}
+      {isRecording && (
+        <View className="recording-overlay">
+          <View className="recording-modal">
+            <View className="recording-icon-container">
+              <View className="recording-pulse" />
+              <AtIcon value="microphone" size="40" color="#ffffff" />
+            </View>
+            <Text className="recording-text">
+              正在录音 {formatDuration(recordDuration)}
+            </Text>
+            <Text className="recording-hint">松开发送，上滑取消</Text>
           </View>
         </View>
+      )}
 
-        {/* 长按操作菜单 */}
-        <AtActionSheet
-          isOpened={actionSheetOpen}
-          cancelText="取消"
-          onCancel={() => setActionSheetOpen(false)}
-          onClose={() => setActionSheetOpen(false)}
+      {/* 底部输入栏 */}
+      <View className="chat-input-bar">
+        {/* 添加功能按钮 */}
+        <View className="input-button add-button" onClick={handleAddFunction}>
+          <AtIcon value="add" size="24" color="#ffffff" />
+        </View>
+
+        {/* 录音按钮 */}
+        <View
+          className={`record-main-button ${isRecording ? 'recording' : ''}`}
+          onTouchStart={handleRecordStart}
+          onTouchEnd={handleRecordEnd}
+          onTouchCancel={handleRecordEnd}
         >
-          <AtActionSheetItem onClick={handleTranslate}>翻译</AtActionSheetItem>
-          {longPressMessage?.sender === 'user' && (
-            <AtActionSheetItem onClick={handleGetHelp}>求助</AtActionSheetItem>
-          )}
-        </AtActionSheet>
+          <AtIcon value="microphone" size="24" color="#ffffff" />
+          {!isRecording && <Text className="record-text">按住说话</Text>}
+        </View>
+
+        {/* 表情按钮 */}
+        <View className="input-button emoji-button" onClick={handleEmoji}>
+          <Text className="emoji-icon">😊</Text>
+        </View>
       </View>
-    </ErrorBoundary>
+    </View>
   )
 }
 
-export default Chat
+export default withPageErrorBoundary(Chat, {
+  pageName: 'AI对话',
+  enableErrorReporting: true,
+  showRetry: true,
+  onError: (error, errorInfo) => {
+    console.log('AI对话页面发生错误:', error, errorInfo)
+  },
+})

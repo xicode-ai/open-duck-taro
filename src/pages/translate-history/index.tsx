@@ -1,5 +1,6 @@
 import { View, Text } from '@tarojs/components'
 import { AtIcon } from 'taro-ui'
+import { withPageErrorBoundary } from '@/components/ErrorBoundary/PageErrorBoundary'
 import './index.scss'
 
 const TranslateHistory = () => {
@@ -14,4 +15,8 @@ const TranslateHistory = () => {
   )
 }
 
-export default TranslateHistory
+export default withPageErrorBoundary(TranslateHistory, {
+  pageName: '翻译历史',
+  enableErrorReporting: true,
+  showRetry: true,
+})
