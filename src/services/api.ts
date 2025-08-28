@@ -1,7 +1,6 @@
 import httpClient from './http'
 import type {
   User,
-  ChatMessage,
   Topic,
   Vocabulary,
   TranslationResult,
@@ -34,23 +33,74 @@ export const userApi = {
 
 // 聊天相关API
 export const chatApi = {
+  // 获取AI助手信息
+  getAssistant: (id: string) =>
+    httpClient.get(`/chat/assistant/${id}`, { cache: true }),
+
+  // 获取聊天历史
+  getChatHistory: (sessionId: string) =>
+    httpClient.get(`/chat/history/${sessionId}`, { cache: true }),
+
   // 发送消息
-  sendMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) =>
-    httpClient.post<ChatMessage>('/chat/message', message, {
+  sendMessage: (params: {
+    sessionId: string
+    content: string
+    type: 'text' | 'voice'
+    audioUrl?: string
+    duration?: number
+  }) =>
+    httpClient.post('/chat/send', params, {
       showLoading: true,
     }),
 
-  // 获取聊天历史
-  getChatHistory: (chatId: string) =>
-    httpClient.get<ChatMessage[]>(`/chat/history/${chatId}`, { cache: true }),
+  // 语音转文字
+  speechToText: (audioFile: FormData) =>
+    httpClient.post('/chat/speech-to-text', audioFile, {
+      showLoading: true,
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 
-  // 获取AI回复
-  getAIResponse: (message: string, context?: string) =>
-    httpClient.post<{
-      reply: string
-      translation?: string
-      suggestions?: string[]
-    }>('/chat/ai-response', { message, context }, { showLoading: true }),
+  // 文字转语音
+  textToSpeech: (text: string, voice?: string) =>
+    httpClient.post(
+      '/chat/text-to-speech',
+      { text, voice },
+      {
+        showLoading: true,
+      }
+    ),
+
+  // 翻译消息
+  translateMessage: (text: string, from?: string, to?: string) =>
+    httpClient.post(
+      '/chat/translate',
+      { text, from, to },
+      {
+        showLoading: true,
+      }
+    ),
+
+  // 获取纠错和帮助
+  getCorrection: (text: string, context?: string) =>
+    httpClient.post(
+      '/chat/correction',
+      { text, context },
+      {
+        showLoading: true,
+      }
+    ),
+
+  // 发送表情反馈
+  sendFeedback: (messageId: string, emoji: string, sessionId: string) =>
+    httpClient.post('/chat/feedback', { messageId, emoji, sessionId }),
+
+  // 获取AI状态
+  getAssistantStatus: (id: string) =>
+    httpClient.get(`/chat/assistant-status/${id}`),
+
+  // 获取推荐话题
+  getSuggestedTopics: () =>
+    httpClient.get('/chat/suggested-topics', { cache: true }),
 }
 
 // 话题相关API

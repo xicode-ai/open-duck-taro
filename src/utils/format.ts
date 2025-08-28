@@ -225,29 +225,7 @@ export const formatArray = (
   return otherItems.join(separator) + lastSeparator + lastItem
 }
 
-/**
- * 格式化相对时间（用于聊天消息）
- */
-export const formatRelativeTime = (timestamp: number): string => {
-  const now = Date.now()
-  const diff = Math.floor((now - timestamp) / 1000) // 转换为秒
-
-  if (diff < 60) {
-    return '刚刚'
-  } else if (diff < 3600) {
-    const minutes = Math.floor(diff / 60)
-    return `${minutes}分钟前`
-  } else if (diff < 86400) {
-    const hours = Math.floor(diff / 3600)
-    return `${hours}小时前`
-  } else if (diff < 604800) {
-    const days = Math.floor(diff / 86400)
-    return `${days}天前`
-  } else {
-    const date = new Date(timestamp)
-    return `${date.getMonth() + 1}月${date.getDate()}日`
-  }
-}
+// formatRelativeTime已移至date.ts模块
 
 // 导出格式化工具对象
 export const formatUtils = {
@@ -272,5 +250,4 @@ export const formatUtils = {
   formatProgress,
   formatStudyTime,
   formatArray,
-  formatRelativeTime,
 }

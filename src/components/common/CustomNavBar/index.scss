@@ -1,52 +1,86 @@
 .custom-nav-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 40px 32px;
-  padding-top: max(40px, env(safe-area-inset-top, 40px));
-  background-color: #d9534f; // Default theme color, can be customized via props if needed
+  width: 100%;
+  padding-top: max(env(safe-area-inset-top, 0px) + 20px, 60px);
+  background-color: #d9534f;
   color: white;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  min-height: 300px; // Increased height for better proportion
+  position: relative;
+  z-index: 10;
   box-sizing: border-box;
+  margin: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  // 使用相对定位的容器
+  display: block;
+  position: relative;
+  min-height: 120px; // 增加最小高度，让导航栏更高
 
   .nav-bar-left-group {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
     align-items: center;
-    flex: 1;
+    max-width: calc(100% - 180px); // 给右侧按钮留出空间
     overflow: hidden;
 
-    .nav-bar-title {
-      font-size: 80px;
-      font-weight: 600;
-      margin-left: 30px;
-      white-space: nowrap;
+    .title-container {
+      margin-left: 20px;
       overflow: hidden;
-      letter-spacing: 1px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      .nav-bar-title {
+        font-size: 36px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        letter-spacing: 0.5px;
+        display: block;
+        line-height: 1.2;
+        margin: 0;
+      }
+
+      .nav-bar-subtitle {
+        font-size: 24px;
+        font-weight: 400;
+        opacity: 0.8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-top: 2px;
+        line-height: 1.2;
+        margin-bottom: 0;
+      }
     }
   }
 
   .nav-bar-right-group {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    min-width: 40px; // Ensure space for at least one icon
+    justify-content: center;
 
     .placeholder {
-      width: 40px; // Match the typical width of the back button area for centering
+      width: 60px;
+      height: 60px;
     }
 
     .nav-right-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 80px;
-      height: 80px;
-      border-radius: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
       background-color: rgba(255, 255, 255, 0.2);
       transition: background-color 0.2s;
+      flex-shrink: 0;
 
       &:active {
         background-color: rgba(255, 255, 255, 0.3);

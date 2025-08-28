@@ -76,6 +76,7 @@ export default [
       '*.config.ts',
       'coverage/**',
       'public/**',
+      '**/mockServiceWorker.js',
       'temp/**',
       'tmp/**',
       '.eslintrc.*',

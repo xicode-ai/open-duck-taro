@@ -88,6 +88,34 @@ export const getRelativeTime = (timestamp: number): string => {
 }
 
 /**
+ * 格式化聊天消息的相对时间
+ * 用于聊天界面，24小时内显示相对时间，超过则显示具体时间
+ */
+export const formatRelativeTime = (timestamp: number): string => {
+  const now = Date.now()
+  const diff = now - timestamp
+  const minute = 60 * 1000
+  const hour = 60 * minute
+  const day = 24 * hour
+
+  if (diff < minute) {
+    return '刚刚'
+  } else if (diff < hour) {
+    return `${Math.floor(diff / minute)}分钟前`
+  } else if (diff < day) {
+    return `${Math.floor(diff / hour)}小时前`
+  } else {
+    // 超过24小时显示具体时间
+    const date = new Date(timestamp)
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const dayNum = date.getDate().toString().padStart(2, '0')
+    const hourNum = date.getHours().toString().padStart(2, '0')
+    const minuteNum = date.getMinutes().toString().padStart(2, '0')
+    return `${month}-${dayNum} ${hourNum}:${minuteNum}`
+  }
+}
+
+/**
  * 判断是否为今天
  */
 export const isToday = (timestamp: number): boolean => {

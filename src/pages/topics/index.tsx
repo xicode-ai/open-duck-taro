@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { View, Text, Input } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
+import CustomIcon from '../../components/CustomIcon'
+import CustomNavBar from '../../components/common/CustomNavBar'
 // import { useTopicsStore } from '../../stores/topics' // 暂时注释
 import { useUserStore } from '../../stores/user'
 import './index.scss'
@@ -31,144 +33,147 @@ const TopicsPage = () => {
   const [filteredTopics, setFilteredTopics] = useState<Topic[]>([])
 
   // 模拟话题数据
-  const mockTopics: Topic[] = [
-    {
-      id: '1',
-      title: '日常生活',
-      description: '学习日常生活中的常用对话',
-      icon: '🏠',
-      iconClass: 'daily',
-      background: '🏠',
-      category: 'daily',
-      difficulty: 'easy',
-      conversations: 25,
-      isPopular: true,
-    },
-    {
-      id: '2',
-      title: '旅行出游',
-      description: '机场、酒店、景点相关表达',
-      icon: '✈️',
-      iconClass: 'travel',
-      background: '✈️',
-      category: 'travel',
-      difficulty: 'medium',
-      conversations: 18,
-    },
-    {
-      id: '3',
-      title: '美食餐厅',
-      description: '点餐、菜单、口味表达',
-      icon: '🍽️',
-      iconClass: 'food',
-      background: '🍽️',
-      category: 'food',
-      difficulty: 'easy',
-      conversations: 22,
-      isNew: true,
-    },
-    {
-      id: '4',
-      title: '职场工作',
-      description: '商务会议、邮件沟通技巧',
-      icon: '💼',
-      iconClass: 'work',
-      background: '💼',
-      category: 'work',
-      difficulty: 'hard',
-      conversations: 15,
-    },
-    {
-      id: '5',
-      title: '兴趣爱好',
-      description: '音乐、电影、运动话题',
-      icon: '🎨',
-      iconClass: 'hobby',
-      background: '🎨',
-      category: 'hobby',
-      difficulty: 'medium',
-      conversations: 20,
-    },
-    {
-      id: '6',
-      title: '购物消费',
-      description: '商场、网购、讨价还价',
-      icon: '🛒',
-      iconClass: 'shopping',
-      background: '🛒',
-      category: 'shopping',
-      difficulty: 'easy',
-      conversations: 16,
-    },
-    {
-      id: '7',
-      title: '健康医疗',
-      description: '看医生、描述症状用语',
-      icon: '🏥',
-      iconClass: 'health',
-      background: '🏥',
-      category: 'health',
-      difficulty: 'hard',
-      conversations: 12,
-    },
-    {
-      id: '8',
-      title: '教育学习',
-      description: '学校、课程、考试话题',
-      icon: '📚',
-      iconClass: 'education',
-      background: '📚',
-      category: 'education',
-      difficulty: 'medium',
-      conversations: 19,
-    },
-    {
-      id: '9',
-      title: '天气气候',
-      description: '天气描述、季节变化',
-      icon: '🌤️',
-      iconClass: 'weather',
-      background: '🌤️',
-      category: 'weather',
-      difficulty: 'easy',
-      conversations: 14,
-      isNew: true,
-    },
-    {
-      id: '10',
-      title: '家庭亲情',
-      description: '家人介绍、家庭聚会',
-      icon: '👨‍👩‍👧‍👦',
-      iconClass: 'family',
-      background: '👨‍👩‍👧‍👦',
-      category: 'family',
-      difficulty: 'easy',
-      conversations: 21,
-    },
-    {
-      id: '11',
-      title: '运动健身',
-      description: '体育运动、健身话题',
-      icon: '⚽',
-      iconClass: 'sports',
-      background: '⚽',
-      category: 'sports',
-      difficulty: 'medium',
-      conversations: 17,
-    },
-    {
-      id: '12',
-      title: '娱乐休闲',
-      description: '电影、音乐、游戏话题',
-      icon: '🎬',
-      iconClass: 'entertainment',
-      background: '🎬',
-      category: 'entertainment',
-      difficulty: 'medium',
-      conversations: 23,
-      isPopular: true,
-    },
-  ]
+  const mockTopics: Topic[] = useMemo(
+    () => [
+      {
+        id: '1',
+        title: '日常生活',
+        description: '学习日常生活中的常用对话',
+        icon: '🏠',
+        iconClass: 'daily',
+        background: '🏠',
+        category: 'daily',
+        difficulty: 'easy',
+        conversations: 25,
+        isPopular: true,
+      },
+      {
+        id: '2',
+        title: '旅行出游',
+        description: '机场、酒店、景点相关表达',
+        icon: '✈️',
+        iconClass: 'travel',
+        background: '✈️',
+        category: 'travel',
+        difficulty: 'medium',
+        conversations: 18,
+      },
+      {
+        id: '3',
+        title: '美食餐厅',
+        description: '点餐、菜单、口味表达',
+        icon: '🍽️',
+        iconClass: 'food',
+        background: '🍽️',
+        category: 'food',
+        difficulty: 'easy',
+        conversations: 22,
+        isNew: true,
+      },
+      {
+        id: '4',
+        title: '职场工作',
+        description: '商务会议、邮件沟通技巧',
+        icon: '💼',
+        iconClass: 'work',
+        background: '💼',
+        category: 'work',
+        difficulty: 'hard',
+        conversations: 15,
+      },
+      {
+        id: '5',
+        title: '兴趣爱好',
+        description: '音乐、电影、运动话题',
+        icon: '🎨',
+        iconClass: 'hobby',
+        background: '🎨',
+        category: 'hobby',
+        difficulty: 'medium',
+        conversations: 20,
+      },
+      {
+        id: '6',
+        title: '购物消费',
+        description: '商场、网购、讨价还价',
+        icon: '🛒',
+        iconClass: 'shopping',
+        background: '🛒',
+        category: 'shopping',
+        difficulty: 'easy',
+        conversations: 16,
+      },
+      {
+        id: '7',
+        title: '健康医疗',
+        description: '看医生、描述症状用语',
+        icon: '🏥',
+        iconClass: 'health',
+        background: '🏥',
+        category: 'health',
+        difficulty: 'hard',
+        conversations: 12,
+      },
+      {
+        id: '8',
+        title: '教育学习',
+        description: '学校、课程、考试话题',
+        icon: '📚',
+        iconClass: 'education',
+        background: '📚',
+        category: 'education',
+        difficulty: 'medium',
+        conversations: 19,
+      },
+      {
+        id: '9',
+        title: '天气气候',
+        description: '天气描述、季节变化',
+        icon: '🌤️',
+        iconClass: 'weather',
+        background: '🌤️',
+        category: 'weather',
+        difficulty: 'easy',
+        conversations: 14,
+        isNew: true,
+      },
+      {
+        id: '10',
+        title: '家庭亲情',
+        description: '家人介绍、家庭聚会',
+        icon: '👨‍👩‍👧‍👦',
+        iconClass: 'family',
+        background: '👨‍👩‍👧‍👦',
+        category: 'family',
+        difficulty: 'easy',
+        conversations: 21,
+      },
+      {
+        id: '11',
+        title: '运动健身',
+        description: '体育运动、健身话题',
+        icon: '⚽',
+        iconClass: 'sports',
+        background: '⚽',
+        category: 'sports',
+        difficulty: 'medium',
+        conversations: 17,
+      },
+      {
+        id: '12',
+        title: '娱乐休闲',
+        description: '电影、音乐、游戏话题',
+        icon: '🎬',
+        iconClass: 'entertainment',
+        background: '🎬',
+        category: 'entertainment',
+        difficulty: 'medium',
+        conversations: 23,
+        isPopular: true,
+      },
+    ],
+    []
+  )
 
   // 分类数据
   const mockCategories = [
@@ -200,29 +205,8 @@ const TopicsPage = () => {
     },
   ]
 
-  // 页面初始化
-  useEffect(() => {
-    loadData()
-  }, []) // loadData 在组件内定义，暂时忽略依赖警告
-
   // 筛选话题
-  useEffect(() => {
-    filterTopics()
-  }, [searchText, activeCategory]) // filterTopics 在组件内定义，暂时忽略依赖警告
-
-  // 加载数据
-  const loadData = async () => {
-    setIsLoading(true)
-
-    // 模拟网络延迟
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    setIsLoading(false)
-    filterTopics()
-  }
-
-  // 筛选话题
-  const filterTopics = () => {
+  const filterTopics = useCallback(() => {
     let filtered = mockTopics
 
     // 按分类筛选
@@ -240,7 +224,28 @@ const TopicsPage = () => {
     }
 
     setFilteredTopics(filtered)
-  }
+  }, [activeCategory, searchText, mockTopics])
+
+  // 加载数据
+  const loadData = useCallback(async () => {
+    setIsLoading(true)
+
+    // 模拟网络延迟
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    setIsLoading(false)
+    filterTopics()
+  }, [filterTopics])
+
+  // 页面初始化
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  // 筛选话题
+  useEffect(() => {
+    filterTopics()
+  }, [filterTopics])
 
   // 清空搜索
   const clearSearch = () => {
@@ -312,16 +317,21 @@ const TopicsPage = () => {
 
   return (
     <View className="topics-page">
-      {/* 页面头部 */}
-      <View className="page-header">
-        <Text className="header-title">话题练习</Text>
-        <Text className="header-desc">选择感兴趣的话题开始对话</Text>
-      </View>
+      {/* 导航栏 */}
+      <CustomNavBar
+        title="话题练习"
+        backgroundColor="#9C27B0"
+        renderRight={
+          <View className="nav-right-btn" onClick={createCustomTopic}>
+            <AtIcon value="add" size="20" />
+          </View>
+        }
+      />
 
       {/* 搜索栏 */}
       <View className="search-section">
         <View className="search-bar">
-          <AtIcon value="search" className="search-icon" />
+          <CustomIcon name="search" size={16} />
           <Input
             className="search-input"
             value={searchText}

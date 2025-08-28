@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
+import CustomNavBar from '../../components/common/CustomNavBar'
 import { useUserStore } from '../../stores/user'
-import { useVocabularyStore } from '../../stores/vocabulary'
 import './index.scss'
 
 interface Vocabulary {
@@ -51,53 +51,86 @@ const VocabularyStudyPage = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   // 模拟单词数据
-  const mockWords: Vocabulary[] = [
-    {
-      id: '1',
-      word: 'immense',
-      pronunciation: {
-        us: '/ɪˈmens/',
-        uk: '/ɪˈmens/',
+  const mockWords: Vocabulary[] = useMemo(
+    () => [
+      {
+        id: '1',
+        word: 'immense',
+        pronunciation: {
+          us: '/ɪˈmens/',
+          uk: '/ɪˈmens/',
+        },
+        meaning: 'adj. 极大的，巨大的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'He inherited an immense fortune.',
+          chinese: '他继承了巨额财富。',
+        },
+        level: 'university',
       },
-      meaning: 'adj. 极大的，巨大的',
-      partOfSpeech: 'adjective',
-      example: {
-        english: 'He inherited an immense fortune.',
-        chinese: '他继承了巨额财富。',
+      {
+        id: '2',
+        word: 'brilliant',
+        pronunciation: {
+          us: '/ˈbrɪljənt/',
+          uk: '/ˈbrɪljənt/',
+        },
+        meaning: 'adj. 杰出的，聪明的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'She gave a brilliant performance.',
+          chinese: '她的表演非常精彩。',
+        },
+        level: 'high',
       },
-      level: 'university',
+      {
+        id: '3',
+        word: 'fascinating',
+        pronunciation: {
+          us: '/ˈfæsɪneɪtɪŋ/',
+          uk: '/ˈfæsɪneɪtɪŋ/',
+        },
+        meaning: 'adj. 迷人的，极有趣的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'The documentary was absolutely fascinating.',
+          chinese: '这部纪录片非常引人入胜。',
+        },
+        level: 'university',
+      },
+    ],
+    []
+  )
+
+  // 初始化学习会话
+  const initializeSession = useCallback(
+    (mode: StudySession['mode'], level: string, wordCount: number) => {
+      const newSession: StudySession = {
+        mode,
+        level,
+        wordCount,
+        correctCount: 0,
+        incorrectCount: 0,
+        startTime: Date.now(),
+        currentIndex: 0,
+        words: mockWords.slice(0, wordCount),
+      }
+
+      setSession(newSession)
+      setCurrentWord(newSession.words[0])
+
+      // 挑战模式设置计时器
+      if (mode === 'challenge') {
+        setTimeRemaining(wordCount * 10) // 每个单词10秒
+      }
+
+      // 测试模式隐藏词义
+      if (mode === 'test') {
+        setShowMeaning(false)
+      }
     },
-    {
-      id: '2',
-      word: 'brilliant',
-      pronunciation: {
-        us: '/ˈbrɪljənt/',
-        uk: '/ˈbrɪljənt/',
-      },
-      meaning: 'adj. 杰出的，聪明的',
-      partOfSpeech: 'adjective',
-      example: {
-        english: 'She gave a brilliant performance.',
-        chinese: '她的表演非常精彩。',
-      },
-      level: 'high',
-    },
-    {
-      id: '3',
-      word: 'fascinating',
-      pronunciation: {
-        us: '/ˈfæsɪneɪtɪŋ/',
-        uk: '/ˈfæsɪneɪtɪŋ/',
-      },
-      meaning: 'adj. 迷人的，极有趣的',
-      partOfSpeech: 'adjective',
-      example: {
-        english: 'The documentary was absolutely fascinating.',
-        chinese: '这部纪录片非常引人入胜。',
-      },
-      level: 'university',
-    },
-  ]
+    [mockWords]
+  )
 
   // 页面初始化
   useEffect(() => {
@@ -113,7 +146,7 @@ const VocabularyStudyPage = () => {
     } else {
       Taro.navigateBack()
     }
-  }, []) // initializeSession 在组件内定义，忽略依赖警告
+  }, [initializeSession])
 
   // 计时器
   useEffect(() => {
@@ -138,37 +171,6 @@ const VocabularyStudyPage = () => {
       }
     }
   }, [timeRemaining, isPaused, isCompleted, session])
-
-  // 初始化学习会话
-  const initializeSession = (
-    mode: StudySession['mode'],
-    level: string,
-    wordCount: number
-  ) => {
-    const newSession: StudySession = {
-      mode,
-      level,
-      wordCount,
-      correctCount: 0,
-      incorrectCount: 0,
-      startTime: Date.now(),
-      currentIndex: 0,
-      words: mockWords.slice(0, wordCount),
-    }
-
-    setSession(newSession)
-    setCurrentWord(newSession.words[0])
-
-    // 挑战模式设置计时器
-    if (mode === 'challenge') {
-      setTimeRemaining(wordCount * 10) // 每个单词10秒
-    }
-
-    // 测试模式隐藏词义
-    if (mode === 'test') {
-      setShowMeaning(false)
-    }
-  }
 
   // 播放音频
   const playAudio = (type: 'us' | 'uk' | 'sentence') => {
@@ -325,6 +327,22 @@ const VocabularyStudyPage = () => {
 
   return (
     <View className="vocabulary-study-page">
+      {/* 导航栏 */}
+      <CustomNavBar
+        title={
+          session
+            ? `${session.mode === 'new' ? '学新单词' : session.mode === 'review' ? '复习巩固' : session.mode === 'test' ? '单词测试' : '挑战模式'}`
+            : '单词学习'
+        }
+        backgroundColor="#E91E63"
+        renderRight={
+          session && (
+            <View className="nav-right-btn" onClick={togglePause}>
+              <AtIcon value={isPaused ? 'play' : 'pause'} size="20" />
+            </View>
+          )
+        }
+      />
       {/* 学习头部 */}
       <View className="study-header">
         <View className="header-content">

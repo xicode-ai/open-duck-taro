@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
+import CustomIcon from '../../components/CustomIcon'
 import { useUserStore } from '../../stores/user'
 import './index.scss'
 
@@ -19,7 +20,7 @@ const IndexPage = () => {
       id: 'chat',
       title: '对话模式',
       desc: '与AI外教语音对话练习',
-      icon: 'message',
+      icon: 'chat',
       iconClass: 'blue',
       page: '/pages/chat/index',
     },
@@ -27,7 +28,7 @@ const IndexPage = () => {
       id: 'topics',
       title: '话题模式',
       desc: '选择话题进行场景对话',
-      icon: 'tags',
+      icon: 'list',
       iconClass: 'green',
       page: '/pages/topics/index',
     },
@@ -35,7 +36,7 @@ const IndexPage = () => {
       id: 'translate',
       title: '翻译功能',
       desc: '中英互译，地道口语表达',
-      icon: 'reload',
+      icon: 'translate',
       iconClass: 'purple',
       page: '/pages/translate/index',
     },
@@ -43,7 +44,7 @@ const IndexPage = () => {
       id: 'photo-story',
       title: '拍照短文',
       desc: '拍照生成英文描述练习',
-      icon: 'camera',
+      icon: 'photo-story',
       iconClass: 'orange',
       page: '/pages/photo-story/index',
     },
@@ -51,7 +52,7 @@ const IndexPage = () => {
       id: 'vocabulary',
       title: '背单词',
       desc: '语境学习法，分阶段背单词',
-      icon: 'book',
+      icon: 'vocabulary',
       iconClass: 'red',
       page: '/pages/vocabulary/index',
     },
@@ -68,13 +69,13 @@ const IndexPage = () => {
     {
       key: 'translate',
       name: '地道翻译',
-      icon: 'reload',
+      icon: 'translate',
       color: 'purple',
     },
     {
       key: 'photo',
       name: '拍照短文',
-      icon: 'camera',
+      icon: 'photo-story',
       color: 'blue',
     },
   ]
@@ -123,15 +124,6 @@ const IndexPage = () => {
 
   return (
     <View className="index-page">
-      {/* 页面头部 */}
-      <View className="page-header">
-        <View className="app-logo">
-          <View className="duck-logo"></View>
-          <Text className="app-title">开口鸭</Text>
-        </View>
-        <Text className="app-subtitle">与AI外教练习英语口语</Text>
-      </View>
-
       {/* 用户状态卡片 */}
       <View className="user-status-card">
         <View className="card-header">
@@ -148,7 +140,7 @@ const IndexPage = () => {
             const usage = checkUsage(feature.key)
             return (
               <View key={feature.key} className={`stat-item ${feature.color}`}>
-                <AtIcon value={feature.icon} className="stat-icon" />
+                <CustomIcon name={feature.icon} size={40} />
                 <Text className="stat-name">{feature.name}</Text>
                 <Text className="stat-value">剩余: {usage.remaining}</Text>
               </View>
@@ -181,9 +173,7 @@ const IndexPage = () => {
             onClick={() => navigateToPage(item.page, item.id)}
           >
             <View className="function-content">
-              <View className={`function-icon ${item.iconClass}`}>
-                <AtIcon value={item.icon} className="icon" />
-              </View>
+              <CustomIcon name={item.icon} size={64} />
               <View className="function-info">
                 <Text className="function-title">{item.title}</Text>
                 <Text className="function-desc">{item.desc}</Text>

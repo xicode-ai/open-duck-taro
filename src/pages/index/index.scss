@@ -1,68 +1,7 @@
 .index-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 0 32rpx 120rpx;
-
-  .page-header {
-    padding: 40rpx 0 32rpx;
-    text-align: center;
-
-    .app-logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16rpx;
-
-      .duck-logo {
-        position: relative;
-        width: 64rpx;
-        height: 64rpx;
-        background: linear-gradient(45deg, #ffd700, #ffa500);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 16rpx 40rpx rgba(255, 165, 0, 0.3);
-        margin-right: 16rpx;
-
-        &::before {
-          content: '';
-          position: absolute;
-          top: 15%;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 30%;
-          height: 25%;
-          background: #ff6b35;
-          border-radius: 0 0 50% 50%;
-          clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
-        }
-
-        &::after {
-          content: '';
-          position: absolute;
-          top: 40%;
-          left: 25%;
-          width: 8rpx;
-          height: 8rpx;
-          border-radius: 50%;
-          background: #000;
-          box-shadow: 20rpx 0 0 #000;
-        }
-      }
-
-      .app-title {
-        font-size: 48rpx;
-        font-weight: bold;
-        color: #333;
-      }
-    }
-
-    .app-subtitle {
-      font-size: 28rpx;
-      color: #666;
-    }
-  }
+  padding: 32rpx 32rpx 120rpx;
 
   .user-status-card {
     background: #fff;
@@ -111,43 +50,18 @@
         text-align: center;
         padding: 24rpx 16rpx;
         border-radius: 16rpx;
-
-        .stat-icon {
-          font-size: 32rpx;
-          margin-bottom: 8rpx;
-        }
+        background: transparent;
 
         .stat-name {
           font-size: 24rpx;
           font-weight: 500;
           color: #333;
-          margin-bottom: 4rpx;
+          margin: 8rpx 0 4rpx 0;
         }
 
         .stat-value {
           font-size: 20rpx;
           color: #666;
-        }
-
-        &.orange {
-          background: #fff7ed;
-          .stat-icon {
-            color: #ea580c;
-          }
-        }
-
-        &.purple {
-          background: #faf5ff;
-          .stat-icon {
-            color: #9333ea;
-          }
-        }
-
-        &.blue {
-          background: #eff6ff;
-          .stat-icon {
-            color: #2563eb;
-          }
         }
       }
     }
@@ -204,71 +118,44 @@
 
     .function-item {
       background: #fff;
-      border-radius: 32rpx;
-      padding: 40rpx 32rpx;
-      box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
-      border: 1rpx solid #f0f0f0;
+      border-radius: 24rpx;
+      padding: 32rpx 24rpx;
+      box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+      border: 1rpx solid #f8f9fa;
       transition: all 0.3s ease;
 
       &:active {
         transform: scale(0.98);
-        box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.12);
+        box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);
       }
 
       .function-content {
         display: flex;
         align-items: center;
 
-        .function-icon {
-          width: 88rpx;
-          height: 88rpx;
-          border-radius: 24rpx;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-right: 32rpx;
-
-          .icon {
-            font-size: 40rpx;
-            color: #fff;
-          }
-
-          &.blue {
-            background: #3b82f6;
-          }
-          &.green {
-            background: #10b981;
-          }
-          &.purple {
-            background: #8b5cf6;
-          }
-          &.orange {
-            background: #f59e0b;
-          }
-          &.red {
-            background: #ef4444;
-          }
-        }
-
         .function-info {
           flex: 1;
+          margin-left: 24rpx;
+          margin-right: 16rpx;
 
           .function-title {
-            font-size: 36rpx;
+            font-size: 34rpx;
             font-weight: 600;
             color: #333;
-            margin-bottom: 8rpx;
+            margin-bottom: 6rpx;
           }
 
           .function-desc {
-            font-size: 26rpx;
+            font-size: 24rpx;
             color: #666;
+            line-height: 1.4;
           }
         }
 
         .arrow-icon {
-          color: #ccc;
-          font-size: 32rpx;
+          color: #d1d5db;
+          font-size: 28rpx;
+          margin-left: 8rpx;
         }
       }
     }

@@ -9,6 +9,8 @@ import {
   AtModalAction,
   AtButton,
 } from 'taro-ui'
+import CustomIcon from '../../components/CustomIcon'
+import CustomNavBar from '../../components/common/CustomNavBar'
 import { useUserStore } from '../../stores/user'
 import './index.scss'
 
@@ -244,6 +246,20 @@ const ProfilePage = () => {
 
   return (
     <View className="profile-page">
+      {/* 导航栏 */}
+      <CustomNavBar
+        title="个人中心"
+        backgroundColor="#FF5722"
+        renderRight={
+          <View
+            className="nav-right-btn"
+            onClick={() => setShowLogoutModal(true)}
+          >
+            <AtIcon value="settings" size="20" />
+          </View>
+        }
+      />
+
       {/* 用户信息头部 */}
       <View className="profile-header">
         <View className="header-content">
@@ -252,7 +268,7 @@ const ProfilePage = () => {
               <Text>🦆</Text>
             </View>
             <View className="edit-avatar">
-              <AtIcon value="edit" />
+              <CustomIcon name="edit" size={16} />
             </View>
             {membership.isPremium && (
               <View className="membership-crown">👑</View>
@@ -355,9 +371,7 @@ const ProfilePage = () => {
                     className="menu-item"
                     onClick={() => handleMenuClick(item)}
                   >
-                    <View className={`menu-icon ${item.iconClass}`}>
-                      <AtIcon value={item.icon} />
-                    </View>
+                    <CustomIcon name={item.icon} size={40} />
 
                     <View className="menu-info">
                       <Text className="menu-title">{item.title}</Text>
@@ -385,7 +399,7 @@ const ProfilePage = () => {
         {/* 退出登录 */}
         <View className="logout-section">
           <View className="logout-btn" onClick={handleLogout}>
-            <AtIcon value="blocked" />
+            <CustomIcon name="blocked" size={20} />
             <Text>退出登录</Text>
           </View>
         </View>

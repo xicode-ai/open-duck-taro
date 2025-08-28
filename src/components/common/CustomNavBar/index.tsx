@@ -27,6 +27,22 @@ export interface CustomNavBarProps {
    * Defaults to the theme color if not provided.
    */
   backgroundColor?: string
+  /**
+   * Text color for title and buttons. Defaults to white.
+   */
+  textColor?: string
+  /**
+   * Subtitle displayed below the main title
+   */
+  subtitle?: string
+  /**
+   * Custom className for additional styling
+   */
+  className?: string
+  /**
+   * Whether this navbar is for the home page (changes layout)
+   */
+  isHomePage?: boolean
 }
 
 const CustomNavBar: React.FC<CustomNavBarProps> = ({
@@ -35,16 +51,39 @@ const CustomNavBar: React.FC<CustomNavBarProps> = ({
   onBack,
   showBackButton = true,
   backgroundColor,
+  textColor = 'white',
+  subtitle,
+  className = '',
+  isHomePage = false,
 }) => {
-  const navBarStyle = backgroundColor ? { backgroundColor } : {}
+  const navBarStyle = {
+    ...(backgroundColor ? { backgroundColor } : {}),
+    color: textColor,
+  }
+
+  const titleStyle = {
+    color: textColor,
+  }
 
   return (
-    <View className="custom-nav-bar" style={navBarStyle}>
+    <View
+      className={`custom-nav-bar ${className} ${isHomePage ? 'home-page' : ''}`}
+      style={navBarStyle}
+    >
       <View className="nav-bar-left-group">
         {showBackButton && (
-          <BackButton color="white" hasBackground={false} onBack={onBack} />
+          <BackButton color={textColor} hasBackground={false} onBack={onBack} />
         )}
-        <Text className="nav-bar-title">{title}</Text>
+        <View className="title-container">
+          <Text className="nav-bar-title" style={titleStyle}>
+            {title}
+          </Text>
+          {subtitle && (
+            <Text className="nav-bar-subtitle" style={{ color: textColor }}>
+              {subtitle}
+            </Text>
+          )}
+        </View>
       </View>
       <View className="nav-bar-right-group">
         {renderRight || <View className="placeholder" />}

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
+import CustomIcon from '../../components/CustomIcon'
+import CustomNavBar from '../../components/common/CustomNavBar'
 import { useUserStore } from '../../stores/user'
 import './index.scss'
 
@@ -242,34 +244,38 @@ const VocabularyPage = () => {
 
   return (
     <View className="vocabulary-page">
-      {/* 词汇页面头部 */}
-      <View className="vocabulary-header">
-        <View className="header-content">
-          <Text className="header-title">语境学单词</Text>
-          <Text className="header-subtitle">
-            通过真实语境和例句，让单词学习更高效更有趣
-          </Text>
+      {/* 导航栏 */}
+      <CustomNavBar
+        title="背单词"
+        backgroundColor="#673AB7"
+        renderRight={
+          <View className="nav-right-btn" onClick={adjustDailyGoal}>
+            <AtIcon value="settings" size="20" />
+          </View>
+        }
+      />
 
-          <View className="daily-goal">
-            <View className="goal-header">
-              <Text className="goal-title">今日学习目标</Text>
-              <View className="goal-setting" onClick={adjustDailyGoal}>
-                <AtIcon value="settings" size="16" />
-                <Text>{dailyGoal} 词/天</Text>
-              </View>
+      {/* 每日学习目标 */}
+      <View className="daily-goal-section">
+        <View className="daily-goal">
+          <View className="goal-header">
+            <Text className="goal-title">今日学习目标</Text>
+            <View className="goal-setting" onClick={adjustDailyGoal}>
+              <CustomIcon name="settings" size={16} />
+              <Text>{dailyGoal} 词/天</Text>
             </View>
+          </View>
 
-            <View className="goal-progress">
-              <View className="progress-bar">
-                <View
-                  className="progress-fill"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </View>
-              <Text className="progress-text">
-                已完成 {dailyProgress} / {dailyGoal} 个单词 ({progressPercent}%)
-              </Text>
+          <View className="goal-progress">
+            <View className="progress-bar">
+              <View
+                className="progress-fill"
+                style={{ width: `${progressPercent}%` }}
+              />
             </View>
+            <Text className="progress-text">
+              已完成 {dailyProgress} / {dailyGoal} 个单词 ({progressPercent}%)
+            </Text>
           </View>
         </View>
       </View>
@@ -401,10 +407,10 @@ const VocabularyPage = () => {
         {/* 快捷操作按钮 */}
         <View className="quick-actions">
           <View className="quick-btn start-learn" onClick={quickStartLearning}>
-            <AtIcon value="play" />
+            <CustomIcon name="play-circle" size={24} />
           </View>
           <View className="quick-btn random-test" onClick={randomTest}>
-            <AtIcon value="lightning" />
+            <CustomIcon name="target" size={24} />
           </View>
         </View>
       </View>

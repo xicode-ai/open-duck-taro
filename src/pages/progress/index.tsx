@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
+import CustomNavBar from '../../components/common/CustomNavBar'
 import { useUserStore } from '../../stores/user'
 // import { ProgressRing } from '../../components/common' // 暂时不使用
 import './index.scss'
@@ -217,11 +218,21 @@ const ProgressPage = () => {
 
   return (
     <View className="progress-page">
-      {/* 页面头部 */}
-      <View className="progress-header">
-        <Text className="header-title">学习进度</Text>
-        <Text className="header-desc">追踪你的英语学习之路</Text>
-      </View>
+      {/* 导航栏 */}
+      <CustomNavBar
+        title="学习进度"
+        backgroundColor="#00BCD4"
+        renderRight={
+          <View
+            className="nav-right-btn"
+            onClick={() =>
+              Taro.showToast({ title: '分享功能开发中', icon: 'none' })
+            }
+          >
+            <AtIcon value="share" size="20" />
+          </View>
+        }
+      />
 
       {/* 概览卡片 */}
       <View className="overview-card">

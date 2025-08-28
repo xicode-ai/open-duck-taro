@@ -144,7 +144,8 @@ class HttpClient {
       })
 
       // 发送请求
-      const fetchPromise = fetch(`${config.api.baseUrl}${url}`, requestConfig)
+      const fullUrl = config.api.baseUrl ? `${config.api.baseUrl}${url}` : url
+      const fetchPromise = fetch(fullUrl, requestConfig)
       const response = await Promise.race([fetchPromise, timeoutPromise])
 
       // 隐藏加载状态

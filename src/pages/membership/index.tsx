@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
+import CustomNavBar from '../../components/common/CustomNavBar'
 import { useUserStore } from '../../stores/user'
 import './index.scss'
 
@@ -194,16 +195,26 @@ const MembershipPage = () => {
 
   return (
     <View className="membership-page">
-      {/* 页面头部 */}
-      <View className="membership-header">
-        <View className="header-content">
-          <Text className="crown-icon">👑</Text>
-          <Text className="header-title">开通会员</Text>
-          <Text className="header-subtitle">
-            解锁所有高级功能{'\n'}享受更好的学习体验
-          </Text>
-        </View>
-      </View>
+      {/* 导航栏 */}
+      <CustomNavBar
+        title="开口鸭会员"
+        backgroundColor="#FFD700"
+        textColor="#333"
+        renderRight={
+          <View
+            className="nav-right-btn"
+            onClick={() =>
+              Taro.showModal({
+                title: '客服联系方式',
+                content: '微信：openduck-support\n邮箱：service@openduck.com',
+                showCancel: false,
+              })
+            }
+          >
+            <AtIcon value="help" size="20" color="#333" />
+          </View>
+        }
+      />
 
       {/* 会员权益 */}
       <View className="benefits-section">

@@ -5,6 +5,7 @@ export * from './format'
 export * from './validation'
 export * from './performance'
 export * from './errorHandler'
+export * from './environment'
 
 // 重新导出常用工具
 export { dateUtils } from './date'

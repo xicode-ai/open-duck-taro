@@ -15,7 +15,7 @@ alwaysApply: true
 - 接口mock 工具： msw
 - 测试框架：Jest
 - react 错误边界
-- 图标使用taro-iconfont-cli
+- 图标管理：taro-iconfont-cli
 
 ## 考taro 官方技术文档：https://docs.taro.zone/docs/ 优先以官方文档的为准。
 

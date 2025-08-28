@@ -13,11 +13,19 @@ export interface IconFontProps {
 
 // 自定义图标映射 - 使用emoji或Unicode字符
 const iconMap: Record<string, string> = {
-  'icon-help': '❓',
+  // 功能模块图标 - 根据原型截图设计
+  'icon-chat': '💬', // 对话气泡
+  'icon-topics': '📑', // 页面/话题图标
+  'icon-translate': '🔤', // 翻译/语言图标
+  'icon-camera': '📷', // 相机图标
+  'icon-vocabulary': '📖', // 打开的书
+
+  // 使用统计图标
+  'icon-help': '🆘', // 求助图标
+  'icon-photo': '📷',
+
+  // 通用图标
   'icon-message': '💬',
-  'icon-chat': '💬',
-  'icon-translate': '🔤',
-  'icon-camera': '📷',
   'icon-book': '📚',
   'icon-topic': '📝',
   'icon-list': '📋',
@@ -29,7 +37,6 @@ const iconMap: Record<string, string> = {
   'icon-home': '🏠',
   'icon-user': '👤',
   'icon-progress': '📈',
-  'icon-vocabulary': '📖',
   'icon-settings': '⚙️',
   'icon-arrow-right': '›',
   'icon-arrow-left': '‹',
@@ -63,12 +70,16 @@ const iconMap: Record<string, string> = {
   'icon-info': 'ℹ️',
   'icon-success': '✅',
   'icon-error': '❌',
+
   // 简化的键名（不带前缀）
-  help: '❓',
-  message: '💬',
   chat: '💬',
+  topics: '📑',
   translate: '🔤',
   camera: '📷',
+  vocabulary: '📖',
+  help: '🆘',
+  photo: '📷',
+  message: '💬',
   book: '📚',
   topic: '📝',
   list: '📋',
@@ -80,7 +91,6 @@ const iconMap: Record<string, string> = {
   home: '🏠',
   user: '👤',
   progress: '📈',
-  vocabulary: '📖',
   settings: '⚙️',
 }
 
@@ -101,6 +111,11 @@ const IconFont: React.FC<IconFontProps> = ({
     alignItems: 'center',
     justifyContent: 'center',
     lineHeight: 1,
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    textRendering: 'optimizeLegibility',
+    fontSmooth: 'always',
+    WebkitFontSmoothing: 'antialiased',
+    MozOsxFontSmoothing: 'grayscale',
     ...style,
   }
 

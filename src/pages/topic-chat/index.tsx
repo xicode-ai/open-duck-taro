@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
+import CustomNavBar from '../../components/common/CustomNavBar'
 import { useUserStore } from '../../stores/user'
 import './index.scss'
 
@@ -251,6 +252,26 @@ const TopicChatPage = () => {
 
   return (
     <View className="topic-chat-page">
+      {/* 导航栏 */}
+      <CustomNavBar
+        title={topicData ? topicData.title : '话题对话'}
+        backgroundColor="#795548"
+        renderRight={
+          topicData && (
+            <View
+              className="nav-right-btn"
+              onClick={() =>
+                setCurrentMode(currentMode === 'study' ? 'practice' : 'study')
+              }
+            >
+              <AtIcon
+                value={currentMode === 'study' ? 'sound' : 'edit'}
+                size="20"
+              />
+            </View>
+          )
+        }
+      />
       {/* 话题头部信息 */}
       <View className="topic-header">
         <View className="header-content">

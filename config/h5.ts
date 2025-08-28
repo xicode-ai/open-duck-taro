@@ -1,4 +1,5 @@
 import { defineConfig } from '@tarojs/cli'
+import CopyWebpackPlugin from 'copy-webpack-plugin'
 
 export default defineConfig({
   projectName: 'open-duck',
@@ -59,6 +60,18 @@ export default defineConfig({
       },
     },
     webpackChain(chain) {
+      // 添加CopyWebpackPlugin来复制MSW的Service Worker文件
+      chain.plugin('copy-msw').use(CopyWebpackPlugin, [
+        {
+          patterns: [
+            {
+              from: 'public/mockServiceWorker.js',
+              to: 'mockServiceWorker.js',
+            },
+          ],
+        },
+      ])
+
       // 优化 H5 端配置
       chain.optimization.splitChunks({
         chunks: 'all',
@@ -121,6 +134,13 @@ export default defineConfig({
       headers: {
         'Access-Control-Allow-Origin': '*',
       },
+      // 添加静态文件服务，确保MSW的Service Worker可以访问
+      static: [
+        {
+          directory: 'public',
+          publicPath: '/',
+        },
+      ],
     },
   },
 })

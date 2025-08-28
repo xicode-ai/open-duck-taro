@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { View, Text, Textarea } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
+import CustomNavBar from '../../components/common/CustomNavBar'
 import { useUserStore } from '../../stores/user'
 import './index.scss'
 
@@ -294,220 +295,234 @@ const TranslatePage = () => {
 
   return (
     <View className="translate-page">
-      {/* 页面头部 */}
-      <View className="page-header">
-        <Text className="header-title">智能翻译</Text>
-        <Text className="header-desc">中英互译，地道口语表达</Text>
-      </View>
-
-      {/* 翻译卡片 */}
-      <View className="translate-card">
-        {/* 输入区域 */}
-        <View className="input-section">
-          <View className="section-header">
-            <Text className="section-title">
-              <Text className="flag-icon">
-                {sourceLanguage === 'zh' ? '🇨🇳' : '🇺🇸'}
-              </Text>
-              {sourceLanguage === 'zh' ? '中文' : 'English'}
-            </Text>
-            <View className="language-switch" onClick={toggleLanguage}>
-              <AtIcon value="reload" size="16" />
-            </View>
-          </View>
-
-          <View className="input-container">
-            <Textarea
-              className="text-input"
-              value={inputText}
-              onInput={(e: { detail: { value: string } }) =>
-                setInputText(e.detail.value)
-              }
-              placeholder={
-                sourceLanguage === 'zh'
-                  ? '请输入要翻译的中文...'
-                  : 'Please enter English text...'
-              }
-              maxlength={1000}
-              autoHeight
-            />
-
-            <View className="input-actions">
-              {inputText && (
-                <View className="action-btn clear-btn" onClick={clearInput}>
-                  <AtIcon value="close" />
-                </View>
-              )}
-
-              <View
-                className={`action-btn voice-btn ${isRecording ? 'recording' : ''}`}
-                onClick={handleVoiceInput}
-              >
-                <AtIcon value="sound" />
-              </View>
-            </View>
-
-            <Text
-              className={`char-count ${inputText.length > 800 ? 'warning' : inputText.length > 900 ? 'error' : ''}`}
-            >
-              {inputText.length}/1000
-            </Text>
-          </View>
-        </View>
-
-        {/* 翻译按钮 */}
-        <View
-          className={`translate-button ${isTranslating ? 'loading' : ''}`}
-          onClick={handleTranslate}
-        >
-          <AtIcon
-            value={isTranslating ? 'loading-3' : 'reload'}
-            className="translate-icon"
-          />
-          <Text>{isTranslating ? '翻译中...' : '开始翻译'}</Text>
-        </View>
-
-        {/* 翻译结果 */}
-        {translateResult && (
-          <View className="result-section show">
-            <View className="result-tabs">
-              <View
-                className={`tab-item ${activeTab === 'standard' ? 'active' : ''}`}
-                onClick={() => setActiveTab('standard')}
-              >
-                标准翻译
-              </View>
-              <View
-                className={`tab-item ${activeTab === 'colloquial' ? 'active' : ''}`}
-                onClick={() => setActiveTab('colloquial')}
-              >
-                地道口语
-              </View>
-            </View>
-
-            <View className="result-content">
-              <View className="result-item">
-                <View className="result-header">
-                  <Text className="result-title">
-                    <Text className={`title-icon ${activeTab}`}>
-                      {activeTab === 'standard' ? '📖' : '💬'}
-                    </Text>
-                    {activeTab === 'standard' ? '标准翻译' : '地道表达'}
-                  </Text>
-
-                  <View className="result-actions">
-                    <View
-                      className="action-btn copy-btn"
-                      onClick={() =>
-                        copyText(
-                          activeTab === 'standard'
-                            ? translateResult.standard
-                            : translateResult.colloquial
-                        )
-                      }
-                    >
-                      <AtIcon value="copy" />
-                      <Text>复制</Text>
-                    </View>
-
-                    <View
-                      className={`action-btn play-btn ${playingAudio === `${activeTab}-audio` ? 'playing' : ''}`}
-                      onClick={() =>
-                        playAudio(
-                          activeTab === 'standard'
-                            ? translateResult.standard
-                            : translateResult.colloquial,
-                          activeTab
-                        )
-                      }
-                    >
-                      <AtIcon
-                        value={
-                          playingAudio === `${activeTab}-audio`
-                            ? 'pause'
-                            : 'play'
-                        }
-                      />
-                      <Text>
-                        {playingAudio === `${activeTab}-audio`
-                          ? '停止'
-                          : '朗读'}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                <Text className={`result-text ${activeTab}`}>
-                  {activeTab === 'standard'
-                    ? translateResult.standard
-                    : translateResult.colloquial}
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
-      </View>
-
-      {/* 快速短语 */}
-      <View className="quick-phrases">
-        <Text className="section-title">
-          <Text className="title-icon">⚡</Text>
-          常用短语
-        </Text>
-
-        <View className="phrases-grid">
-          {quickPhrases.map((phrase, index) => (
-            <View
-              key={index}
-              className="phrase-item"
-              onClick={() => setInputText(phrase.template)}
-            >
-              <Text className="phrase-icon">{phrase.icon}</Text>
-              <Text className="phrase-text">{phrase.text}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      {/* 翻译历史 */}
-      <View className="history-section">
-        <View className="section-header">
-          <Text className="section-title">
-            <Text className="title-icon">📝</Text>
-            翻译历史
-          </Text>
-
+      {/* 导航栏 */}
+      <CustomNavBar
+        title="智能翻译"
+        backgroundColor="#2196F3"
+        renderRight={
           <View
-            className="view-all-btn"
+            className="nav-right-btn"
             onClick={() =>
               Taro.navigateTo({ url: '/pages/translate-history/index' })
             }
           >
-            查看全部
+            <AtIcon value="clock" size="20" />
           </View>
-        </View>
+        }
+      />
 
-        <View className="history-list">
-          {history.slice(0, 3).map(item => (
-            <View key={item.id} className="history-item">
-              <View className="history-content">
-                <Text className="original-text">{item.original}</Text>
-                <Text className="translated-text">{item.result.standard}</Text>
-                <Text className="history-time">
-                  {formatTime(item.timestamp)}
+      <View className="page-content">
+        {/* 翻译卡片 */}
+        <View className="translate-card">
+          {/* 输入区域 */}
+          <View className="input-section">
+            <View className="section-header">
+              <Text className="section-title">
+                <Text className="flag-icon">
+                  {sourceLanguage === 'zh' ? '🇨🇳' : '🇺🇸'}
                 </Text>
+                {sourceLanguage === 'zh' ? '中文' : 'English'}
+              </Text>
+              <View className="language-switch" onClick={toggleLanguage}>
+                <AtIcon value="reload" size="16" />
+              </View>
+            </View>
+
+            <View className="input-container">
+              <Textarea
+                className="text-input"
+                value={inputText}
+                onInput={(e: { detail: { value: string } }) =>
+                  setInputText(e.detail.value)
+                }
+                placeholder={
+                  sourceLanguage === 'zh'
+                    ? '请输入要翻译的中文...'
+                    : 'Please enter English text...'
+                }
+                maxlength={1000}
+                autoHeight
+              />
+
+              <View className="input-actions">
+                {inputText && (
+                  <View className="action-btn clear-btn" onClick={clearInput}>
+                    <AtIcon value="close" />
+                  </View>
+                )}
+
+                <View
+                  className={`action-btn voice-btn ${isRecording ? 'recording' : ''}`}
+                  onClick={handleVoiceInput}
+                >
+                  <AtIcon value="sound" />
+                </View>
               </View>
 
-              <View className="history-actions">
+              <Text
+                className={`char-count ${inputText.length > 800 ? 'warning' : inputText.length > 900 ? 'error' : ''}`}
+              >
+                {inputText.length}/1000
+              </Text>
+            </View>
+          </View>
+
+          {/* 翻译按钮 */}
+          <View
+            className={`translate-button ${isTranslating ? 'loading' : ''}`}
+            onClick={handleTranslate}
+          >
+            <AtIcon
+              value={isTranslating ? 'loading-3' : 'reload'}
+              className="translate-icon"
+            />
+            <Text>{isTranslating ? '翻译中...' : '开始翻译'}</Text>
+          </View>
+
+          {/* 翻译结果 */}
+          {translateResult && (
+            <View className="result-section show">
+              <View className="result-tabs">
                 <View
-                  className="history-action-btn"
-                  onClick={() => setInputText(item.original)}
+                  className={`tab-item ${activeTab === 'standard' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('standard')}
                 >
-                  重新翻译
+                  标准翻译
+                </View>
+                <View
+                  className={`tab-item ${activeTab === 'colloquial' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('colloquial')}
+                >
+                  地道口语
+                </View>
+              </View>
+
+              <View className="result-content">
+                <View className="result-item">
+                  <View className="result-header">
+                    <Text className="result-title">
+                      <Text className={`title-icon ${activeTab}`}>
+                        {activeTab === 'standard' ? '📖' : '💬'}
+                      </Text>
+                      {activeTab === 'standard' ? '标准翻译' : '地道表达'}
+                    </Text>
+
+                    <View className="result-actions">
+                      <View
+                        className="action-btn copy-btn"
+                        onClick={() =>
+                          copyText(
+                            activeTab === 'standard'
+                              ? translateResult.standard
+                              : translateResult.colloquial
+                          )
+                        }
+                      >
+                        <AtIcon value="copy" />
+                        <Text>复制</Text>
+                      </View>
+
+                      <View
+                        className={`action-btn play-btn ${playingAudio === `${activeTab}-audio` ? 'playing' : ''}`}
+                        onClick={() =>
+                          playAudio(
+                            activeTab === 'standard'
+                              ? translateResult.standard
+                              : translateResult.colloquial,
+                            activeTab
+                          )
+                        }
+                      >
+                        <AtIcon
+                          value={
+                            playingAudio === `${activeTab}-audio`
+                              ? 'pause'
+                              : 'play'
+                          }
+                        />
+                        <Text>
+                          {playingAudio === `${activeTab}-audio`
+                            ? '停止'
+                            : '朗读'}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <Text className={`result-text ${activeTab}`}>
+                    {activeTab === 'standard'
+                      ? translateResult.standard
+                      : translateResult.colloquial}
+                  </Text>
                 </View>
               </View>
             </View>
-          ))}
+          )}
+        </View>
+
+        {/* 快速短语 */}
+        <View className="quick-phrases">
+          <Text className="section-title">
+            <Text className="title-icon">⚡</Text>
+            常用短语
+          </Text>
+
+          <View className="phrases-grid">
+            {quickPhrases.map((phrase, index) => (
+              <View
+                key={index}
+                className="phrase-item"
+                onClick={() => setInputText(phrase.template)}
+              >
+                <Text className="phrase-icon">{phrase.icon}</Text>
+                <Text className="phrase-text">{phrase.text}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* 翻译历史 */}
+        <View className="history-section">
+          <View className="section-header">
+            <Text className="section-title">
+              <Text className="title-icon">📝</Text>
+              翻译历史
+            </Text>
+
+            <View
+              className="view-all-btn"
+              onClick={() =>
+                Taro.navigateTo({ url: '/pages/translate-history/index' })
+              }
+            >
+              查看全部
+            </View>
+          </View>
+
+          <View className="history-list">
+            {history.slice(0, 3).map(item => (
+              <View key={item.id} className="history-item">
+                <View className="history-content">
+                  <Text className="original-text">{item.original}</Text>
+                  <Text className="translated-text">
+                    {item.result.standard}
+                  </Text>
+                  <Text className="history-time">
+                    {formatTime(item.timestamp)}
+                  </Text>
+                </View>
+
+                <View className="history-actions">
+                  <View
+                    className="history-action-btn"
+                    onClick={() => setInputText(item.original)}
+                  >
+                    重新翻译
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
       </View>
     </View>

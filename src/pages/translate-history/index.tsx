@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { View, Text, Input } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import {
@@ -9,7 +9,7 @@ import {
   AtModalAction,
   AtButton,
 } from 'taro-ui'
-import { useUserStore } from '../../stores/user'
+import CustomNavBar from '../../components/common/CustomNavBar'
 import './index.scss'
 
 interface TranslateHistoryItem {
@@ -45,71 +45,64 @@ const TranslateHistoryPage = () => {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   // 模拟历史数据
-  const mockHistory: TranslateHistoryItem[] = [
-    {
-      id: '1',
-      original: '你好，很高兴认识你',
-      standard: 'Hello, nice to meet you',
-      colloquial: 'Hi there! Great to meet you!',
-      sourceLanguage: 'zh',
-      timestamp: Date.now() - 1800000,
-      favorite: true,
-      tags: ['问候', '社交'],
-    },
-    {
-      id: '2',
-      original: '今天天气真不错',
-      standard: 'The weather is really nice today',
-      colloquial: 'What a beautiful day!',
-      sourceLanguage: 'zh',
-      timestamp: Date.now() - 3600000,
-      favorite: false,
-      tags: ['天气', '日常'],
-    },
-    {
-      id: '3',
-      original: 'How are you doing?',
-      standard: '你好吗？',
-      colloquial: '你最近怎么样？',
-      sourceLanguage: 'en',
-      timestamp: Date.now() - 7200000,
-      favorite: true,
-      tags: ['问候', '关心'],
-    },
-    {
-      id: '4',
-      original: '我想点一杯咖啡',
-      standard: 'I would like a cup of coffee',
-      colloquial: "I'll have a coffee, please",
-      sourceLanguage: 'zh',
-      timestamp: Date.now() - 86400000,
-      favorite: false,
-      tags: ['点餐', '咖啡'],
-    },
-    {
-      id: '5',
-      original: '请问洗手间在哪里？',
-      standard: 'Excuse me, where is the restroom?',
-      colloquial: 'Where can I find the bathroom?',
-      sourceLanguage: 'zh',
-      timestamp: Date.now() - 172800000,
-      favorite: false,
-      tags: ['问路', '设施'],
-    },
-  ]
-
-  // 页面初始化
-  useEffect(() => {
-    loadHistory()
-  }, []) // loadHistory 在组件内定义，忽略依赖警告
-
-  // 筛选数据
-  useEffect(() => {
-    filterHistory()
-  }, [searchText, selectedLanguage, selectedTime, historyList]) // filterHistory 在组件内定义，忽略依赖警告
+  const mockHistory: TranslateHistoryItem[] = useMemo(
+    () => [
+      {
+        id: '1',
+        original: '你好，很高兴认识你',
+        standard: 'Hello, nice to meet you',
+        colloquial: 'Hi there! Great to meet you!',
+        sourceLanguage: 'zh',
+        timestamp: Date.now() - 1800000,
+        favorite: true,
+        tags: ['问候', '社交'],
+      },
+      {
+        id: '2',
+        original: '今天天气真不错',
+        standard: 'The weather is really nice today',
+        colloquial: 'What a beautiful day!',
+        sourceLanguage: 'zh',
+        timestamp: Date.now() - 3600000,
+        favorite: false,
+        tags: ['天气', '日常'],
+      },
+      {
+        id: '3',
+        original: 'How are you doing?',
+        standard: '你好吗？',
+        colloquial: '你最近怎么样？',
+        sourceLanguage: 'en',
+        timestamp: Date.now() - 7200000,
+        favorite: true,
+        tags: ['问候', '关心'],
+      },
+      {
+        id: '4',
+        original: '我想点一杯咖啡',
+        standard: 'I would like a cup of coffee',
+        colloquial: "I'll have a coffee, please",
+        sourceLanguage: 'zh',
+        timestamp: Date.now() - 86400000,
+        favorite: false,
+        tags: ['点餐', '咖啡'],
+      },
+      {
+        id: '5',
+        original: '请问洗手间在哪里？',
+        standard: 'Excuse me, where is the restroom?',
+        colloquial: 'Where can I find the bathroom?',
+        sourceLanguage: 'zh',
+        timestamp: Date.now() - 172800000,
+        favorite: false,
+        tags: ['问路', '设施'],
+      },
+    ],
+    []
+  )
 
   // 加载历史数据
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     setIsLoading(true)
 
     // 模拟网络延迟
@@ -117,10 +110,10 @@ const TranslateHistoryPage = () => {
 
     setHistoryList(mockHistory)
     setIsLoading(false)
-  }
+  }, [mockHistory])
 
   // 筛选历史记录
-  const filterHistory = () => {
+  const filterHistory = useCallback(() => {
     let filtered = [...historyList]
 
     // 按语言筛选
@@ -161,7 +154,17 @@ const TranslateHistoryPage = () => {
     }
 
     setFilteredList(filtered)
-  }
+  }, [historyList, selectedLanguage, selectedTime, searchText])
+
+  // 页面初始化
+  useEffect(() => {
+    loadHistory()
+  }, [loadHistory])
+
+  // 筛选数据
+  useEffect(() => {
+    filterHistory()
+  }, [filterHistory])
 
   // 播放音频
   const playAudio = (itemId: string, type: 'standard' | 'colloquial') => {
@@ -327,14 +330,20 @@ const TranslateHistoryPage = () => {
 
   return (
     <View className="translate-history-page">
-      {/* 页面头部 */}
-      <View className="history-header">
-        <View className="header-content">
-          <Text className="header-title">翻译历史</Text>
-          <Text className="header-subtitle">
-            管理你的翻译记录，随时回顾学习
-          </Text>
+      {/* 导航栏 */}
+      <CustomNavBar
+        title="翻译历史"
+        backgroundColor="#607D8B"
+        renderRight={
+          <View className="nav-right-btn" onClick={batchExport}>
+            <AtIcon value="download" size="20" />
+          </View>
+        }
+      />
 
+      <View className="history-content">
+        {/* 统计信息 */}
+        <View className="stats-section">
           <View className="header-stats">
             <View className="stat-item">
               <Text className="stat-number">{historyList.length}</Text>

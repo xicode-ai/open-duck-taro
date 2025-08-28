@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
+import CustomNavBar from '../../components/common/CustomNavBar'
 import { useUserStore } from '../../stores/user'
 import './index.scss'
 
@@ -305,17 +306,16 @@ const PhotoStoryPage = () => {
 
   return (
     <View className="photo-story-page">
-      {/* 页面头部 */}
-      <View className="photo-header">
-        <View className="header-content">
-          <Text className="header-title">拍照短文</Text>
-          <Text className="header-subtitle">
-            拍摄照片，AI为你生成英文描述
-            {'\n'}
-            练习发音，提升口语表达能力
-          </Text>
-        </View>
-      </View>
+      {/* 导航栏 */}
+      <CustomNavBar
+        title="拍照短文"
+        backgroundColor="#FF9800"
+        renderRight={
+          <View className="nav-right-btn" onClick={takePhoto}>
+            <AtIcon value="camera" size="20" />
+          </View>
+        }
+      />
 
       <View className="photo-content">
         {/* 拍照区域 */}

@@ -1,16 +1,43 @@
 /* 完全自定义的样式系统，不依赖第三方UI库 */
 
-/* Add this to the top of all page scss files that use CustomNavBar */
+/* 通用页面样式 */
 .page-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #f8f9fa; /* A general safe background */
+  background-color: #f8f9fa;
 }
 
 .content-area {
   flex: 1;
   overflow-y: auto;
+}
+
+/* 页面内容容器 - 与导航栏完美衔接 */
+.page-content {
+  flex: 1;
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 88px); // 减去导航栏高度
+  box-sizing: border-box;
+}
+
+/* 通用页面样式 */
+.translate-page,
+.topics-page,
+.vocabulary-page,
+.vocabulary-study-page,
+.photo-story-page,
+.translate-history-page,
+.topic-chat-page,
+.progress-page,
+.membership-page,
+.profile-page,
+.chat-page {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-page {

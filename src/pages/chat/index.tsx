@@ -2,8 +2,18 @@ import { useState, useRef, useEffect } from 'react'
 import { View, Text, ScrollView, Textarea } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
+import CustomIcon from '../../components/CustomIcon'
+import VoiceWaveform from '../../components/VoiceWaveform'
 import { useChatStore } from '../../stores/chat'
 import { useUserStore } from '../../stores/user'
+import { formatRelativeTime } from '../../utils/date'
+
+import {
+  mockStartRecording,
+  mockStopRecording,
+  shouldUseMockAudio,
+} from '../../services/mockAudio'
+import { chatApi } from '../../services/api'
 import './index.scss'
 
 interface ChatMessage {
@@ -11,12 +21,26 @@ interface ChatMessage {
   type: 'user' | 'ai'
   content: string
   audioUrl?: string
+  duration?: number // 语音时长（秒）
   timestamp: number
   translation?: string
   helpContent?: {
     original: string
     corrected: string
   }
+  reaction?: string // emoji反馈
+}
+
+interface SpeechToTextResponse {
+  text: string
+  confidence: number
+  language: string
+}
+
+interface ChatResponse {
+  content: string
+  audioUrl?: string
+  duration?: number
 }
 
 const ChatPage = () => {
@@ -29,6 +53,12 @@ const ChatPage = () => {
   const [showTextInput, setShowTextInput] = useState(false)
   const [textInput, setTextInput] = useState('')
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null)
+  const [messageReactions, setMessageReactions] = useState<Map<string, string>>(
+    new Map()
+  )
+  const [aiStatus, setAiStatus] = useState<'online' | 'offline' | 'typing'>(
+    'online'
+  )
 
   // 引用
   const scrollViewRef = useRef<{
@@ -40,15 +70,26 @@ const ChatPage = () => {
   useEffect(() => {
     // 添加欢迎消息
     if (messages.length === 0) {
-      addMessage({
+      const welcomeMessage: ChatMessage = {
         id: Date.now().toString(),
         type: 'ai',
         content:
           "Hi! I'm your AI English tutor. Let's practice speaking English together! 🦆",
         timestamp: Date.now(),
-      })
+        translation: '嗨！我是你的AI英语老师。让我们一起练习说英语吧！🦆',
+      }
+      addMessage(welcomeMessage)
     }
   }, [messages.length, addMessage])
+
+  // AI状态管理
+  useEffect(() => {
+    if (isTyping) {
+      setAiStatus('typing')
+    } else {
+      setAiStatus('online')
+    }
+  }, [isTyping])
 
   // 滚动到底部
   const scrollToBottom = () => {
@@ -60,6 +101,20 @@ const ChatPage = () => {
   // 开始录音
   const handleStartRecording = async () => {
     try {
+      // 在开发环境下使用mock录音
+      if (shouldUseMockAudio()) {
+        console.log('🎤 开发环境：使用Mock录音功能')
+        startRecording()
+        await mockStartRecording()
+
+        // 设置最大录音时长
+        recordingTimer.current = setTimeout(() => {
+          handleStopRecording()
+        }, 60000) // 最多录音60秒
+        return
+      }
+
+      // 生产环境使用真实录音
       const { authSetting } = await Taro.getSetting()
 
       if (!authSetting['scope.record']) {
@@ -119,17 +174,61 @@ const ChatPage = () => {
     stopRecording()
 
     try {
-      Taro.stopRecord({
-        success: res => {
-          const audioPath = (res as unknown as { tempFilePath: string })
-            .tempFilePath
+      // 在开发环境下使用mock录音
+      if (shouldUseMockAudio()) {
+        console.log('🎤 开发环境：停止Mock录音')
+        const mockAudioData = await mockStopRecording()
+
+        try {
+          // 创建模拟的FormData
+          const formData = new FormData()
+          // 在小程序环境中，使用File对象代替Blob
+          const mockFile = new File(['mock audio data'], 'mock-recording.wav', {
+            type: 'audio/wav',
+          })
+          formData.append('audio', mockFile)
+
+          // 使用MSW API进行语音转文字
+          const speechResult = await chatApi.speechToText(formData)
 
           // 添加用户消息
           const userMessage: ChatMessage = {
             id: Date.now().toString(),
             type: 'user',
-            content: '[语音消息]', // 这里应该是语音转文字的结果
+            content: (speechResult.data as SpeechToTextResponse).text,
+            audioUrl: mockAudioData.audioUrl,
+            duration: mockAudioData.duration,
+            timestamp: Date.now(),
+          }
+
+          addMessage(userMessage)
+          scrollToBottom()
+
+          // AI回复
+          handleAIResponse(userMessage.content)
+        } catch (error) {
+          console.error('Mock语音转文字失败:', error)
+          Taro.showToast({
+            title: '语音识别失败',
+            icon: 'error',
+          })
+        }
+        return
+      }
+
+      // 生产环境使用真实录音
+      Taro.stopRecord({
+        success: res => {
+          const audioPath = (res as unknown as { tempFilePath: string })
+            .tempFilePath
+
+          // 添加用户消息（模拟语音时长）
+          const userMessage: ChatMessage = {
+            id: Date.now().toString(),
+            type: 'user',
+            content: "Hello, I'd like to practice speaking English.", // 模拟语音转文字结果
             audioUrl: audioPath,
+            duration: Math.floor(Math.random() * 10 + 3), // 模拟3-13秒的语音
             timestamp: Date.now(),
           }
 
@@ -153,34 +252,39 @@ const ChatPage = () => {
   }
 
   // AI回复处理
-  const handleAIResponse = async (_userInput: string) => {
+  const handleAIResponse = async (userInput: string) => {
     setIsTyping(true)
 
-    // 模拟API调用延迟
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    try {
+      // 使用MSW API发送消息并获取AI回复
+      const response = await chatApi.sendMessage({
+        sessionId: 'default-session',
+        content: userInput,
+        type: 'voice',
+      })
 
-    // 模拟AI回复
-    const responses = [
-      "That's interesting! Can you tell me more about it?",
-      'Great job! Your pronunciation is getting better.',
-      'I understand. How do you feel about that?',
-      'That sounds wonderful! What happened next?',
-      'Good point! I agree with you on that.',
-    ]
+      const aiResponseData = response.data as ChatResponse
 
-    const randomResponse =
-      responses[Math.floor(Math.random() * responses.length)]
+      const aiMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: aiResponseData.content,
+        audioUrl: aiResponseData.audioUrl,
+        duration: aiResponseData.duration || Math.floor(Math.random() * 5 + 3),
+        timestamp: Date.now(),
+      }
 
-    const aiMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'ai',
-      content: randomResponse,
-      timestamp: Date.now(),
+      setIsTyping(false)
+      addMessage(aiMessage)
+      scrollToBottom()
+    } catch (error) {
+      console.error('AI回复失败:', error)
+      setIsTyping(false)
+      Taro.showToast({
+        title: 'AI回复失败，请重试',
+        icon: 'error',
+      })
     }
-
-    setIsTyping(false)
-    addMessage(aiMessage)
-    scrollToBottom()
   }
 
   // 发送文本消息
@@ -226,6 +330,11 @@ const ChatPage = () => {
           })
         },
       })
+
+      // 模拟播放结束
+      setTimeout(() => {
+        setPlayingAudioId(null)
+      }, 5000)
     }
   }
 
@@ -234,15 +343,30 @@ const ChatPage = () => {
     updateDailyUsage('translate')
 
     // 模拟翻译结果
-    const translation =
-      content ===
-      "Hi! I'm your AI English tutor. Let's practice speaking English together! 🦆"
-        ? '你好！我是你的AI英语老师。让我们一起练习说英语吧！🦆'
-        : '这是翻译结果示例'
+    const translations: { [key: string]: string } = {
+      "Hi! I'm your AI English tutor. Let's practice speaking English together! 🦆":
+        '嗨！我是你的AI英语老师。让我们一起练习说英语吧！🦆',
+      "That's great! What topics would you like to discuss today?":
+        '太好了！今天你想讨论什么话题呢？',
+      'Excellent pronunciation! Your English is improving.':
+        '发音很棒！你的英语在进步。',
+      'I understand. Could you tell me more about that?':
+        '我明白了。你能详细说说吗？',
+      'Interesting point! How do you usually practice English?':
+        '有趣的观点！你平时是怎么练习英语的？',
+      'Good job! Let me help you with a more natural expression.':
+        '做得好！让我帮你用更地道的表达方式。',
+    }
+
+    const translation = translations[content] || '这是翻译结果示例'
 
     // 更新消息添加翻译
+    const updatedMessages = messages.map(msg =>
+      msg.id === messageId ? { ...msg, translation } : msg
+    )
+
     // 这里应该调用store方法更新消息
-    console.log('翻译:', translation)
+    console.log('翻译:', translation, updatedMessages)
 
     Taro.showToast({
       title: '翻译完成',
@@ -250,41 +374,52 @@ const ChatPage = () => {
     })
   }
 
-  // 求助功能
-  const handleHelp = (messageId: string, content: string) => {
-    updateDailyUsage('help')
+  // Emoji反馈
+  const handleEmojiReaction = (messageId: string, emoji: string) => {
+    const newReactions = new Map(messageReactions)
 
-    // 模拟求助结果
-    const helpContent = {
-      original: content,
-      corrected: "Here's a more natural way to say it...",
+    // 如果已经是同一个emoji，则取消反馈
+    if (newReactions.get(messageId) === emoji) {
+      newReactions.delete(messageId)
+    } else {
+      newReactions.set(messageId, emoji)
     }
 
-    console.log('求助结果:', helpContent)
-
-    Taro.showToast({
-      title: '获取帮助成功',
-      icon: 'success',
-    })
+    setMessageReactions(newReactions)
   }
 
-  // 格式化时间
-  const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp)
-    return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
+  // 返回上一页
+  const handleBack = () => {
+    Taro.navigateBack()
   }
 
   return (
     <View className="chat-page">
-      {/* 聊天头部 */}
-      <View className="chat-header">
-        <View className="ai-info">
-          <View className={`duck-avatar ${isTyping ? 'speaking' : ''}`}></View>
-          <View className="ai-details">
-            <Text className="ai-name">AI外教 Duck</Text>
-            <Text className={`ai-status ${isTyping ? 'typing' : 'online'}`}>
-              {isTyping ? '正在输入...' : '在线'}
-            </Text>
+      {/* AI头部信息 */}
+      <View className="ai-header">
+        <View className="header-content">
+          <View className="back-btn" onClick={handleBack}>
+            <AtIcon value="chevron-left" size="24" color="#fff" />
+          </View>
+
+          <View className="ai-info">
+            <View className="ai-avatar">
+              <Text className="avatar-emoji">🤖</Text>
+            </View>
+
+            <View className="ai-details">
+              <Text className="ai-name">Emma (AI外教)</Text>
+              <View className="ai-status">
+                <View className={`status-dot ${aiStatus}`}></View>
+                <Text className="status-text">
+                  {aiStatus === 'typing' ? '正在输入...' : '在线'}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <View className="header-actions">
+            <CustomIcon name="more-horizontal" size={24} color="#fff" />
           </View>
         </View>
       </View>
@@ -300,78 +435,101 @@ const ChatPage = () => {
       >
         {messages.map(message => (
           <View key={message.id} className={`message ${message.type}`}>
-            <View className="message-bubble">
-              <Text className="message-text">{message.content}</Text>
+            {/* 头像 */}
+            <View className="message-avatar">
+              {message.type === 'ai' ? (
+                <View className="avatar-ai">
+                  <Text className="avatar-emoji">🤖</Text>
+                </View>
+              ) : (
+                <View className="avatar-user">
+                  <Text className="avatar-emoji">😊</Text>
+                </View>
+              )}
+            </View>
 
-              {message.audioUrl && (
-                <View className="message-audio">
+            {/* 消息内容 */}
+            <View className="message-content">
+              <View className="message-bubble">
+                {/* 语音消息显示波形 */}
+                {message.audioUrl && message.duration ? (
                   <View
-                    className={`play-btn ${playingAudioId === message.id ? 'playing' : ''}`}
+                    className="message-voice"
                     onClick={() =>
                       handlePlayAudio(message.id, message.audioUrl)
                     }
                   >
-                    <AtIcon
-                      value={playingAudioId === message.id ? 'pause' : 'play'}
-                      className="play-icon"
+                    <View className="play-button">
+                      <AtIcon
+                        value={playingAudioId === message.id ? 'pause' : 'play'}
+                        size="16"
+                        color={message.type === 'user' ? '#fff' : '#7c3aed'}
+                      />
+                    </View>
+                    <VoiceWaveform
+                      duration={message.duration}
+                      isPlaying={playingAudioId === message.id}
                     />
                   </View>
-                  <Text className="audio-duration">0:15</Text>
-                </View>
-              )}
+                ) : (
+                  <Text className="message-text">{message.content}</Text>
+                )}
 
-              {message.type === 'ai' && (
-                <View className="message-actions">
-                  <View
-                    className="action-btn translate-btn"
-                    onClick={() => handleTranslate(message.id, message.content)}
-                  >
-                    翻译
+                {/* 翻译内容 */}
+                {message.translation && (
+                  <View className="translation">
+                    <Text className="translation-text">
+                      {message.translation}
+                    </Text>
                   </View>
-                </View>
-              )}
+                )}
+              </View>
 
-              {message.type === 'user' && (
-                <View className="message-actions">
-                  <View
-                    className="action-btn help-btn"
-                    onClick={() => handleHelp(message.id, message.content)}
-                  >
-                    求助
+              {/* 消息操作和时间 */}
+              <View className="message-footer">
+                <Text className="message-time">
+                  {formatRelativeTime(message.timestamp)}
+                </Text>
+
+                {message.type === 'ai' && (
+                  <View className="message-actions">
+                    <View
+                      className="action-btn"
+                      onClick={() =>
+                        handleTranslate(message.id, message.content)
+                      }
+                    >
+                      <CustomIcon name="globe" size={14} />
+                      <Text className="action-text">翻译</Text>
+                    </View>
                   </View>
-                </View>
-              )}
-
-              <Text className="message-time">
-                {formatTime(message.timestamp)}
-              </Text>
-
-              {message.translation && (
-                <View className="translation">
-                  <Text className="translation-text">
-                    {message.translation}
-                  </Text>
-                </View>
-              )}
-
-              {message.helpContent && (
-                <View className="help-content">
-                  <Text className="original-text">
-                    {message.helpContent.original}
-                  </Text>
-                  <Text className="corrected-text">
-                    {message.helpContent.corrected}
-                  </Text>
-                </View>
-              )}
+                )}
+              </View>
             </View>
+
+            {/* Emoji反馈 */}
+            {message.type === 'user' && (
+              <View className="emoji-reaction">
+                <View
+                  className={`emoji-btn ${messageReactions.get(message.id) === '😊' ? 'active' : ''}`}
+                  onClick={() => handleEmojiReaction(message.id, '😊')}
+                >
+                  😊
+                </View>
+              </View>
+            )}
           </View>
         ))}
 
         {isTyping && (
-          <View className="typing-indicator">
-            <View className="typing-bubble">
-              <View className="typing-animation">
+          <View className="message ai typing-message">
+            <View className="message-avatar">
+              <View className="avatar-ai">
+                <Text className="avatar-emoji">🤖</Text>
+              </View>
+            </View>
+            <View className="message-content">
+              <View className="typing-indicator">
                 <View className="typing-dot"></View>
                 <View className="typing-dot"></View>
                 <View className="typing-dot"></View>
@@ -385,23 +543,29 @@ const ChatPage = () => {
 
       {/* 输入工具栏 */}
       <View className="input-bar">
+        <View className="input-left">
+          <View className="icon-btn" onClick={() => {}}>
+            <CustomIcon name="plus-circle" size={24} color="#999" />
+          </View>
+        </View>
+
         <View
           className={`record-button ${isRecording ? 'recording' : ''}`}
           onTouchStart={handleStartRecording}
           onTouchEnd={handleStopRecording}
         >
-          <AtIcon value="sound" className="record-icon" />
+          <CustomIcon name="mic" size={20} color="#fff" />
           <Text className="record-text">
             {isRecording ? '松开结束' : '按住说话'}
           </Text>
+          {shouldUseMockAudio() && (
+            <Text className="mock-indicator">🎤 Mock</Text>
+          )}
         </View>
 
-        <View className="function-buttons">
-          <View
-            className="function-btn keyboard-btn"
-            onClick={() => setShowTextInput(true)}
-          >
-            <AtIcon value="edit" />
+        <View className="input-right">
+          <View className="icon-btn emoji-btn" onClick={() => {}}>
+            <Text className="emoji-icon">😊</Text>
           </View>
         </View>
       </View>
@@ -416,7 +580,7 @@ const ChatPage = () => {
                 className="close-btn"
                 onClick={() => setShowTextInput(false)}
               >
-                <AtIcon value="close" />
+                <CustomIcon name="x-circle" size={20} />
               </View>
             </View>
 

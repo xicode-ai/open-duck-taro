@@ -248,18 +248,20 @@ class ErrorBoundary extends Component<Props, State> {
               ))}
             </View>
 
-            {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
-              <View className="error-details">
-                <Text className="details-title">错误详情 (开发环境)</Text>
-                <Text className="error-type">
-                  错误类型: {this.state.errorType}
-                </Text>
-                <Text className="error-stack">{this.state.error?.stack}</Text>
-                <Text className="component-stack">
-                  {this.state.errorInfo.componentStack}
-                </Text>
-              </View>
-            )}
+            {typeof process !== 'undefined' &&
+              process.env?.NODE_ENV === 'development' &&
+              this.state.errorInfo && (
+                <View className="error-details">
+                  <Text className="details-title">错误详情 (开发环境)</Text>
+                  <Text className="error-type">
+                    错误类型: {this.state.errorType}
+                  </Text>
+                  <Text className="error-stack">{this.state.error?.stack}</Text>
+                  <Text className="component-stack">
+                    {this.state.errorInfo.componentStack}
+                  </Text>
+                </View>
+              )}
           </View>
         </View>
       )

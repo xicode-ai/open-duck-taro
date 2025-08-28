@@ -75,7 +75,7 @@ interface Config {
 // 开发环境配置
 const devConfig: Config = {
   api: {
-    baseUrl: 'https://dev-api.openduck.com',
+    baseUrl: '', // 开发环境使用相对路径，让MSW能拦截请求
     timeout: 10000,
     retryCount: 2,
   },
@@ -93,26 +93,44 @@ const devConfig: Config = {
   },
   services: {
     openai: {
-      apiKey: process.env.REACT_APP_OPENAI_API_KEY || '',
+      apiKey:
+        (typeof process !== 'undefined' &&
+          process.env?.REACT_APP_OPENAI_API_KEY) ||
+        '',
       model: 'gpt-3.5-turbo',
       maxTokens: 1000,
     },
     speech: {
       provider: 'azure',
-      apiKey: process.env.REACT_APP_SPEECH_API_KEY || '',
+      apiKey:
+        (typeof process !== 'undefined' &&
+          process.env?.REACT_APP_SPEECH_API_KEY) ||
+        '',
       region: 'eastasia',
     },
     translation: {
       provider: 'google',
-      apiKey: process.env.REACT_APP_TRANSLATION_API_KEY || '',
+      apiKey:
+        (typeof process !== 'undefined' &&
+          process.env?.REACT_APP_TRANSLATION_API_KEY) ||
+        '',
     },
     payment: {
       wechat: {
-        appId: process.env.REACT_APP_WECHAT_APP_ID || '',
-        mchId: process.env.REACT_APP_WECHAT_MCH_ID || '',
+        appId:
+          (typeof process !== 'undefined' &&
+            process.env?.REACT_APP_WECHAT_APP_ID) ||
+          '',
+        mchId:
+          (typeof process !== 'undefined' &&
+            process.env?.REACT_APP_WECHAT_MCH_ID) ||
+          '',
       },
       alipay: {
-        appId: process.env.REACT_APP_ALIPAY_APP_ID || '',
+        appId:
+          (typeof process !== 'undefined' &&
+            process.env?.REACT_APP_ALIPAY_APP_ID) ||
+          '',
       },
     },
   },
@@ -170,9 +188,20 @@ const prodConfig: Config = {
   },
 }
 
+// 安全获取环境变量
+const getNodeEnv = (): string => {
+  try {
+    return (
+      (typeof process !== 'undefined' && process.env?.NODE_ENV) || 'development'
+    )
+  } catch {
+    return 'development'
+  }
+}
+
 // 根据环境获取配置
 const getConfig = (): Config => {
-  const env = process.env.NODE_ENV
+  const env = getNodeEnv()
 
   switch (env) {
     case 'production':
@@ -195,9 +224,9 @@ export default config
 export type { Config }
 
 // 导出环境变量
-export const isDev = process.env.NODE_ENV === 'development'
-export const isTest = process.env.NODE_ENV === 'test'
-export const isProd = process.env.NODE_ENV === 'production'
+export const isDev = getNodeEnv() === 'development'
+export const isTest = getNodeEnv() === 'test'
+export const isProd = getNodeEnv() === 'production'
 
 // 导出常用配置
 export const {
