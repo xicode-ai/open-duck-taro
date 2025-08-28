@@ -2,7 +2,6 @@
   "name": "open-duck",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "description": "开口鸭 - 基于 Taro 4 + React + TypeScript 的跨平台应用",
   "scripts": {
     "build:weapp": "taro build --type weapp",
