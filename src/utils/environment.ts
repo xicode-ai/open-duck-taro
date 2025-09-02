@@ -27,8 +27,8 @@ export const isDevelopment = (): boolean => {
 
   // 检查 TARO_ENV 和构建模式
   const taroEnv = getEnv('TARO_ENV')
-  if (taroEnv === 'h5' && nodeEnv !== 'production') {
-    return true
+  if (taroEnv === 'h5') {
+    return true // H5环境总是被视为开发环境，需要使用Mock
   }
 
   // 检查是否在本地开发服务器

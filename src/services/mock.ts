@@ -25,6 +25,7 @@ export const mockTopics: Topic[] = [
     description: '学习在咖啡店如何点餐和与店员交流',
     category: 'daily',
     level: 'elementary',
+    difficulty: 'easy',
     icon: '☕',
     dialogues: [
       {
@@ -63,6 +64,7 @@ export const mockTopics: Topic[] = [
     description: '学习在机场办理登机手续的英语对话',
     category: 'travel',
     level: 'middle',
+    difficulty: 'medium',
     icon: '✈️',
     dialogues: [
       {
@@ -94,6 +96,7 @@ export const mockTopics: Topic[] = [
     description: '在健身房与教练和其他会员的交流',
     category: 'health',
     level: 'elementary',
+    difficulty: 'easy',
     icon: '💪',
     dialogues: [
       {
@@ -118,6 +121,7 @@ export const mockTopics: Topic[] = [
     description: '参加商务会议时的常用表达',
     category: 'business',
     level: 'high',
+    difficulty: 'hard',
     icon: '💼',
     dialogues: [
       {
@@ -142,6 +146,7 @@ export const mockTopics: Topic[] = [
     description: '在餐厅点餐和用餐的英语对话',
     category: 'food',
     level: 'elementary',
+    difficulty: 'easy',
     icon: '🍽️',
     dialogues: [
       {
@@ -166,6 +171,7 @@ export const mockTopics: Topic[] = [
     description: '在商店购物的英语表达',
     category: 'daily',
     level: 'elementary',
+    difficulty: 'easy',
     icon: '🛍️',
     dialogues: [
       {

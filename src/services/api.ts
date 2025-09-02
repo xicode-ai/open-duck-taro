@@ -28,6 +28,7 @@ export const userApi = {
       currentStreak: number
       totalConversations: number
       totalWords: number
+      totalMinutes: number
     }>('/user/stats', { cache: true }),
 }
 
@@ -101,22 +102,46 @@ export const chatApi = {
   // 获取推荐话题
   getSuggestedTopics: () =>
     httpClient.get('/chat/suggested-topics', { cache: true }),
+
+  // 获取翻译详情
+  getTranslationDetail: (
+    messageId: string,
+    content: string,
+    messageType: 'user' | 'ai'
+  ) =>
+    httpClient.post(
+      '/chat/translation-detail',
+      { messageId, content, messageType },
+      { showLoading: true }
+    ),
+
+  // 获取求助建议
+  getHelpSuggestion: (messageId: string, content: string) =>
+    httpClient.post(
+      '/chat/help-suggestion',
+      { messageId, content },
+      { showLoading: true }
+    ),
 }
 
 // 话题相关API
 export const topicApi = {
   // 获取话题列表
-  getTopics: (category?: string, level?: string) => {
-    const params = new URLSearchParams({
-      ...(category && { category }),
-      ...(level && { level }),
+  getTopics: (params?: { category?: string; level?: string }) => {
+    const searchParams = new URLSearchParams({
+      ...(params?.category && { category: params.category }),
+      ...(params?.level && { level: params.level }),
     })
-    return httpClient.get<Topic[]>(`/topics?${params}`, { cache: true })
+    return httpClient.get<Topic[]>(`/topics?${searchParams}`, { cache: true })
   },
 
   // 获取话题详情
   getTopicDetail: (topicId: string) =>
     httpClient.get<Topic>(`/topics/${topicId}`, { cache: true }),
+
+  // 获取话题对话内容
+  getTopicDialogues: (topicId: string) =>
+    httpClient.get<unknown>(`/topics/${topicId}/dialogues`, { cache: true }),
 
   // 获取推荐话题
   getRecommendedTopics: (userId: string) =>
@@ -126,6 +151,14 @@ export const topicApi = {
 // 翻译相关API
 export const translateApi = {
   // 文本翻译
+  translateText: (text: string, from = 'zh', to = 'en') =>
+    httpClient.post<TranslationResult>(
+      '/translate',
+      { text, from, to },
+      { showLoading: true }
+    ),
+
+  // 文本翻译（别名，保持兼容性）
   translate: (text: string, from = 'zh', to = 'en') =>
     httpClient.post<TranslationResult>(
       '/translate',
@@ -145,22 +178,18 @@ export const translateApi = {
 // 拍照短文相关API
 export const photoStoryApi = {
   // 生成短文
-  generateStory: (imageFile: File, prompt?: string) => {
-    const formData = new FormData()
-    formData.append('image', imageFile)
-    if (prompt) {
-      formData.append('prompt', prompt)
-    }
-
-    return httpClient.request<PhotoStory>({
-      url: '/photo-story/generate',
-      method: 'POST',
-      body: formData,
-      showLoading: true,
-    })
-  },
+  generateStory: (imageUrl: string, prompt?: string) =>
+    httpClient.post<PhotoStory>(
+      '/photo-story/generate',
+      { imageUrl, prompt },
+      { showLoading: true }
+    ),
 
   // 获取短文历史
+  getPhotoStories: () =>
+    httpClient.get<PhotoStory[]>('/photo-story/history', { cache: true }),
+
+  // 获取短文历史（别名，保持兼容性）
   getStoryHistory: () =>
     httpClient.get<PhotoStory[]>('/photo-story/history', { cache: true }),
 
@@ -172,18 +201,40 @@ export const photoStoryApi = {
 // 单词相关API
 export const vocabularyApi = {
   // 获取单词列表
-  getVocabularies: (level: string, page = 1, size = 20) => {
-    const params = new URLSearchParams({
-      level,
-      page: page.toString(),
-      size: size.toString(),
+  getVocabularies: (params?: {
+    level?: string
+    category?: string
+    page?: number
+    size?: number
+  }) => {
+    const searchParams = new URLSearchParams({
+      ...(params?.level && { level: params.level }),
+      ...(params?.category && { category: params.category }),
+      page: (params?.page || 1).toString(),
+      size: (params?.size || 20).toString(),
     })
     return httpClient.get<{
       words: Vocabulary[]
       total: number
       hasMore: boolean
-    }>(`/vocabulary?${params}`, { cache: true })
+    }>(`/vocabulary?${searchParams}`, { cache: true })
   },
+
+  // 获取按级别分组的词汇
+  getVocabulariesByLevel: (level: string) =>
+    httpClient.get<Vocabulary[]>(`/vocabulary/level/${level}`, { cache: true }),
+
+  // 获取词汇学习进度
+  getVocabularyProgress: (userId: string) =>
+    httpClient.get<unknown>(`/vocabulary/progress/${userId}`, { cache: true }),
+
+  // 更新词汇学习进度
+  updateVocabularyProgress: (wordId: string, progress: number) =>
+    httpClient.post(
+      `/vocabulary/${wordId}/progress`,
+      { progress },
+      { showLoading: true }
+    ),
 
   // 获取单词详情
   getWordDetail: (wordId: string) =>

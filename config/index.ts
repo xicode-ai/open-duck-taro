@@ -27,7 +27,7 @@ export default defineConfig<'webpack5'>(
       },
       sourceRoot: 'src',
       outputRoot: 'dist',
-      entry: 'src/app.ts',
+      entry: 'src/app.tsx',
       plugins: [
         '@tarojs/plugin-framework-react',
         '@tarojs/plugin-platform-h5',

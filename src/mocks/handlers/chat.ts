@@ -378,6 +378,127 @@ export const chatHandlers = [
     })
   }),
 
+  // 获取翻译详情
+  http.post('/chat/translation-detail', async ({ request }) => {
+    await delay(800)
+    const body = (await request.json()) as {
+      messageId: string
+      content: string
+      messageType: 'user' | 'ai'
+    }
+
+    // 模拟翻译详情数据
+    const translationDetails = [
+      {
+        original: body.content,
+        translation: 'I plan to take a walk in the park',
+        pronunciation: {
+          planning: { phonetic: '/ˈplænɪŋ/', note: '注意双n的发音' },
+          walk: { phonetic: '/wɔːk/', note: '长音o' },
+          park: { phonetic: '/pɑːrk/', note: '重音在第一个音节' },
+        },
+        comparison: {
+          userExpression: body.content,
+          betterExpression: "I'm planning to go for a walk in the park",
+        },
+        improvements: [
+          '"go for a walk" 比 "take a walk" 更自然地道',
+          '"planning" 比 "plan" 更口语化',
+          '"in the park" 表示在公园内部活动',
+        ],
+        vocabulary: [
+          { word: 'go for a stroll', meaning: '悠闲散步' },
+          { word: 'take a hike', meaning: '徒步' },
+          { word: 'wander around', meaning: '四处走走' },
+        ],
+      },
+      {
+        original: body.content,
+        translation: 'What about your weekend plans?',
+        pronunciation: {
+          weekend: { phonetic: '/ˈwiːkɛnd/', note: '重音在第一音节' },
+          plans: { phonetic: '/plænz/', note: '复数s发z音' },
+        },
+        comparison: {
+          userExpression: body.content,
+          betterExpression: 'Do you have any plans for the weekend?',
+        },
+        improvements: [
+          '疑问句更常用 "Do you have" 开头',
+          '"for the weekend" 更地道',
+          '语调应该上扬表示疑问',
+        ],
+        vocabulary: [
+          { word: 'make plans', meaning: '制定计划' },
+          { word: 'weekend getaway', meaning: '周末短途旅行' },
+          { word: 'free time', meaning: '空闲时间' },
+        ],
+      },
+    ]
+
+    const result =
+      translationDetails[Math.floor(Math.random() * translationDetails.length)]
+
+    return HttpResponse.json({
+      code: 200,
+      data: result,
+      message: 'success',
+    })
+  }),
+
+  // 获取求助建议
+  http.post('/chat/help-suggestion', async ({ request }) => {
+    await delay(1000)
+    const _body = (await request.json()) as {
+      messageId: string
+      content: string
+    }
+
+    // 模拟求助建议数据
+    const helpSuggestions = [
+      {
+        status: '求助成功! 已为您提供地道表达建议，剩余次数: 2',
+        suggestion: {
+          recommended: "I'm planning to go for a walk in the park",
+          reasons: [
+            '"go for a walk" 比 "take a walk" 更自然地道',
+            '"planning" 比 "plan" 更口语化',
+            '现在进行时表示计划更合适',
+          ],
+        },
+        pronunciation: {
+          planning: { phonetic: '/ˈplænɪŋ/', note: '注意双n的发音' },
+          walk: { phonetic: '/wɔːk/', note: '长音o' },
+          park: { phonetic: '/pɑːrk/', note: '重音在第一个音节' },
+        },
+      },
+      {
+        status: '求助成功! 已为您提供地道表达建议，剩余次数: 1',
+        suggestion: {
+          recommended: 'How was your weekend? Did you do anything interesting?',
+          reasons: [
+            '"How was..." 比 "What about..." 更自然',
+            '添加后续问题显得更关心',
+            '使用过去时询问已发生的事情',
+          ],
+        },
+        pronunciation: {
+          weekend: { phonetic: '/ˈwiːkɛnd/', note: '重音在第一音节' },
+          interesting: { phonetic: '/ˈɪntrəstɪŋ/', note: '注意第一个音节重读' },
+        },
+      },
+    ]
+
+    const result =
+      helpSuggestions[Math.floor(Math.random() * helpSuggestions.length)]
+
+    return HttpResponse.json({
+      code: 200,
+      data: result,
+      message: 'success',
+    })
+  }),
+
   // 获取推荐话题
   http.get('/chat/suggested-topics', async () => {
     await delay(400)

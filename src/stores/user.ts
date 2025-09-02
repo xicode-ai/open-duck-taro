@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { queryClient } from '@/providers/QueryProvider'
+import { QUERY_KEYS } from '@/hooks/useApiQueries'
 import type { User } from '@/types'
 
 // 用户相关类型
@@ -67,20 +69,35 @@ export const useUserStore = create<UserState>()(
       },
       isLoggedIn: false,
 
-      setUser: (user: User) => set({ user, isLoggedIn: true }),
+      setUser: (user: User) => {
+        set({ user, isLoggedIn: true })
+        // 同步更新 React Query 缓存
+        queryClient.setQueryData(QUERY_KEYS.USER_PROFILE(), user)
+      },
 
-      logout: () => set({ user: null, isLoggedIn: false, dailyUsage: {} }),
+      logout: () => {
+        set({ user: null, isLoggedIn: false, dailyUsage: {} })
+        // 清除所有用户相关的缓存
+        queryClient.removeQueries({ queryKey: QUERY_KEYS.USER })
+        queryClient.removeQueries({ queryKey: QUERY_KEYS.USER_STATS })
+      },
 
       updateUser: (updates: Partial<User>) => {
         const currentUser = get().user
         if (currentUser) {
-          set({ user: { ...currentUser, ...updates } })
+          const updatedUser = { ...currentUser, ...updates }
+          set({ user: updatedUser })
+          // 同步更新 React Query 缓存
+          queryClient.setQueryData(QUERY_KEYS.USER_PROFILE(), updatedUser)
         }
       },
 
       updateProfile: (updates: Partial<UserProfile>) => {
         const currentProfile = get().profile
-        set({ profile: { ...currentProfile, ...updates } })
+        const updatedProfile = { ...currentProfile, ...updates }
+        set({ profile: updatedProfile })
+        // 使相关查询失效，触发重新获取
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER_STATS })
       },
 
       updateDailyUsage: (feature: string) => {

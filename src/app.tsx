@@ -1,5 +1,6 @@
 import { PropsWithChildren } from 'react'
 import { useLaunch } from '@tarojs/taro'
+import { QueryProvider } from '@/providers/QueryProvider'
 import './app.scss'
 
 // 开发环境启用MSW
@@ -35,8 +36,8 @@ function App({ children }: PropsWithChildren) {
     console.log('开口鸭应用启动')
   })
 
-  // children 就是要渲染的页面
-  return children
+  // 使用 QueryProvider 包装应用
+  return <QueryProvider>{children}</QueryProvider>
 }
 
 export default App

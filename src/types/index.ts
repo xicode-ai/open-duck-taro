@@ -38,10 +38,16 @@ export interface Topic {
   description: string
   category: string
   level: UserLevel
+  difficulty: 'easy' | 'medium' | 'hard'
   icon: string
+  iconClass?: string
+  background?: string
   color?: string
   dialogCount?: number
+  conversations?: number
   dialogues: Dialogue[]
+  isNew?: boolean
+  isPopular?: boolean
 }
 
 export interface Dialogue {
