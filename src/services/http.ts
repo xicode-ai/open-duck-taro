@@ -190,6 +190,12 @@ class HttpClient {
       ...restOptions
     } = options
 
+    // 在开发环境等待MSW准备就绪
+    if (process.env.NODE_ENV === 'development') {
+      const { waitForMSW } = await import('../app')
+      await waitForMSW()
+    }
+
     // 检查网络状态
     const hasNetwork = await this.checkNetwork()
     if (!hasNetwork) {

@@ -545,4 +545,546 @@ export const chatHandlers = [
       message: 'success',
     })
   }),
+
+  // 获取话题分类和具体话题列表（直接路径匹配）
+  http.get('/chat/topic-categories', async ({ request }) => {
+    console.log('🔧 MSW直接路径拦截到话题分类请求:', request.url)
+    console.log('🔧 请求方法:', request.method)
+    console.log('🔧 请求头:', Object.fromEntries(request.headers.entries()))
+    await delay(300)
+
+    const categories = [
+      {
+        id: 'casual',
+        name: '闲聊话题',
+        color: '#7c3aed',
+        description: '日常轻松聊天话题',
+        topics: [
+          '你经历过的文化差异是什么',
+          '你上个假期如何放松的',
+          '你认为城市发展应该保护老建筑吗',
+          '你养过宠物吗',
+          '你如何看待在线学习',
+          '你最喜欢的电影类型是什么',
+          '你平时有什么兴趣爱好',
+          '你对环保有什么看法',
+          '你喜欢哪种类型的音乐',
+          '你觉得现代生活节奏怎么样',
+        ],
+      },
+      {
+        id: 'ielts-part1',
+        name: 'IELTS Part 1',
+        color: '#059669',
+        description: '雅思口语第一部分话题',
+        topics: [
+          '描述你的家乡',
+          '谈谈你的工作或学习',
+          '你平时的休闲活动',
+          '你最喜欢的季节',
+          '你的日常作息',
+          '谈谈你的朋友',
+          '你喜欢的食物',
+          '你的购物习惯',
+          '你如何使用手机',
+          '你对未来的计划',
+        ],
+      },
+      {
+        id: 'ielts-part2',
+        name: 'IELTS Part 2',
+        color: '#dc2626',
+        description: '雅思口语第二部分话题',
+        topics: [
+          '描述一个你熟悉的人',
+          '描述一个你喜欢的地方',
+          '描述一次难忘的经历',
+          '描述你学过的一项技能',
+          '描述一本书或电影',
+          '描述你的一个目标',
+          '描述一次成功的经历',
+          '描述你收到的礼物',
+          '描述一项运动或活动',
+          '描述你想改变的一件事',
+        ],
+      },
+      {
+        id: 'business',
+        name: '商务英语',
+        color: '#f59e0b',
+        description: '职场和商务相关话题',
+        topics: [
+          '介绍你的公司',
+          '谈论工作压力',
+          '描述团队合作',
+          '讨论商务会议',
+          '谈论职业发展',
+          '描述客户服务',
+          '讨论市场趋势',
+          '谈论企业文化',
+          '描述项目管理',
+          '讨论商务礼仪',
+        ],
+      },
+    ]
+
+    return HttpResponse.json({
+      code: 200,
+      data: categories,
+      message: 'success',
+    })
+  }),
+
+  // 获取话题分类和具体话题列表（支持通配符匹配）
+  http.get('*/chat/topic-categories', async ({ request }) => {
+    console.log('🔧 MSW通配符拦截到话题分类请求:', request.url)
+    console.log('🔧 请求方法:', request.method)
+    console.log('🔧 请求头:', Object.fromEntries(request.headers.entries()))
+    await delay(300)
+
+    const categories = [
+      {
+        id: 'casual',
+        name: '闲聊话题',
+        color: '#7c3aed',
+        topics: [
+          '你经历过的文化差异是什么',
+          '你上个假期如何放松的',
+          '你认为城市发展应该保护老建筑吗',
+          '你养过宠物吗',
+          '你对哪种新兴科技感兴趣',
+          '你喜欢和家人一块去旅行吗',
+          '你周末一般怎么过',
+          '你有没有崇拜的明星',
+          '你最近有没有突破自我的事情',
+          '你喜欢在家吃饭还是出去吃饭',
+        ],
+      },
+      {
+        id: 'ielts_part1',
+        name: '雅思Part1',
+        color: '#059669',
+        topics: [
+          'Do you like rainy days?',
+          'What do you usually do on weekends?',
+          'Do you prefer to live in the city or countryside?',
+          'What kind of music do you like?',
+          'Do you like cooking?',
+          'What is your favorite season?',
+          'Do you like taking photos?',
+          'How do you usually travel?',
+          'Do you like reading books?',
+          'What sports do you like?',
+        ],
+      },
+      {
+        id: 'ielts_part2',
+        name: '雅思Part2',
+        color: '#dc2626',
+        topics: [
+          'Describe a person who inspired you',
+          'Describe a place you want to visit',
+          'Describe a skill you learned recently',
+          'Describe an important decision you made',
+          'Describe a memorable journey',
+          'Describe your ideal job',
+          'Describe a book that influenced you',
+          'Describe a traditional festival in your country',
+          'Describe a challenge you overcame',
+          'Describe your favorite movie',
+        ],
+      },
+      {
+        id: 'business',
+        name: '商务英语',
+        color: '#f59e0b',
+        topics: [
+          'Tell me about your work experience',
+          'How do you handle difficult customers?',
+          'Describe a successful project you worked on',
+          'What are your career goals?',
+          'How do you manage your time effectively?',
+          'Describe your ideal working environment',
+          'How do you deal with workplace conflicts?',
+          'What skills are important for your job?',
+          'How do you stay motivated at work?',
+          'Describe a presentation you gave',
+        ],
+      },
+    ]
+
+    return HttpResponse.json({
+      code: 200,
+      data: categories,
+      message: 'success',
+    })
+  }),
+
+  // 选择话题并开始对话（支持通配符匹配）
+  http.post('*/chat/select-topic', async ({ request }) => {
+    console.log('🔧 MSW拦截到话题选择请求:', request.url)
+    await delay(500)
+    const body = (await request.json()) as { topic: string; category: string }
+    console.log('🔧 选择的话题:', body)
+
+    // 根据不同话题生成对应的开场白
+    const topicIntroductions: Record<string, string> = {
+      你经历过的文化差异是什么:
+        "That's an interesting topic! Cultural differences can be fascinating. Can you tell me about a specific cultural difference you've encountered?",
+      你上个假期如何放松的:
+        'I love talking about vacations! How did you spend your last holiday? Did you do anything special to relax?',
+      'Do you like rainy days?':
+        "Rainy days can be quite peaceful or gloomy depending on the person. What's your opinion on rainy weather?",
+      'Describe a person who inspired you':
+        'This sounds like it will be a meaningful conversation. Can you tell me about someone who has inspired you in your life?',
+    }
+
+    const introduction =
+      topicIntroductions[body.topic] ||
+      `Great choice! Let's talk about "${body.topic}". What are your thoughts on this topic?`
+
+    return HttpResponse.json({
+      code: 200,
+      data: {
+        topic: body.topic,
+        category: body.category,
+        introduction,
+        audioUrl: generateAudioUrl(introduction),
+        duration: Math.floor(introduction.length / 15),
+      },
+      message: 'success',
+    })
+  }),
+
+  // 获取特定分类的话题列表（直接路径匹配）
+  http.get('/chat/topics/:categoryId', async ({ params, request }) => {
+    console.log('🔧 MSW直接路径拦截到获取分类话题请求:', params.categoryId)
+    console.log('🔧 请求URL:', request.url)
+    console.log('🔧 请求方法:', request.method)
+    await delay(200)
+
+    const categoryTopics: Record<string, string[]> = {
+      casual: [
+        '你经历过的文化差异是什么',
+        '你上个假期如何放松的',
+        '你认为城市发展应该保护老建筑吗',
+        '你养过宠物吗',
+        '你如何看待在线学习',
+        '你最喜欢的电影类型是什么',
+        '你平时有什么兴趣爱好',
+        '你对环保有什么看法',
+        '你喜欢哪种类型的音乐',
+        '你觉得现代生活节奏怎么样',
+      ],
+      'ielts-part1': [
+        '描述你的家乡',
+        '谈谈你的工作或学习',
+        '你平时的休闲活动',
+        '你最喜欢的季节',
+        '你的日常作息',
+        '谈谈你的朋友',
+        '你喜欢的食物',
+        '你的购物习惯',
+        '你如何使用手机',
+        '你对未来的计划',
+      ],
+      'ielts-part2': [
+        '描述一个你熟悉的人',
+        '描述一个你喜欢的地方',
+        '描述一次难忘的经历',
+        '描述你学过的一项技能',
+        '描述一本书或电影',
+        '描述你的一个目标',
+        '描述一次成功的经历',
+        '描述你收到的礼物',
+        '描述一项运动或活动',
+        '描述你想改变的一件事',
+      ],
+      business: [
+        '介绍你的公司',
+        '谈论工作压力',
+        '描述团队合作',
+        '讨论商务会议',
+        '谈论职业发展',
+        '描述客户服务',
+        '讨论市场趋势',
+        '谈论企业文化',
+        '描述项目管理',
+        '讨论商务礼仪',
+      ],
+    }
+
+    const categoryId = params.categoryId as string
+    const topics = categoryTopics[categoryId] || []
+
+    console.log('🔧 返回分类话题数据:', {
+      categoryId,
+      topics: topics.length,
+      firstTopic: topics[0],
+    })
+
+    return HttpResponse.json({
+      code: 200,
+      data: {
+        categoryId,
+        topics,
+        total: topics.length,
+      },
+      message: 'success',
+    })
+  }),
+
+  // 获取特定分类的话题列表（支持通配符匹配）
+  http.get('*/chat/topics/:categoryId', async ({ params, request }) => {
+    console.log('🔧 MSW通配符拦截到获取分类话题请求:', params.categoryId)
+    console.log('🔧 请求URL:', request.url)
+    console.log('🔧 请求方法:', request.method)
+    await delay(200)
+
+    const categoryTopics: Record<string, string[]> = {
+      casual: [
+        '你经历过的文化差异是什么',
+        '你上个假期如何放松的',
+        '你认为城市发展应该保护老建筑吗',
+        '你养过宠物吗',
+        '你对哪种新兴科技感兴趣',
+        '你喜欢和家人一块去旅行吗',
+        '你周末一般怎么过',
+        '你有没有崇拜的明星',
+        '你最近有没有突破自我的事情',
+        '你喜欢在家吃饭还是出去吃饭',
+      ],
+      ielts_part1: [
+        'Do you like rainy days?',
+        'What do you usually do on weekends?',
+        'Do you prefer to live in the city or countryside?',
+        'What kind of music do you like?',
+        'Do you like cooking?',
+        'What is your favorite season?',
+        'Do you like taking photos?',
+        'How do you usually travel?',
+        'Do you like reading books?',
+        'What sports do you like?',
+      ],
+      ielts_part2: [
+        'Describe a person who inspired you',
+        'Describe a place you want to visit',
+        'Describe a skill you learned recently',
+        'Describe an important decision you made',
+        'Describe a memorable journey',
+        'Describe your ideal job',
+        'Describe a book that influenced you',
+        'Describe a traditional festival in your country',
+        'Describe a challenge you overcame',
+        'Describe your favorite movie',
+      ],
+      business: [
+        'Tell me about your work experience',
+        'How do you handle difficult customers?',
+        'Describe a successful project you worked on',
+        'What are your career goals?',
+        'How do you manage your time effectively?',
+        'Describe your ideal working environment',
+        'How do you deal with workplace conflicts?',
+        'What skills are important for your job?',
+        'How do you stay motivated at work?',
+        'Describe a presentation you gave',
+      ],
+    }
+
+    const topics = categoryTopics[params.categoryId as string] || []
+
+    return HttpResponse.json({
+      code: 200,
+      data: {
+        categoryId: params.categoryId,
+        topics,
+        total: topics.length,
+      },
+      message: 'success',
+    })
+  }),
+
+  // 获取话题详情（包含引导问题和建议）
+  http.get('/chat/topic-detail/:topicId', async ({ params }) => {
+    console.log('🔧 MSW拦截到话题详情请求:', params.topicId)
+    await delay(300)
+
+    const topicDetails: Record<
+      string,
+      {
+        id: string
+        title: string
+        category: string
+        difficulty: string
+        estimatedTime: string
+        description: string
+        guideQuestions: string[]
+        vocabulary: { word: string; meaning: string }[]
+        tips: string[]
+      }
+    > = {
+      'cultural-differences': {
+        id: 'cultural-differences',
+        title: '你经历过的文化差异是什么',
+        category: 'casual',
+        difficulty: 'intermediate',
+        estimatedTime: '5-10分钟',
+        description: '讨论不同文化背景下的差异和体验',
+        guideQuestions: [
+          '你在什么情况下遇到了文化差异？',
+          '这种差异给你带来了什么感受？',
+          '你是如何适应或处理这种差异的？',
+          '这种经历对你有什么影响？',
+        ],
+        vocabulary: [
+          { word: 'cultural shock', meaning: '文化冲击' },
+          { word: 'adaptation', meaning: '适应' },
+          { word: 'tradition', meaning: '传统' },
+          { word: 'custom', meaning: '习俗' },
+        ],
+        tips: [
+          '可以分享具体的例子',
+          '描述你的感受和想法',
+          '谈谈你从中学到了什么',
+        ],
+      },
+      'weekend-activities': {
+        id: 'weekend-activities',
+        title: '你周末一般怎么过',
+        category: 'casual',
+        difficulty: 'beginner',
+        estimatedTime: '3-5分钟',
+        description: '分享你的周末活动和休闲方式',
+        guideQuestions: [
+          '你通常周末做什么？',
+          '你最喜欢哪种周末活动？',
+          '你周末会和谁一起度过？',
+          '你理想中的周末是什么样的？',
+        ],
+        vocabulary: [
+          { word: 'leisure', meaning: '休闲' },
+          { word: 'relaxation', meaning: '放松' },
+          { word: 'hobby', meaning: '爱好' },
+          { word: 'recreation', meaning: '娱乐' },
+        ],
+        tips: ['可以描述具体的活动', '分享你的感受', '谈谈这些活动对你的意义'],
+      },
+    }
+
+    const topicDetail = topicDetails[params.topicId as string] || {
+      id: params.topicId,
+      title: '话题详情',
+      category: 'general',
+      difficulty: 'intermediate',
+      estimatedTime: '5分钟',
+      description: '这是一个有趣的话题，让我们开始讨论吧！',
+      guideQuestions: [
+        '你对这个话题有什么看法？',
+        '你能分享一些相关的经历吗？',
+        '这个话题让你想到了什么？',
+      ],
+      vocabulary: [],
+      tips: ['自由表达你的想法', '可以分享个人经历'],
+    }
+
+    return HttpResponse.json({
+      code: 200,
+      data: topicDetail,
+      message: 'success',
+    })
+  }),
+
+  // 获取随机话题（支持通配符匹配）
+  http.get('*/chat/random-topic', async ({ request }) => {
+    console.log('🔧 MSW拦截到随机话题请求')
+    await delay(200)
+
+    // 解析查询参数
+    const url = request.url
+    const categoryMatch = url.match(/[?&]category=([^&]*)/)
+    const category = categoryMatch ? decodeURIComponent(categoryMatch[1]) : null
+
+    const allTopics = {
+      casual: [
+        '你经历过的文化差异是什么',
+        '你上个假期如何放松的',
+        '你认为城市发展应该保护老建筑吗',
+        '你养过宠物吗',
+        '你对哪种新兴科技感兴趣',
+      ],
+      ielts_part1: [
+        'Do you like rainy days?',
+        'What do you usually do on weekends?',
+        'Do you prefer to live in the city or countryside?',
+        'What kind of music do you like?',
+        'Do you like cooking?',
+      ],
+      ielts_part2: [
+        'Describe a person who inspired you',
+        'Describe a place you want to visit',
+        'Describe a skill you learned recently',
+        'Describe an important decision you made',
+        'Describe a memorable journey',
+      ],
+      business: [
+        'Tell me about your work experience',
+        'How do you handle difficult customers?',
+        'Describe a successful project you worked on',
+        'What are your career goals?',
+        'How do you manage your time effectively?',
+      ],
+    }
+
+    let topics: string[] = []
+    if (category && allTopics[category as keyof typeof allTopics]) {
+      topics = allTopics[category as keyof typeof allTopics]
+    } else {
+      // 如果没有指定分类，从所有话题中随机选择
+      topics = Object.values(allTopics).flat()
+    }
+
+    const randomTopic = topics[Math.floor(Math.random() * topics.length)]
+
+    return HttpResponse.json({
+      code: 200,
+      data: {
+        topic: randomTopic,
+        category: category || 'random',
+      },
+      message: 'success',
+    })
+  }),
+
+  // 获取话题统计信息
+  http.get('/chat/topic-stats', async () => {
+    console.log('🔧 MSW拦截到话题统计请求')
+    await delay(150)
+
+    return HttpResponse.json({
+      code: 200,
+      data: {
+        totalTopics: 40,
+        categories: {
+          casual: 10,
+          ielts_part1: 10,
+          ielts_part2: 10,
+          business: 10,
+        },
+        popularTopics: [
+          '你经历过的文化差异是什么',
+          'Do you like rainy days?',
+          'Describe a person who inspired you',
+          'Tell me about your work experience',
+        ],
+        recentTopics: [
+          '你周末一般怎么过',
+          'What is your favorite season?',
+          'Describe a memorable journey',
+          'How do you stay motivated at work?',
+        ],
+      },
+      message: 'success',
+    })
+  }),
 ]

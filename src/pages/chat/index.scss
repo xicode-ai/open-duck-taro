@@ -1,24 +1,56 @@
+// 确保没有任何容器限制宽度
+* {
+  box-sizing: border-box;
+}
+
+// 重置页面容器
+.taro_page,
+.taro_router {
+  width: 100vw !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 .chat-page {
   height: 100vh;
+  width: 100vw;
   background: #f5f7fa;
   display: flex;
   flex-direction: column;
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 
   // AI头部信息
   .ai-header {
     background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
     padding-top: env(safe-area-inset-top);
     box-shadow: 0 4rpx 20rpx rgba(124, 58, 237, 0.2);
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100vw;
     z-index: 100;
+    box-sizing: border-box;
 
     .header-content {
       display: flex;
       align-items: center;
       padding: 16rpx 24rpx 24rpx;
       position: relative;
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      max-width: none;
 
       .back-btn {
         width: 60rpx;
@@ -121,7 +153,7 @@
   // 消息容器
   .message-container {
     flex: 1;
-    padding: 24rpx 16rpx;
+    padding: 160rpx 16rpx 24rpx 16rpx; // 添加顶部padding避免被header遮挡
     overflow-y: auto;
 
     .message {
@@ -404,6 +436,17 @@
           font-size: 28rpx;
         }
       }
+
+      .hash-icon {
+        font-size: 32rpx;
+        font-weight: 600;
+        color: #7c3aed;
+      }
+    }
+
+    .input-right {
+      // 右边区域现在为空，可以移除这部分样式
+      display: none;
     }
 
     .record-button {

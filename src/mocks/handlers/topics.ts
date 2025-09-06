@@ -1,143 +1,314 @@
 import { http, HttpResponse, delay } from 'msw'
 import type { TopicParams, LessonParams, TopicPracticeBody } from '../types'
 
-// Mock话题数据
-const topicsData = [
+// Mock自定义话题数据
+let customTopics = [
   {
-    id: 'topic-001',
-    title: '自我介绍',
-    titleEn: 'Self Introduction',
-    description: '学习如何用英语介绍自己',
-    category: 'daily',
-    difficulty: 'beginner',
-    icon: '👋',
-    progress: 100,
-    completed: true,
-    lessons: [
-      {
-        id: 'lesson-001',
-        title: '基本信息',
-        content: 'Learn to introduce your name, age, and where you are from.',
-        completed: true,
-      },
-      {
-        id: 'lesson-002',
-        title: '兴趣爱好',
-        content: 'Talk about your hobbies and interests.',
-        completed: true,
-      },
-    ],
-    vocabulary: ['name', 'age', 'hometown', 'hobby', 'interest'],
-    keyPhrases: [
-      'My name is...',
-      "I'm from...",
-      'I enjoy...',
-      'In my free time, I...',
-    ],
+    id: 'custom-1',
+    title: '游戏交流',
+    description: '3个对话 · 已练习2次',
+    icon: '🎮',
+    conversations: 3,
+    created: '2024-01-01',
+    isCustom: true,
   },
   {
-    id: 'topic-002',
-    title: '日常生活',
-    titleEn: 'Daily Life',
-    description: '描述你的日常生活和习惯',
-    category: 'daily',
-    difficulty: 'beginner',
-    icon: '☀️',
-    progress: 60,
-    completed: false,
-    lessons: [
-      {
-        id: 'lesson-003',
-        title: '早晨例行',
-        content: 'Describe your morning routine.',
-        completed: true,
-      },
-      {
-        id: 'lesson-004',
-        title: '工作学习',
-        content: 'Talk about work or study.',
-        completed: false,
-      },
-      {
-        id: 'lesson-005',
-        title: '晚间活动',
-        content: 'Evening activities and relaxation.',
-        completed: false,
-      },
-    ],
-    vocabulary: ['wake up', 'breakfast', 'commute', 'work', 'dinner'],
-    keyPhrases: [
-      'I usually wake up at...',
-      'After breakfast, I...',
-      'In the evening, I like to...',
-    ],
+    id: 'custom-2',
+    title: '音乐分享',
+    description: '2个对话 · 已练习1次',
+    icon: '🎵',
+    conversations: 2,
+    created: '2024-01-02',
+    isCustom: true,
+  },
+]
+
+// Mock学习进度数据
+const topicProgress = [
+  {
+    topicId: '1',
+    title: '咖啡话题',
+    icon: '☕',
+    completedDialogues: 8,
+    totalDialogues: 15,
+    progress: 53,
   },
   {
-    id: 'topic-003',
-    title: '旅行经历',
-    titleEn: 'Travel Experiences',
-    description: '分享你的旅行故事和计划',
-    category: 'lifestyle',
-    difficulty: 'intermediate',
+    topicId: '2',
+    title: '旅游话题',
     icon: '✈️',
-    progress: 30,
-    completed: false,
-    lessons: [
-      {
-        id: 'lesson-006',
-        title: '过去的旅行',
-        content: 'Share your past travel experiences.',
-        completed: true,
-      },
-      {
-        id: 'lesson-007',
-        title: '旅行计划',
-        content: 'Discuss future travel plans.',
-        completed: false,
-      },
-    ],
-    vocabulary: ['destination', 'itinerary', 'accommodation', 'sightseeing'],
-    keyPhrases: [
-      "I've been to...",
-      'The most memorable trip was...',
-      "I'm planning to visit...",
-    ],
+    completedDialogues: 12,
+    totalDialogues: 20,
+    progress: 60,
   },
   {
-    id: 'topic-004',
-    title: '职场英语',
-    titleEn: 'Workplace English',
-    description: '商务和职场常用英语',
-    category: 'business',
-    difficulty: 'intermediate',
+    topicId: '3',
+    title: '健身话题',
+    icon: '💪',
+    completedDialogues: 5,
+    totalDialogues: 12,
+    progress: 42,
+  },
+  {
+    topicId: '4',
+    title: '餐厅话题',
+    icon: '🍽️',
+    completedDialogues: 14,
+    totalDialogues: 18,
+    progress: 78,
+  },
+  {
+    topicId: '5',
+    title: '购物话题',
+    icon: '🛒',
+    completedDialogues: 6,
+    totalDialogues: 16,
+    progress: 38,
+  },
+  {
+    topicId: '6',
+    title: '工作话题',
     icon: '💼',
+    completedDialogues: 18,
+    totalDialogues: 22,
+    progress: 82,
+  },
+]
+
+// Mock热门话题数据
+const hotTopicsData = [
+  {
+    id: '1',
+    title: '咖啡',
+    description: '点咖啡、描述口味偏好',
+    icon: '☕',
+    background: '#FF6B35',
+    category: 'daily',
+    difficulty: 'easy',
+    conversations: 15,
+    progress: 53,
+    isPopular: true,
+  },
+  {
+    id: '2',
+    title: '旅游',
+    description: '机场、酒店、问路',
+    icon: '✈️',
+    background: '#4ECDC4',
+    category: 'travel',
+    difficulty: 'medium',
+    conversations: 20,
+    progress: 60,
+    isPopular: true,
+  },
+  {
+    id: '3',
+    title: '健身',
+    description: '健身房、运动计划',
+    icon: '💪',
+    background: '#45B7D1',
+    category: 'health',
+    difficulty: 'medium',
+    conversations: 12,
+    progress: 42,
+  },
+  {
+    id: '4',
+    title: '餐厅',
+    description: '点餐、服务、买单',
+    icon: '🍽️',
+    background: '#F7931E',
+    category: 'daily',
+    difficulty: 'easy',
+    conversations: 18,
+    progress: 78,
+  },
+  {
+    id: '5',
+    title: '购物',
+    description: '选择、试穿、砍价',
+    icon: '🛒',
+    background: '#C44569',
+    category: 'shopping',
+    difficulty: 'easy',
+    conversations: 16,
+    progress: 38,
+  },
+  {
+    id: '6',
+    title: '工作',
+    description: '面试、会议、同事',
+    icon: '💼',
+    background: '#6C5CE7',
+    category: 'work',
+    difficulty: 'hard',
+    conversations: 22,
+    progress: 82,
+  },
+  {
+    id: '7',
+    title: '闲聊',
+    description: '',
+    icon: '💬',
+    background: '#A8E6CF',
+    category: 'daily',
+    difficulty: 'medium',
+    conversations: 8,
     progress: 0,
-    completed: false,
-    lessons: [
-      {
-        id: 'lesson-008',
-        title: '会议用语',
-        content: 'Essential phrases for meetings.',
-        completed: false,
-      },
-      {
-        id: 'lesson-009',
-        title: '邮件写作',
-        content: 'Professional email writing.',
-        completed: false,
-      },
-    ],
-    vocabulary: ['meeting', 'agenda', 'deadline', 'proposal', 'collaboration'],
-    keyPhrases: [
-      "I'd like to propose...",
-      'Could we schedule a meeting?',
-      'Please find attached...',
-    ],
+  },
+  {
+    id: '8',
+    title: '电话',
+    description: '',
+    icon: '📞',
+    background: '#74B9FF',
+    category: 'daily',
+    difficulty: 'medium',
+    conversations: 6,
+    progress: 0,
   },
 ]
 
 export const topicsHandlers = [
-  // 获取话题列表
+  // 获取热门话题列表
+  http.get('/api/topics/hot', async ({ request }) => {
+    await delay(500)
+    // eslint-disable-next-line no-undef
+    const url = new URL(request.url)
+    const category = url.searchParams.get('category')
+    const difficulty = url.searchParams.get('difficulty')
+
+    let filteredTopics = [...hotTopicsData]
+
+    if (category) {
+      filteredTopics = filteredTopics.filter(t => t.category === category)
+    }
+
+    if (difficulty) {
+      filteredTopics = filteredTopics.filter(t => t.difficulty === difficulty)
+    }
+
+    return HttpResponse.json({
+      code: 200,
+      data: filteredTopics,
+      message: 'success',
+    })
+  }),
+
+  // 获取自定义话题列表
+  http.get('/api/topics/custom', async () => {
+    await delay(300)
+
+    return HttpResponse.json({
+      code: 200,
+      data: customTopics,
+      message: 'success',
+    })
+  }),
+
+  // 创建自定义话题
+  http.post('/api/topics/custom', async ({ request }) => {
+    await delay(400)
+    const body = (await request.json()) as {
+      title: string
+      description?: string
+      icon: string
+    }
+
+    if (!body) {
+      return HttpResponse.json(
+        { code: 400, message: '参数不能为空' },
+        { status: 400 }
+      )
+    }
+
+    const newTopic = {
+      id: `custom-${Date.now()}`,
+      title: body.title,
+      description: body.description || `0个对话 · 未练习`,
+      icon: body.icon,
+      conversations: 0,
+      created: new Date().toISOString().split('T')[0],
+      isCustom: true,
+    }
+
+    customTopics.push(newTopic)
+
+    return HttpResponse.json({
+      code: 200,
+      data: newTopic,
+      message: '创建成功',
+    })
+  }),
+
+  // 更新自定义话题
+  http.put('/api/topics/custom/:topicId', async ({ params, request }) => {
+    await delay(300)
+    const body = (await request.json()) as {
+      title: string
+      icon: string
+    }
+    const topicIndex = customTopics.findIndex(t => t.id === params.topicId)
+
+    if (topicIndex === -1) {
+      return HttpResponse.json(
+        { code: 404, message: '话题不存在' },
+        { status: 404 }
+      )
+    }
+
+    if (!body) {
+      return HttpResponse.json(
+        { code: 400, message: '参数不能为空' },
+        { status: 400 }
+      )
+    }
+
+    customTopics[topicIndex] = {
+      ...customTopics[topicIndex],
+      title: body.title,
+      icon: body.icon,
+    }
+
+    return HttpResponse.json({
+      code: 200,
+      data: customTopics[topicIndex],
+      message: '更新成功',
+    })
+  }),
+
+  // 删除自定义话题
+  http.delete('/api/topics/custom/:topicId', async ({ params }) => {
+    await delay(300)
+    const topicIndex = customTopics.findIndex(t => t.id === params.topicId)
+
+    if (topicIndex === -1) {
+      return HttpResponse.json(
+        { code: 404, message: '话题不存在' },
+        { status: 404 }
+      )
+    }
+
+    customTopics.splice(topicIndex, 1)
+
+    return HttpResponse.json({
+      code: 200,
+      message: '删除成功',
+    })
+  }),
+
+  // 获取学习进度
+  http.get('/api/topics/progress', async () => {
+    await delay(400)
+
+    return HttpResponse.json({
+      code: 200,
+      data: topicProgress,
+      message: 'success',
+    })
+  }),
+
+  // 获取话题列表（兼容旧接口）
   http.get('/api/topics', async ({ request }) => {
     await delay(500)
     // eslint-disable-next-line no-undef
@@ -145,7 +316,7 @@ export const topicsHandlers = [
     const category = url.searchParams.get('category')
     const difficulty = url.searchParams.get('difficulty')
 
-    let filteredTopics = [...topicsData]
+    let filteredTopics = [...hotTopicsData]
 
     if (category) {
       filteredTopics = filteredTopics.filter(t => t.category === category)
@@ -165,7 +336,9 @@ export const topicsHandlers = [
   // 获取话题详情
   http.get<TopicParams>('/api/topics/:topicId', async ({ params }) => {
     await delay(400)
-    const topic = topicsData.find(t => t.id === params.topicId)
+    const topic = [...hotTopicsData, ...customTopics].find(
+      t => t.id === params.topicId
+    )
 
     if (!topic) {
       return HttpResponse.json(
@@ -173,6 +346,12 @@ export const topicsHandlers = [
         { status: 404 }
       )
     }
+
+    // 获取相关话题（只从hotTopicsData中获取，因为customTopics没有category）
+    const topicCategory = 'category' in topic ? topic.category : 'daily'
+    const relatedTopics = hotTopicsData
+      .filter(t => t.id !== topic.id && t.category === topicCategory)
+      .slice(0, 3)
 
     // 添加更多详细内容
     const detailedTopic = {
@@ -197,9 +376,7 @@ export const topicsHandlers = [
         },
         { type: 'pdf', title: 'Study Notes', url: '/mock-pdf/notes.pdf' },
       ],
-      relatedTopics: topicsData
-        .filter(t => t.id !== topic.id && t.category === topic.category)
-        .slice(0, 3),
+      relatedTopics,
     }
 
     return HttpResponse.json({
@@ -347,13 +524,13 @@ export const topicsHandlers = [
   http.get('/api/topics/recommendations', async () => {
     await delay(400)
 
-    const recommendations = topicsData
-      .filter(t => !t.completed)
-      .sort((a, b) => a.progress - b.progress)
+    const recommendations = hotTopicsData
+      .filter(t => t.progress < 100)
+      .sort((a, b) => (a.progress || 0) - (b.progress || 0))
       .slice(0, 3)
       .map(t => ({
         ...t,
-        reason: t.progress > 0 ? '继续学习' : '新话题',
+        reason: (t.progress || 0) > 0 ? '继续学习' : '新话题',
         estimatedTime: '15-20分钟',
       }))
 

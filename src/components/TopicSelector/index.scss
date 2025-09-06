@@ -1,0 +1,226 @@
+.topic-selector-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+
+  .topic-selector {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-radius: 24rpx 24rpx 0 0;
+    height: 80vh;
+    max-height: 1200rpx;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+  }
+}
+
+// 头部区域
+.topic-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx 24rpx 16rpx;
+  border-bottom: 1rpx solid #f3f4f6;
+  flex-shrink: 0;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+
+    .header-title {
+      font-size: 32rpx;
+      font-weight: 600;
+      color: #1f2937;
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+
+    .refresh-btn {
+      display: flex;
+      align-items: center;
+      gap: 8rpx;
+      padding: 8rpx 16rpx;
+      background: #f3f4f6;
+      border-radius: 20rpx;
+      cursor: pointer;
+
+      &:active {
+        background: #e5e7eb;
+      }
+
+      .refresh-text {
+        font-size: 24rpx;
+        color: #6b7280;
+      }
+
+      .rotating {
+        animation: rotate 1s linear infinite;
+      }
+    }
+
+    .close-btn {
+      width: 48rpx;
+      height: 48rpx;
+      background: #f3f4f6;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transform: rotate(45deg);
+
+      &:active {
+        background: #e5e7eb;
+      }
+    }
+  }
+}
+
+// 分类标签区域
+.category-tabs {
+  padding: 16rpx 24rpx;
+  border-bottom: 1rpx solid #f3f4f6;
+  flex-shrink: 0;
+
+  .category-tab {
+    display: inline-block;
+    margin-right: 16rpx;
+    padding: 12rpx 24rpx;
+    border-radius: 20rpx;
+    border: 2rpx solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &.active {
+      box-shadow: 0 4rpx 12rpx rgba(124, 58, 237, 0.2);
+
+      .category-text {
+        color: #fff !important;
+        font-weight: 600 !important;
+        text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+      }
+    }
+
+    .category-text {
+      font-size: 26rpx;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+  }
+}
+
+// 话题列表区域
+.topic-list {
+  flex: 1;
+  padding: 16rpx 0;
+  overflow: hidden;
+
+  .loading-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200rpx;
+
+    .loading-text {
+      color: #9ca3af;
+      font-size: 28rpx;
+    }
+  }
+
+  .topic-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20rpx 24rpx;
+    margin-bottom: 2rpx;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1rpx solid #f9fafb;
+
+    &:active {
+      background: #f3f4f6;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .topic-text {
+      flex: 1;
+      font-size: 28rpx;
+      color: #374151;
+      line-height: 1.6;
+      margin-right: 16rpx;
+    }
+
+    .topic-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32rpx;
+      height: 32rpx;
+    }
+  }
+}
+
+// 动画定义
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 响应式适配
+@media (max-height: 600px) {
+  .topic-selector {
+    height: 90vh;
+  }
+}
+
+@media (max-height: 500px) {
+  .topic-selector {
+    height: 95vh;
+  }
+}

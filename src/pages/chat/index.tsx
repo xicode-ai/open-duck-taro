@@ -4,6 +4,7 @@ import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
 import CustomIcon from '../../components/CustomIcon'
 import VoiceWaveform from '../../components/VoiceWaveform'
+import TopicSelector from '../../components/TopicSelector'
 import { useChatStore } from '../../stores/chat'
 import { useUserStore } from '../../stores/user'
 import { formatRelativeTime } from '../../utils/date'
@@ -59,6 +60,7 @@ const ChatPage = () => {
   const [aiStatus, setAiStatus] = useState<'online' | 'offline' | 'typing'>(
     'online'
   )
+  const [showTopicSelector, setShowTopicSelector] = useState(false)
 
   // 长按菜单相关状态
   const [longPressMenu, setLongPressMenu] = useState<{
@@ -621,6 +623,41 @@ const ChatPage = () => {
     })
   }
 
+  // 显示话题选择器
+  const handleShowTopicSelector = () => {
+    setShowTopicSelector(true)
+  }
+
+  // 隐藏话题选择器
+  const handleCloseTopicSelector = () => {
+    setShowTopicSelector(false)
+  }
+
+  // 选择话题
+  const handleSelectTopic = async (topic: string, _category: string) => {
+    try {
+      // 创建话题选择消息
+      const topicMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: 'user',
+        content: `我想聊聊关于"${topic}"的话题`,
+        timestamp: Date.now(),
+      }
+
+      addMessage(topicMessage)
+      scrollToBottom()
+
+      // AI根据话题回复
+      handleAIResponse(`让我们谈论一下${topic}`)
+    } catch (error) {
+      console.error('选择话题失败:', error)
+      Taro.showToast({
+        title: '选择话题失败',
+        icon: 'error',
+      })
+    }
+  }
+
   // 返回上一页
   const handleBack = () => {
     Taro.navigateBack()
@@ -654,10 +691,6 @@ const ChatPage = () => {
                 )}
               </View>
             </View>
-          </View>
-
-          <View className="header-actions">
-            <CustomIcon name="more-horizontal" size={24} color="#fff" />
           </View>
         </View>
       </View>
@@ -797,8 +830,8 @@ const ChatPage = () => {
       {/* 输入工具栏 */}
       <View className="input-bar">
         <View className="input-left">
-          <View className="icon-btn" onClick={() => {}}>
-            <CustomIcon name="plus-circle" size={24} color="#999" />
+          <View className="icon-btn" onClick={handleShowTopicSelector}>
+            <Text className="hash-icon">#</Text>
           </View>
         </View>
 
@@ -824,12 +857,6 @@ const ChatPage = () => {
           {(shouldUseMockAudio() || process.env.TARO_ENV === 'h5') && (
             <Text className="mock-indicator">🎤 开发模式</Text>
           )}
-        </View>
-
-        <View className="input-right">
-          <View className="icon-btn emoji-btn" onClick={() => {}}>
-            <Text className="emoji-icon">😊</Text>
-          </View>
         </View>
       </View>
 
@@ -1098,6 +1125,13 @@ const ChatPage = () => {
           </View>
         </View>
       )}
+
+      {/* 话题选择器 */}
+      <TopicSelector
+        visible={showTopicSelector}
+        onClose={handleCloseTopicSelector}
+        onSelectTopic={handleSelectTopic}
+      />
     </View>
   )
 }

@@ -1,17 +1,7 @@
+/* 导入 Taro UI 必要样式 - 仅导入Icon组件样式 */
+@use '~taro-ui/dist/style/components/icon.scss';
+
 /* 完全自定义的样式系统，不依赖第三方UI库 */
-
-/* 通用页面样式 */
-.page-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background-color: #f8f9fa;
-}
-
-.content-area {
-  flex: 1;
-  overflow-y: auto;
-}
 
 /* 页面内容容器 - 与导航栏完美衔接 */
 .page-content {
@@ -22,7 +12,7 @@
   box-sizing: border-box;
 }
 
-/* 通用页面样式 */
+/* 通用页面样式 - 移动端滚动完全优化 */
 .translate-page,
 .topics-page,
 .vocabulary-page,
@@ -34,10 +24,10 @@
 .membership-page,
 .profile-page,
 .chat-page {
-  min-height: 100vh;
+  height: 100vh;
   background-color: #f8f9fa;
-  display: flex;
-  flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .chat-page {
@@ -54,10 +44,14 @@
 }
 
 html,
-body {
+body,
+#app {
+  height: 100%;
   margin: 0;
   padding: 0;
-  height: 100%;
+}
+
+body {
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
     'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
@@ -65,22 +59,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-#app {
-  height: 100%;
-}
-
-/* 移动端基础样式（适用于所有手机） */
-/* 基础字体大小 */
-html {
-  font-size: 16px;
+/* 隐藏滚动条 */
+::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* 触摸优化 */
 * {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
 }
 
 /* 允许文本选择 */
@@ -103,6 +92,7 @@ textarea {
   -webkit-user-select: text;
   user-select: text;
   -webkit-appearance: none;
+  appearance: none; /* 标准属性 */
   border-radius: 0;
 }
 
@@ -110,6 +100,7 @@ textarea {
 button,
 [role='button'] {
   -webkit-appearance: none;
+  appearance: none; /* 标准属性 */
   border: none;
   outline: none;
   cursor: pointer;
@@ -183,25 +174,6 @@ a {
   .safe-area-right {
     padding-right: max(16px, env(safe-area-inset-right));
   }
-}
-
-/* 滚动条优化 */
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 2px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
 }
 
 /* 焦点状态优化 */

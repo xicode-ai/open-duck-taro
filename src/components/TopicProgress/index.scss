@@ -1,0 +1,156 @@
+.topic-progress-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topic-progress {
+  width: 90%;
+  max-width: 680rpx;
+  max-height: 80%;
+  background: #fff;
+  border-radius: 24rpx;
+  overflow: hidden;
+  position: relative;
+
+  .progress-header {
+    padding: 32rpx 32rpx 24rpx;
+    border-bottom: 1rpx solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16rpx;
+
+      .header-title {
+        font-size: 32rpx;
+        font-weight: 600;
+        color: #333;
+      }
+    }
+
+    .close-btn {
+      width: 60rpx;
+      height: 60rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #f8fafc;
+      transition: background-color 0.2s;
+
+      &:active {
+        background: #e2e8f0;
+      }
+    }
+  }
+
+  .progress-content {
+    max-height: 1000rpx;
+    overflow-y: auto;
+
+    .loading-container {
+      padding: 80rpx 0;
+      text-align: center;
+
+      .loading-text {
+        font-size: 28rpx;
+        color: #9ca3af;
+      }
+    }
+
+    .progress-list {
+      padding: 0 32rpx 32rpx;
+
+      .progress-item {
+        padding: 32rpx 0;
+        border-bottom: 1rpx solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .item-left {
+          display: flex;
+          align-items: center;
+          flex: 1;
+          min-width: 0;
+
+          .topic-icon {
+            width: 80rpx;
+            height: 80rpx;
+            border-radius: 20rpx;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 24rpx;
+
+            .icon-text {
+              font-size: 32rpx;
+              color: #fff;
+            }
+          }
+
+          .topic-info {
+            flex: 1;
+            min-width: 0;
+
+            .topic-name {
+              font-size: 28rpx;
+              font-weight: 600;
+              color: #333;
+              margin-bottom: 8rpx;
+              display: block;
+            }
+
+            .topic-stats {
+              font-size: 24rpx;
+              color: #6b7280;
+              display: block;
+            }
+          }
+        }
+
+        .item-right {
+          text-align: right;
+          min-width: 120rpx;
+
+          .progress-percent {
+            font-size: 32rpx;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16rpx;
+            display: block;
+          }
+
+          .progress-bar {
+            width: 120rpx;
+            height: 8rpx;
+            background: #e5e7eb;
+            border-radius: 4rpx;
+            overflow: hidden;
+
+            .progress-fill {
+              height: 100%;
+              border-radius: 4rpx;
+              transition: width 0.3s ease;
+            }
+          }
+        }
+      }
+    }
+  }
+}

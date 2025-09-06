@@ -10,367 +10,370 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <style>
+      /* 适配iframe展示的设计风格 */
+      body {
+        width: 375px;
+        height: 812px;
+        overflow: hidden;
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+      }
+
       .scroll-container {
         overflow-y: auto;
-        scrollbar-width: thin;
-        scrollbar-color: #cbd5e0 #f7fafc;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
       }
       .scroll-container::-webkit-scrollbar {
-        width: 4px;
+        display: none;
       }
-      .scroll-container::-webkit-scrollbar-track {
-        background: #f7fafc;
+
+      /* 现代卡片设计 */
+      .topic-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
       }
-      .scroll-container::-webkit-scrollbar-thumb {
-        background: #cbd5e0;
-        border-radius: 2px;
+
+      .topic-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+      }
+
+      .topic-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      .topic-card:active {
+        transform: translateY(-2px) scale(0.98);
+      }
+
+      /* 渐变背景 */
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .gradient-green {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      }
+
+      .gradient-orange {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+      }
+
+      .gradient-blue {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      }
+
+      .gradient-purple {
+        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      }
+
+      /* 动画效果 */
+      @keyframes slideInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animate-slide-up {
+        animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* 状态栏优化 */
+      .status-bar {
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.03) 0%, transparent 100%);
+        backdrop-filter: blur(20px);
       }
     </style>
   </head>
-  <body class="bg-gray-50 h-screen overflow-hidden">
+  <body class="relative">
     <script src="auth.js"></script>
+
     <!-- iOS状态栏 -->
-    <div class="bg-white h-11 flex items-center justify-between px-4 text-sm font-medium">
-      <div class="flex items-center space-x-1">
-        <span>9:41</span>
-      </div>
-      <div class="w-16 h-4 bg-black rounded-full relative">
-        <div class="absolute right-0 top-0 w-1 h-1 bg-white rounded-full m-1"></div>
-      </div>
-      <div class="flex items-center space-x-1">
-        <i class="fas fa-signal text-xs"></i>
-        <i class="fas fa-wifi text-xs"></i>
-        <i class="fas fa-battery-three-quarters text-xs"></i>
-      </div>
-    </div>
+    <div class="status-bar h-11 flex items-center justify-between px-4 text-sm font-semibold text-gray-800">
+          <div class="flex items-center space-x-1">
+            <span>9:41</span>
+          </div>
+          <div class="w-16 h-4 bg-black rounded-full relative">
+            <div class="absolute right-0.5 top-0.5 w-1 h-1 bg-white rounded-full"></div>
+            <div class="absolute right-1 top-1 w-0.5 h-0.5 bg-white rounded-full"></div>
+          </div>
+          <div class="flex items-center space-x-1 text-gray-800">
+            <i class="fas fa-signal text-xs"></i>
+            <i class="fas fa-wifi text-xs"></i>
+            <i class="fas fa-battery-three-quarters text-xs"></i>
+          </div>
+        </div>
 
     <!-- 导航栏 -->
-    <div class="bg-green-500 text-white px-4 py-3 flex items-center">
-      <i class="fas fa-arrow-left text-xl mr-4"></i>
-      <h2 class="text-lg font-semibold flex-1">话题模式</h2>
-      <button class="bg-white bg-opacity-20 p-2 rounded-lg" onclick="showAddTopic()">
-        <i class="fas fa-plus text-xl"></i>
+    <div class="gradient-green text-white px-4 py-3 flex items-center shadow-lg">
+      <button class="mr-3 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors">
+        <i class="fas fa-arrow-left text-lg"></i>
+      </button>
+      <h2 class="text-lg font-bold flex-1">话题模式</h2>
+      <button class="bg-white bg-opacity-20 p-2 rounded-xl hover:bg-opacity-30 transition-colors" onclick="showProgressModal()">
+        <i class="fas fa-chart-bar text-lg"></i>
       </button>
     </div>
 
     <!-- 主内容区域 -->
-    <div class="px-4 pt-6 pb-20 h-full scroll-container">
+    <div class="px-4 pt-4 pb-20 scroll-container animate-slide-up" style="height: calc(812px - 88px - 60px);">
       <!-- 标题描述 -->
       <div class="mb-6">
-        <h3 class="text-xl font-bold text-gray-800 mb-2">选择一个话题开始练习</h3>
-        <p class="text-gray-600 text-sm">每个话题都包含相关的日常对话场景</p>
-      </div>
-
-      <!-- 话题网格 -->
-      <div class="grid grid-cols-2 gap-4">
-        <!-- 咖啡话题 -->
-        <div
-          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
-        >
-          <div class="text-center">
-            <div
-              class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
-            >
-              <i class="fas fa-coffee text-orange-500 text-2xl"></i>
-            </div>
-            <h4 class="font-semibold text-gray-800 mb-1">咖啡</h4>
-            <p class="text-xs text-gray-500 mb-3">点咖啡、描述口味偏好</p>
-            <div class="bg-orange-50 rounded-lg p-2">
-              <span class="text-orange-600 text-xs font-medium">15个对话</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 旅游话题 -->
-        <div
-          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
-        >
-          <div class="text-center">
-            <div
-              class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
-            >
-              <i class="fas fa-plane text-blue-500 text-2xl"></i>
-            </div>
-            <h4 class="font-semibold text-gray-800 mb-1">旅游</h4>
-            <p class="text-xs text-gray-500 mb-3">机场、酒店、问路</p>
-            <div class="bg-blue-50 rounded-lg p-2">
-              <span class="text-blue-600 text-xs font-medium">20个对话</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 健身话题 -->
-        <div
-          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
-        >
-          <div class="text-center">
-            <div
-              class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
-            >
-              <i class="fas fa-dumbbell text-green-500 text-2xl"></i>
-            </div>
-            <h4 class="font-semibold text-gray-800 mb-1">健身</h4>
-            <p class="text-xs text-gray-500 mb-3">健身房、运动计划</p>
-            <div class="bg-green-50 rounded-lg p-2">
-              <span class="text-green-600 text-xs font-medium">12个对话</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 餐厅话题 -->
-        <div
-          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
-        >
-          <div class="text-center">
-            <div
-              class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
-            >
-              <i class="fas fa-utensils text-red-500 text-2xl"></i>
-            </div>
-            <h4 class="font-semibold text-gray-800 mb-1">餐厅</h4>
-            <p class="text-xs text-gray-500 mb-3">点餐、服务、买单</p>
-            <div class="bg-red-50 rounded-lg p-2">
-              <span class="text-red-600 text-xs font-medium">18个对话</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 购物话题 -->
-        <div
-          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
-        >
-          <div class="text-center">
-            <div
-              class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
-            >
-              <i class="fas fa-shopping-bag text-purple-500 text-2xl"></i>
-            </div>
-            <h4 class="font-semibold text-gray-800 mb-1">购物</h4>
-            <p class="text-xs text-gray-500 mb-3">选择、试穿、砍价</p>
-            <div class="bg-purple-50 rounded-lg p-2">
-              <span class="text-purple-600 text-xs font-medium">16个对话</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 工作话题 -->
-        <div
-          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
-        >
-          <div class="text-center">
-            <div
-              class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
-            >
-              <i class="fas fa-briefcase text-indigo-500 text-2xl"></i>
-            </div>
-            <h4 class="font-semibold text-gray-800 mb-1">工作</h4>
-            <p class="text-xs text-gray-500 mb-3">面试、会议、同事</p>
-            <div class="bg-indigo-50 rounded-lg p-2">
-              <span class="text-indigo-600 text-xs font-medium">22个对话</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 医院话题 -->
-        <div
-          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
-        >
-          <div class="text-center">
-            <div
-              class="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
-            >
-              <i class="fas fa-user-md text-teal-500 text-2xl"></i>
-            </div>
-            <h4 class="font-semibold text-gray-800 mb-1">医院</h4>
-            <p class="text-xs text-gray-500 mb-3">挂号、问诊、买药</p>
-            <div class="bg-teal-50 rounded-lg p-2">
-              <span class="text-teal-600 text-xs font-medium">14个对话</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 天气话题 -->
-        <div
-          class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform"
-        >
-          <div class="text-center">
-            <div
-              class="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-3"
-            >
-              <i class="fas fa-sun text-yellow-500 text-2xl"></i>
-            </div>
-            <h4 class="font-semibold text-gray-800 mb-1">天气</h4>
-            <p class="text-xs text-gray-500 mb-3">聊天、计划、感受</p>
-            <div class="bg-yellow-50 rounded-lg p-2">
-              <span class="text-yellow-600 text-xs font-medium">10个对话</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 推荐话题 -->
-      <div class="mt-8 mb-6">
-        <h4 class="text-lg font-semibold text-gray-800 mb-4">🔥 热门话题</h4>
-        <div class="bg-gradient-to-r from-pink-500 to-rose-500 rounded-2xl p-4 text-white">
-          <div class="flex items-center space-x-4">
-            <div
-              class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center"
-            >
-              <i class="fas fa-heart text-2xl"></i>
-            </div>
-            <div class="flex-1">
-              <h5 class="font-semibold mb-1">约会交友</h5>
-              <p class="text-pink-100 text-sm">浪漫对话、表达情感</p>
-            </div>
-            <div class="bg-white bg-opacity-20 rounded-lg px-3 py-1">
-              <span class="text-sm font-medium">新</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 学习进度 -->
-      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
-        <h4 class="text-lg font-semibold text-gray-800 mb-4">📊 话题学习进度</h4>
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-coffee text-orange-500"></i>
-              </div>
-              <div>
-                <div class="font-medium text-gray-800 text-sm">咖啡话题</div>
-                <div class="text-gray-500 text-xs">已完成 8/15 个对话</div>
-              </div>
-            </div>
-            <div class="text-right">
-              <div class="text-orange-500 text-sm font-medium">53%</div>
-              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
-                <div class="bg-orange-500 h-1 rounded-full w-8/15"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-plane text-blue-500"></i>
-              </div>
-              <div>
-                <div class="font-medium text-gray-800 text-sm">旅游话题</div>
-                <div class="text-gray-500 text-xs">已完成 12/20 个对话</div>
-              </div>
-            </div>
-            <div class="text-right">
-              <div class="text-blue-500 text-sm font-medium">60%</div>
-              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
-                <div class="bg-blue-500 h-1 rounded-full w-3/5"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-dumbbell text-green-500"></i>
-              </div>
-              <div>
-                <div class="font-medium text-gray-800 text-sm">健身话题</div>
-                <div class="text-gray-500 text-xs">已完成 5/12 个对话</div>
-              </div>
-            </div>
-            <div class="text-right">
-              <div class="text-green-500 text-sm font-medium">42%</div>
-              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
-                <div class="bg-green-500 h-1 rounded-full w-5/12"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 学习建议 -->
-      <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl p-6 text-white mb-6">
-        <h4 class="text-lg font-semibold mb-3">💡 学习建议</h4>
-        <p class="text-green-100 text-sm mb-3">
-          建议先完成咖啡话题，再挑战旅游话题。每个话题都有不同的难度等级，循序渐进效果更好！
-        </p>
-        <button class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg text-sm">
-          开始学习
-        </button>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">探索话题</h3>
+        <p class="text-gray-600 text-sm leading-relaxed">选择感兴趣的话题，开始你的英语对话之旅</p>
       </div>
 
       <!-- 自定义话题 -->
-      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
+      <div class="topic-card rounded-2xl p-4 mb-6 shadow-xl">
         <div class="flex items-center justify-between mb-4">
-          <h4 class="text-lg font-semibold text-gray-800">🎯 我的自定义话题</h4>
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center">
+              <i class="fas fa-star text-white text-lg"></i>
+            </div>
+            <div>
+              <h4 class="text-lg font-bold text-gray-800">我的话题</h4>
+              <p class="text-gray-600 text-xs">个性化定制内容</p>
+            </div>
+          </div>
           <button
-            class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm"
+            class="gradient-green text-white px-3 py-2 rounded-xl text-xs font-semibold shadow-lg hover:shadow-xl transition-all"
             onclick="checkAddTopicPermission()"
           >
-            <i class="fas fa-plus mr-1"></i>添加话题
+            <i class="fas fa-plus mr-1"></i>创建
           </button>
         </div>
 
         <div class="space-y-3" id="customTopics">
           <!-- 自定义话题列表 -->
           <div
-            class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+            class="flex items-center justify-between p-3 bg-white bg-opacity-70 rounded-xl border border-white border-opacity-50 cursor-pointer hover:bg-opacity-90 transition-all hover:scale-105 shadow-md"
             onclick="enterCustomTopic('游戏交流', 'fas fa-gamepad')"
           >
             <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-gamepad text-blue-500"></i>
+              <div class="w-12 h-12 gradient-blue rounded-xl flex items-center justify-center shadow-lg">
+                <i class="fas fa-gamepad text-white text-lg"></i>
               </div>
               <div>
-                <div class="font-medium text-gray-800 text-sm">游戏交流</div>
-                <div class="text-gray-500 text-xs">自定义话题 • 3个对话</div>
+                <div class="font-bold text-gray-800 text-sm">游戏交流</div>
+                <div class="text-gray-600 text-xs">3个对话 • 已练习2次</div>
               </div>
             </div>
             <div class="flex items-center space-x-2">
               <button
-                class="text-blue-500 text-xs"
+                class="w-7 h-7 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-200 transition-colors"
                 onclick="event.stopPropagation(); editTopic('custom_game')"
               >
-                <i class="fas fa-edit"></i>
+                <i class="fas fa-edit text-xs"></i>
               </button>
               <button
-                class="text-red-500 text-xs"
+                class="w-7 h-7 bg-red-100 text-red-600 rounded-lg flex items-center justify-center hover:bg-red-200 transition-colors"
                 onclick="event.stopPropagation(); deleteTopic('custom_game')"
               >
-                <i class="fas fa-trash"></i>
+                <i class="fas fa-trash text-xs"></i>
               </button>
             </div>
           </div>
 
           <div
-            class="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
+            class="flex items-center justify-between p-3 bg-white bg-opacity-70 rounded-xl border border-white border-opacity-50 cursor-pointer hover:bg-opacity-90 transition-all hover:scale-105 shadow-md"
             onclick="enterCustomTopic('音乐分享', 'fas fa-music')"
           >
             <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-music text-purple-500"></i>
+              <div class="w-12 h-12 gradient-purple rounded-xl flex items-center justify-center shadow-lg">
+                <i class="fas fa-music text-white text-lg"></i>
               </div>
               <div>
-                <div class="font-medium text-gray-800 text-sm">音乐分享</div>
-                <div class="text-gray-500 text-xs">自定义话题 • 2个对话</div>
+                <div class="font-bold text-gray-800 text-sm">音乐分享</div>
+                <div class="text-gray-600 text-xs">2个对话 • 已练习1次</div>
               </div>
             </div>
             <div class="flex items-center space-x-2">
               <button
-                class="text-purple-500 text-xs"
+                class="w-7 h-7 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center hover:bg-purple-200 transition-colors"
                 onclick="event.stopPropagation(); editTopic('custom_music')"
               >
-                <i class="fas fa-edit"></i>
+                <i class="fas fa-edit text-xs"></i>
               </button>
               <button
-                class="text-red-500 text-xs"
+                class="w-7 h-7 bg-red-100 text-red-600 rounded-lg flex items-center justify-center hover:bg-red-200 transition-colors"
                 onclick="event.stopPropagation(); deleteTopic('custom_music')"
               >
-                <i class="fas fa-trash"></i>
+                <i class="fas fa-trash text-xs"></i>
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- 热门话题 -->
+      <div class="mb-6">
+        <h4 class="text-lg font-bold text-gray-800 mb-4">🔥 热门话题</h4>
+        <div class="grid grid-cols-2 gap-3">
+          <!-- 咖啡话题 -->
+          <div class="topic-card rounded-2xl p-4 text-center hover:scale-105 transition-transform duration-300 cursor-pointer shadow-xl">
+            <div class="gradient-orange w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <i class="fas fa-coffee text-white text-2xl"></i>
+            </div>
+            <h4 class="font-bold text-gray-800 mb-2 text-base">咖啡</h4>
+            <p class="text-gray-600 text-xs mb-3 leading-relaxed">点咖啡、描述口味偏好</p>
+            <div class="bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl py-1 px-3">
+              <span class="text-xs font-semibold">15个对话</span>
+            </div>
+          </div>
+
+          <!-- 旅游话题 -->
+          <div class="topic-card rounded-2xl p-4 text-center hover:scale-105 transition-transform duration-300 cursor-pointer shadow-xl">
+            <div class="gradient-blue w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <i class="fas fa-plane text-white text-2xl"></i>
+            </div>
+            <h4 class="font-bold text-gray-800 mb-2 text-base">旅游</h4>
+            <p class="text-gray-600 text-xs mb-3 leading-relaxed">机场、酒店、问路</p>
+            <div class="bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-xl py-1 px-3">
+              <span class="text-xs font-semibold">20个对话</span>
+            </div>
+          </div>
+
+          <!-- 健身话题 -->
+          <div class="topic-card rounded-2xl p-4 text-center hover:scale-105 transition-transform duration-300 cursor-pointer shadow-xl">
+            <div class="gradient-green w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <i class="fas fa-dumbbell text-white text-2xl"></i>
+            </div>
+            <h4 class="font-bold text-gray-800 mb-2 text-base">健身</h4>
+            <p class="text-gray-600 text-xs mb-3 leading-relaxed">健身房、运动计划</p>
+            <div class="bg-gradient-to-r from-green-400 to-green-500 text-white rounded-xl py-1 px-3">
+              <span class="text-xs font-semibold">12个对话</span>
+            </div>
+          </div>
+
+          <!-- 餐厅话题 -->
+          <div class="topic-card rounded-2xl p-4 text-center hover:scale-105 transition-transform duration-300 cursor-pointer shadow-xl">
+            <div class="gradient-orange w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <i class="fas fa-utensils text-white text-2xl"></i>
+            </div>
+            <h4 class="font-bold text-gray-800 mb-2 text-base">餐厅</h4>
+            <p class="text-gray-600 text-xs mb-3 leading-relaxed">点餐、服务、买单</p>
+            <div class="bg-gradient-to-r from-red-400 to-red-500 text-white rounded-xl py-1 px-3">
+              <span class="text-xs font-semibold">18个对话</span>
+            </div>
+          </div>
+
+          <!-- 购物话题 -->
+          <div class="topic-card rounded-2xl p-4 text-center hover:scale-105 transition-transform duration-300 cursor-pointer shadow-xl">
+            <div class="gradient-purple w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <i class="fas fa-shopping-bag text-white text-2xl"></i>
+            </div>
+            <h4 class="font-bold text-gray-800 mb-2 text-base">购物</h4>
+            <p class="text-gray-600 text-xs mb-3 leading-relaxed">选择、试穿、砍价</p>
+            <div class="bg-gradient-to-r from-purple-400 to-purple-500 text-white rounded-xl py-1 px-3">
+              <span class="text-xs font-semibold">16个对话</span>
+            </div>
+          </div>
+
+          <!-- 工作话题 -->
+          <div class="topic-card rounded-2xl p-4 text-center hover:scale-105 transition-transform duration-300 cursor-pointer shadow-xl">
+            <div class="gradient-bg w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <i class="fas fa-briefcase text-white text-2xl"></i>
+            </div>
+            <h4 class="font-bold text-gray-800 mb-2 text-base">工作</h4>
+            <p class="text-gray-600 text-xs mb-3 leading-relaxed">面试、会议、同事</p>
+            <div class="bg-gradient-to-r from-indigo-400 to-indigo-500 text-white rounded-xl py-1 px-3">
+              <span class="text-xs font-semibold">22个对话</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- 分类话题 -->
+      <div class="space-y-4">
+        <!-- 日常交流 -->
+        <div class="topic-card rounded-2xl p-4 shadow-xl">
+          <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+            <span class="text-lg mr-2">💬</span>
+            日常交流
+          </h4>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 text-center hover:scale-105 transition-transform cursor-pointer">
+              <div class="w-12 h-12 gradient-blue rounded-xl flex items-center justify-center mx-auto mb-2 shadow-lg">
+                <i class="fas fa-comments text-white text-lg"></i>
+              </div>
+              <div class="font-bold text-gray-800 text-sm mb-1">闲聊</div>
+              <div class="text-gray-600 text-xs">8个对话</div>
+            </div>
+            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 text-center hover:scale-105 transition-transform cursor-pointer">
+              <div class="w-12 h-12 gradient-green rounded-xl flex items-center justify-center mx-auto mb-2 shadow-lg">
+                <i class="fas fa-phone text-white text-lg"></i>
+              </div>
+              <div class="font-bold text-gray-800 text-sm mb-1">电话</div>
+              <div class="text-gray-600 text-xs">6个对话</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 校园生活 -->
+        <div class="topic-card rounded-2xl p-4 shadow-xl">
+          <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+            <span class="text-lg mr-2">🎓</span>
+            校园生活
+          </h4>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-3 text-center hover:scale-105 transition-transform cursor-pointer">
+              <div class="w-12 h-12 gradient-purple rounded-xl flex items-center justify-center mx-auto mb-2 shadow-lg">
+                <i class="fas fa-graduation-cap text-white text-lg"></i>
+              </div>
+              <div class="font-bold text-gray-800 text-sm mb-1">课堂讨论</div>
+              <div class="text-gray-600 text-xs">10个对话</div>
+            </div>
+            <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-3 text-center hover:scale-105 transition-transform cursor-pointer">
+              <div class="w-12 h-12 gradient-orange rounded-xl flex items-center justify-center mx-auto mb-2 shadow-lg">
+                <i class="fas fa-users text-white text-lg"></i>
+              </div>
+              <div class="font-bold text-gray-800 text-sm mb-1">社团活动</div>
+              <div class="text-gray-600 text-xs">7个对话</div>
+            </div>
+          </div>
+        </div>
+      </div>
+        </div>
+
+    </div>
+
+    <!-- 底部导航栏 -->
+    <div class="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 backdrop-filter backdrop-blur-xl border-t border-gray-200 border-opacity-30">
+      <div class="flex justify-around items-center py-2 px-4">
+        <div class="flex flex-col items-center py-2 px-3 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer" onclick="window.location.href='home.html'">
+          <i class="fas fa-home text-gray-400 text-lg mb-1"></i>
+          <span class="text-xs text-gray-500 font-medium">首页</span>
+        </div>
+        <div class="flex flex-col items-center py-2 px-3 rounded-xl bg-green-50 transition-colors cursor-pointer">
+          <i class="fas fa-comments text-green-500 text-lg mb-1"></i>
+          <span class="text-xs text-green-600 font-semibold">话题</span>
+        </div>
+        <div class="flex flex-col items-center py-2 px-3 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer" onclick="window.location.href='progress.html'">
+          <i class="fas fa-chart-line text-gray-400 text-lg mb-1"></i>
+          <span class="text-xs text-gray-500 font-medium">进度</span>
+        </div>
+        <div class="flex flex-col items-center py-2 px-3 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer" onclick="window.location.href='profile.html'">
+          <i class="fas fa-user text-gray-400 text-lg mb-1"></i>
+          <span class="text-xs text-gray-500 font-medium">我的</span>
         </div>
       </div>
     </div>
@@ -476,6 +479,170 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- 学习进度弹窗 -->
+    <div
+      id="progressModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center transition-opacity duration-300"
+    >
+      <div
+        class="bg-white rounded-2xl p-6 mx-4 w-full max-w-md max-h-96 overflow-y-auto transform transition-transform duration-300 scale-95"
+        id="progressModalContent"
+      >
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-800">📊 话题学习进度</h3>
+          <button onclick="hideProgressModal()" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-coffee text-orange-500"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">咖啡话题</div>
+                <div class="text-gray-500 text-xs">已完成 8/15 个对话</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-orange-500 text-sm font-medium">53%</div>
+              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
+                <div class="bg-orange-500 h-1 rounded-full w-8/15"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-plane text-blue-500"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">旅游话题</div>
+                <div class="text-gray-500 text-xs">已完成 12/20 个对话</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-blue-500 text-sm font-medium">60%</div>
+              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
+                <div class="bg-blue-500 h-1 rounded-full w-3/5"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-dumbbell text-green-500"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">健身话题</div>
+                <div class="text-gray-500 text-xs">已完成 5/12 个对话</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-green-500 text-sm font-medium">42%</div>
+              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
+                <div class="bg-green-500 h-1 rounded-full w-5/12"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-utensils text-red-500"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">餐厅话题</div>
+                <div class="text-gray-500 text-xs">已完成 14/18 个对话</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-red-500 text-sm font-medium">78%</div>
+              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
+                <div class="bg-red-500 h-1 rounded-full w-14/18"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-shopping-bag text-purple-500"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">购物话题</div>
+                <div class="text-gray-500 text-xs">已完成 6/16 个对话</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-purple-500 text-sm font-medium">38%</div>
+              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
+                <div class="bg-purple-500 h-1 rounded-full w-6/16"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-briefcase text-indigo-500"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">工作话题</div>
+                <div class="text-gray-500 text-xs">已完成 18/22 个对话</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-indigo-500 text-sm font-medium">82%</div>
+              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
+                <div class="bg-indigo-500 h-1 rounded-full w-18/22"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-user-md text-teal-500"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">医院话题</div>
+                <div class="text-gray-500 text-xs">已完成 2/14 个对话</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-teal-500 text-sm font-medium">14%</div>
+              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
+                <div class="bg-teal-500 h-1 rounded-full w-2/14"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-sun text-yellow-500"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800 text-sm">天气话题</div>
+                <div class="text-gray-500 text-xs">已完成 7/10 个对话</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-yellow-500 text-sm font-medium">70%</div>
+              <div class="w-16 bg-gray-200 rounded-full h-1 mt-1">
+                <div class="bg-yellow-500 h-1 rounded-full w-7/10"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -612,24 +779,38 @@
           toast.remove()
         }, 2000)
       }
-    </script>
 
-    <!-- 底部导航栏 -->
-    <div class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-      <div class="flex justify-around items-center py-2 px-4">
-        <div class="flex flex-col items-center py-2" onclick="window.location.href='home.html'">
-          <i class="fas fa-home text-gray-400 text-xl"></i>
-          <span class="text-xs text-gray-400 mt-1">首页</span>
-        </div>
-        <div class="flex flex-col items-center py-2" onclick="window.location.href='progress.html'">
-          <i class="fas fa-chart-line text-gray-400 text-xl"></i>
-          <span class="text-xs text-gray-400 mt-1">进度</span>
-        </div>
-        <div class="flex flex-col items-center py-2" onclick="window.location.href='profile.html'">
-          <i class="fas fa-user text-gray-400 text-xl"></i>
-          <span class="text-xs text-gray-400 mt-1">我的</span>
-        </div>
-      </div>
-    </div>
+      // 显示学习进度弹窗
+      function showProgressModal() {
+        const modal = document.getElementById('progressModal')
+        const modalContent = document.getElementById('progressModalContent')
+        modal.classList.remove('hidden')
+
+        // 添加动画效果
+        setTimeout(() => {
+          modalContent.classList.remove('scale-95')
+          modalContent.classList.add('scale-100')
+        }, 10)
+      }
+
+      // 隐藏学习进度弹窗
+      function hideProgressModal() {
+        const modal = document.getElementById('progressModal')
+        const modalContent = document.getElementById('progressModalContent')
+
+        modalContent.classList.remove('scale-100')
+        modalContent.classList.add('scale-95')
+
+        setTimeout(() => {
+          modal.classList.add('hidden')
+        }, 300)
+      }
+
+      // 进入自定义话题
+      function enterCustomTopic(topicName, icon) {
+        // 这里可以实现进入话题功能
+        window.location.href = `topic-chat.html?topic=${encodeURIComponent(topicName)}&icon=${encodeURIComponent(icon)}`
+      }
+    </script>
   </body>
 </html>

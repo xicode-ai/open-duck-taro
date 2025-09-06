@@ -103,6 +103,37 @@ export const chatApi = {
   getSuggestedTopics: () =>
     httpClient.get('/chat/suggested-topics', { cache: true }),
 
+  // 获取话题分类和话题列表
+  getTopicCategories: () =>
+    httpClient.get('/chat/topic-categories', { cache: true }),
+
+  // 选择话题并开始对话
+  selectTopic: (topic: string, category: string) =>
+    httpClient.post(
+      '/chat/select-topic',
+      { topic, category },
+      { showLoading: true }
+    ),
+
+  // 获取特定分类的话题列表
+  getTopicsByCategory: (categoryId: string) =>
+    httpClient.get(`/chat/topics/${categoryId}`, { cache: true }),
+
+  // 获取话题详情
+  getTopicDetail: (topicId: string) =>
+    httpClient.get(`/chat/topic-detail/${topicId}`, { cache: true }),
+
+  // 获取随机话题
+  getRandomTopic: (category?: string) => {
+    const url = category
+      ? `/chat/random-topic?category=${category}`
+      : '/chat/random-topic'
+    return httpClient.get(url, { cache: false })
+  },
+
+  // 获取话题统计信息
+  getTopicStats: () => httpClient.get('/chat/topic-stats', { cache: true }),
+
   // 获取翻译详情
   getTranslationDetail: (
     messageId: string,
@@ -126,26 +157,87 @@ export const chatApi = {
 
 // 话题相关API
 export const topicApi = {
-  // 获取话题列表
+  // 获取热门话题列表
+  getHotTopics: (params?: { category?: string; level?: string }) => {
+    const searchParams = new URLSearchParams({
+      ...(params?.category && { category: params.category }),
+      ...(params?.level && { level: params.level }),
+    })
+    return httpClient.get<Topic[]>(`/api/topics/hot?${searchParams}`, {
+      cache: true,
+    })
+  },
+
+  // 获取话题列表（兼容旧接口）
   getTopics: (params?: { category?: string; level?: string }) => {
     const searchParams = new URLSearchParams({
       ...(params?.category && { category: params.category }),
       ...(params?.level && { level: params.level }),
     })
-    return httpClient.get<Topic[]>(`/topics?${searchParams}`, { cache: true })
+    return httpClient.get<Topic[]>(`/api/topics?${searchParams}`, {
+      cache: true,
+    })
   },
+
+  // 获取自定义话题列表
+  getCustomTopics: () =>
+    httpClient.get<
+      {
+        id: string
+        title: string
+        description: string
+        icon: string
+        conversations: number
+        created: string
+        isCustom: boolean
+      }[]
+    >('/api/topics/custom', { cache: true }),
+
+  // 创建自定义话题
+  createCustomTopic: (data: {
+    title: string
+    description?: string
+    icon: string
+  }) => httpClient.post('/api/topics/custom', data, { showLoading: true }),
+
+  // 更新自定义话题
+  updateCustomTopic: (topicId: string, data: { title: string; icon: string }) =>
+    httpClient.put(`/api/topics/custom/${topicId}`, data, {
+      showLoading: true,
+    }),
+
+  // 删除自定义话题
+  deleteCustomTopic: (topicId: string) =>
+    httpClient.delete(`/api/topics/custom/${topicId}`, { showLoading: true }),
+
+  // 获取学习进度
+  getTopicProgress: () =>
+    httpClient.get<
+      {
+        topicId: string
+        title: string
+        icon: string
+        completedDialogues: number
+        totalDialogues: number
+        progress: number
+      }[]
+    >('/api/topics/progress', { cache: true }),
 
   // 获取话题详情
   getTopicDetail: (topicId: string) =>
-    httpClient.get<Topic>(`/topics/${topicId}`, { cache: true }),
+    httpClient.get<Topic>(`/api/topics/${topicId}`, { cache: true }),
 
   // 获取话题对话内容
   getTopicDialogues: (topicId: string) =>
-    httpClient.get<unknown>(`/topics/${topicId}/dialogues`, { cache: true }),
+    httpClient.get<unknown>(`/api/topics/${topicId}/dialogues`, {
+      cache: true,
+    }),
 
   // 获取推荐话题
   getRecommendedTopics: (userId: string) =>
-    httpClient.get<Topic[]>(`/topics/recommended/${userId}`, { cache: true }),
+    httpClient.get<Topic[]>(`/api/topics/recommended/${userId}`, {
+      cache: true,
+    }),
 }
 
 // 翻译相关API
@@ -308,11 +400,23 @@ export const membershipApi = {
     }>('/membership/benefits', { cache: true }),
 }
 
+// 导出话题相关API（别名，保持命名一致性）
+export const topicsApi = {
+  getHotTopics: topicApi.getHotTopics,
+  getCustomTopics: topicApi.getCustomTopics,
+  createCustomTopic: topicApi.createCustomTopic,
+  updateCustomTopic: topicApi.updateCustomTopic,
+  deleteCustomTopic: topicApi.deleteCustomTopic,
+  getTopicsProgress: topicApi.getTopicProgress,
+  getTopicDetail: topicApi.getTopicDetail,
+}
+
 // 导出所有API
 export default {
   user: userApi,
   chat: chatApi,
   topic: topicApi,
+  topics: topicsApi,
   translate: translateApi,
   photoStory: photoStoryApi,
   vocabulary: vocabularyApi,
