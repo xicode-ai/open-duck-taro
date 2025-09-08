@@ -1,8 +1,6 @@
 export default {
   navigationBarTitleText: '话题对话',
-  navigationBarBackgroundColor: '#10b981',
+  navigationBarBackgroundColor: '#FF6B35',
   navigationBarTextStyle: 'white',
-  backgroundColor: '#f0fdf4',
-  enablePullDownRefresh: false,
-  disableScroll: false,
+  backgroundColor: '#F5F7FA',
 }

@@ -1,456 +1,383 @@
+@use '../../app.scss';
+
 .topic-chat-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  display: flex;
-  flex-direction: column;
+  background: linear-gradient(to bottom, #ff6b35 0%, #f5f7fa 120px);
 
-  .topic-header {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    padding: 40rpx 32rpx 32rpx;
-    color: #fff;
-    position: relative;
-    overflow: hidden;
+  .header {
+    padding: 20px;
+    color: white;
 
-    &::before {
-      content: '';
-      position: absolute;
-      top: -100rpx;
-      right: -100rpx;
-      width: 300rpx;
-      height: 300rpx;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
+    .progress-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+
+      .progress-text {
+        font-size: 14px;
+        opacity: 0.9;
+      }
+
+      .favorite-btn {
+        padding: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+
+        &.active {
+          background: rgba(255, 255, 255, 0.3);
+          color: #ffd700;
+        }
+      }
     }
 
-    .header-content {
-      position: relative;
-      z-index: 1;
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
 
-      .topic-info {
-        margin-bottom: 24rpx;
+      .progress-fill {
+        height: 100%;
+        background: white;
+        border-radius: 2px;
+        transition: width 0.3s ease;
+      }
+    }
+  }
 
-        .topic-title {
-          font-size: 40rpx;
-          font-weight: bold;
-          margin-bottom: 8rpx;
-        }
+  .scene-info {
+    margin: 20px;
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 
-        .topic-desc {
-          font-size: 26rpx;
-          opacity: 0.9;
-          line-height: 1.5;
-        }
+    .location {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+
+      .location-icon {
+        color: #ff6b35;
+        margin-right: 6px;
+        font-size: 14px;
       }
 
-      .topic-stats {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16rpx;
-
-        .stat-item {
-          text-align: center;
-          background: rgba(255, 255, 255, 0.15);
-          border-radius: 16rpx;
-          padding: 20rpx 16rpx;
-          backdrop-filter: blur(10px);
-
-          .stat-number {
-            font-size: 32rpx;
-            font-weight: bold;
-            margin-bottom: 4rpx;
-          }
-
-          .stat-label {
-            font-size: 22rpx;
-            opacity: 0.9;
-          }
-        }
+      .location-text {
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
       }
+    }
+
+    .description {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.4;
     }
   }
 
   .dialogue-container {
     flex: 1;
-    padding: 32rpx;
+    padding: 0 20px;
+    margin-bottom: 120px;
 
-    .dialogue-mode-tabs {
-      display: flex;
-      background: #fff;
-      border-radius: 16rpx;
-      padding: 8rpx;
-      margin-bottom: 32rpx;
-      box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+    .dialogue-item {
+      margin-bottom: 20px;
 
-      .mode-tab {
-        flex: 1;
-        padding: 16rpx 24rpx;
-        text-align: center;
-        border-radius: 12rpx;
-        font-size: 26rpx;
-        font-weight: 500;
-        color: #6b7280;
-        background: transparent;
-        border: none;
-        transition: all 0.3s ease;
-
-        &.active {
-          background: #10b981;
-          color: #fff;
-          box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.3);
-        }
-      }
-    }
-
-    .dialogue-content {
-      background: #fff;
-      border-radius: 24rpx;
-      padding: 32rpx;
-      box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
-      border: 1rpx solid #f0f0f0;
-      min-height: 60vh;
-      display: flex;
-      flex-direction: column;
-
-      .dialogue-header {
-        display: flex;
-        align-items: center;
-        justify-content: between;
-        margin-bottom: 24rpx;
-        padding-bottom: 16rpx;
-        border-bottom: 1rpx solid #f3f4f6;
-
-        .dialogue-title {
-          font-size: 32rpx;
-          font-weight: 600;
-          color: #333;
-          flex: 1;
+      &.ai-dialogue {
+        .dialogue-content {
+          align-items: flex-start;
         }
 
-        .dialogue-controls {
+        .speaker-info {
           display: flex;
-          gap: 12rpx;
+          align-items: center;
+          margin-bottom: 8px;
 
-          .control-btn {
-            width: 64rpx;
-            height: 64rpx;
+          .speaker-avatar {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            border: none;
+            background: #ff6b35;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24rpx;
-            color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
-            transition: all 0.3s ease;
+            color: white;
+            font-size: 18px;
+            margin-right: 8px;
+          }
 
-            &:active {
-              transform: scale(0.9);
-            }
+          .speaker-name {
+            font-size: 14px;
+            color: #ff6b35;
+            font-weight: 600;
+          }
 
-            &.playing {
-              background: #10b981;
-              color: #fff;
-            }
+          .play-btn {
+            margin-left: 8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #ff6b35;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+          }
+
+          .duration {
+            margin-left: 6px;
+            font-size: 12px;
+            color: #6b7280;
+          }
+        }
+
+        .message-bubble {
+          background: white;
+          border-radius: 12px;
+          border-bottom-left-radius: 4px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+          padding: 12px 16px;
+          max-width: 80%;
+
+          .english-text {
+            font-size: 16px;
+            color: #1f2937;
+            line-height: 1.4;
+            margin-bottom: 6px;
+          }
+
+          .chinese-text {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.3;
           }
         }
       }
 
-      // 学习模式样式
-      &.study-mode {
-        .dialogue-list {
-          display: flex;
-          flex-direction: column;
-          gap: 24rpx;
-          flex: 1;
+      .dialogue-content {
+        display: flex;
+        flex-direction: column;
+      }
 
-          .dialogue-item {
-            padding: 24rpx;
-            border-radius: 16rpx;
-            border-left: 4rpx solid #10b981;
-            background: #f8fafc;
-            transition: all 0.3s ease;
+      // 用户对话特有样式
+      &.user-dialogue {
+        .user-answer-section {
+          background: #e5f3ff;
+          border-radius: 12px;
+          padding: 16px;
+          margin-top: 16px;
 
-            &:active {
-              background: #f1f5f9;
+          .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+
+            .user-avatar {
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              background: #3b82f6;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-size: 18px;
+              margin-right: 8px;
             }
 
-            .speaker-info {
+            .section-title {
+              font-size: 14px;
+              color: #2563eb;
+              font-weight: 600;
+            }
+          }
+
+          .reference-section {
+            margin-bottom: 16px;
+
+            .reference-header {
               display: flex;
               align-items: center;
               justify-content: space-between;
-              margin-bottom: 12rpx;
+              margin-bottom: 12px;
 
-              .speaker-label {
-                font-size: 24rpx;
+              .reference-title {
+                font-size: 14px;
+                color: #3b82f6;
                 font-weight: 600;
-                color: #10b981;
+              }
+
+              .reference-toggle {
                 display: flex;
                 align-items: center;
-                gap: 8rpx;
+                gap: 4px;
+                padding: 6px 12px;
+                background: #dbeafe;
+                border-radius: 6px;
+                font-size: 13px;
+                color: #2563eb;
+                cursor: pointer;
 
-                .speaker-icon {
-                  width: 32rpx;
-                  height: 32rpx;
-                  background: #10b981;
-                  color: #fff;
-                  border-radius: 50%;
+                &.show {
+                  background: #bfdbfe;
+                }
+              }
+            }
+
+            .reference-answer {
+              padding: 12px;
+              background: white;
+              border-radius: 8px;
+              border-left: 3px solid #3b82f6;
+              margin-bottom: 12px;
+
+              .reference-text {
+                font-size: 14px;
+                color: #1f2937;
+                line-height: 1.4;
+                margin-bottom: 6px;
+              }
+
+              .reference-translation {
+                font-size: 12px;
+                color: #6b7280;
+                line-height: 1.3;
+              }
+            }
+          }
+
+          .recording-section {
+            text-align: center;
+            margin-bottom: 16px;
+
+            .record-btn {
+              width: auto;
+              min-width: 120px;
+              height: 40px;
+              border-radius: 20px;
+              background: #3b82f6;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 6px;
+              color: white;
+              padding: 0 16px;
+              margin: 0 auto 8px;
+              transition: all 0.2s ease;
+
+              &:active {
+                transform: scale(0.95);
+              }
+
+              &.recording {
+                background: #dc2626;
+                animation: pulse 2s infinite;
+              }
+
+              .btn-text {
+                font-size: 14px;
+                font-weight: 500;
+              }
+            }
+
+            .record-status {
+              font-size: 12px;
+              color: #6b7280;
+            }
+          }
+
+          .user-recording {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+
+            .recording-header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 12px;
+
+              .your-answer-label {
+                font-size: 14px;
+                color: #10b981;
+                font-weight: 600;
+              }
+
+              .actions {
+                display: flex;
+                gap: 8px;
+
+                .action-btn {
                   display: flex;
                   align-items: center;
-                  justify-content: center;
-                  font-size: 16rpx;
-                  font-weight: bold;
-                }
-              }
+                  gap: 4px;
+                  padding: 4px 8px;
+                  border-radius: 4px;
+                  font-size: 11px;
 
-              .play-audio {
-                width: 48rpx;
-                height: 48rpx;
-                background: rgba(16, 185, 129, 0.1);
-                border: none;
-                border-radius: 50%;
-                color: #10b981;
-                font-size: 20rpx;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-
-                &.playing {
-                  background: #10b981;
-                  color: #fff;
-                }
-              }
-            }
-
-            .dialogue-text {
-              .english-text {
-                font-size: 30rpx;
-                color: #333;
-                line-height: 1.6;
-                margin-bottom: 8rpx;
-                font-weight: 500;
-              }
-
-              .chinese-text {
-                font-size: 26rpx;
-                color: #6b7280;
-                line-height: 1.5;
-              }
-            }
-
-            .dialogue-actions {
-              display: flex;
-              justify-content: flex-end;
-              gap: 12rpx;
-              margin-top: 16rpx;
-
-              .action-btn {
-                padding: 8rpx 16rpx;
-                border-radius: 12rpx;
-                border: none;
-                font-size: 22rpx;
-                font-weight: 500;
-                display: flex;
-                align-items: center;
-                gap: 6rpx;
-                transition: all 0.3s ease;
-
-                &.practice-btn {
-                  background: rgba(16, 185, 129, 0.1);
-                  color: #10b981;
-
-                  &:active {
-                    background: rgba(16, 185, 129, 0.2);
+                  &.play {
+                    color: #10b981;
+                    background: rgba(16, 185, 129, 0.1);
                   }
-                }
 
-                &.favorite-btn {
-                  background: rgba(245, 158, 11, 0.1);
-                  color: #f59e0b;
-
-                  &.active {
-                    background: #f59e0b;
-                    color: #fff;
+                  &.retry {
+                    color: #3b82f6;
+                    background: rgba(59, 130, 246, 0.1);
                   }
                 }
               }
             }
-          }
-        }
-      }
 
-      // 练习模式样式
-      &.practice-mode {
-        .practice-area {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
+            .transcription {
+              font-size: 15px;
+              color: #1f2937;
+              margin-bottom: 8px;
+              line-height: 1.4;
+              font-weight: 500;
+            }
 
-          .current-dialogue {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border-radius: 16rpx;
-            padding: 32rpx;
-            margin-bottom: 24rpx;
-            border: 2rpx solid #10b981;
+            .translation {
+              font-size: 13px;
+              color: #6b7280;
+              margin-bottom: 12px;
+              line-height: 1.3;
+            }
 
-            .role-indicator {
-              font-size: 24rpx;
-              color: #10b981;
-              font-weight: 600;
-              margin-bottom: 16rpx;
+            .score-display {
               display: flex;
+              justify-content: space-between;
               align-items: center;
-              gap: 8rpx;
 
-              .role-icon {
-                width: 32rpx;
-                height: 32rpx;
-                background: #10b981;
-                color: #fff;
-                border-radius: 50%;
+              .score-item {
                 display: flex;
                 align-items: center;
-                justify-content: center;
-                font-size: 16rpx;
-              }
-            }
+                font-size: 13px;
 
-            .dialogue-text {
-              .english-text {
-                font-size: 36rpx;
-                font-weight: 600;
-                color: #333;
-                line-height: 1.6;
-                margin-bottom: 12rpx;
-              }
-
-              .chinese-text {
-                font-size: 28rpx;
-                color: #6b7280;
-                line-height: 1.5;
-                font-style: italic;
-              }
-            }
-
-            .audio-controls {
-              display: flex;
-              align-items: center;
-              gap: 16rpx;
-              margin-top: 20rpx;
-
-              .play-btn {
-                width: 80rpx;
-                height: 80rpx;
-                background: #10b981;
-                border: none;
-                border-radius: 50%;
-                color: #fff;
-                font-size: 32rpx;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 8rpx 24rpx rgba(16, 185, 129, 0.4);
-
-                &:active {
-                  transform: scale(0.9);
-                }
-
-                &.playing {
-                  background: #ef4444;
-                }
-              }
-
-              .playback-info {
-                flex: 1;
-
-                .speed-control {
-                  font-size: 22rpx;
+                .score-label {
                   color: #6b7280;
-                  margin-bottom: 8rpx;
+                  margin-right: 2px;
                 }
 
-                .progress-bar {
-                  height: 8rpx;
-                  background: #e5e7eb;
-                  border-radius: 4rpx;
-                  overflow: hidden;
+                .score-value {
+                  font-weight: 600;
 
-                  .progress-fill {
-                    height: 100%;
-                    background: #10b981;
-                    border-radius: 4rpx;
-                    width: 35%;
-                    transition: width 0.3s ease;
+                  &.green {
+                    color: #10b981;
+                  }
+
+                  &.orange {
+                    color: #f59e0b;
                   }
                 }
-              }
-            }
-          }
 
-          .practice-controls {
-            margin-top: auto;
-            padding-top: 24rpx;
-            border-top: 1rpx solid #f3f4f6;
-
-            .recording-area {
-              text-align: center;
-              margin-bottom: 24rpx;
-
-              .record-btn {
-                width: 120rpx;
-                height: 120rpx;
-                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-                border: none;
-                border-radius: 50%;
-                color: #fff;
-                font-size: 48rpx;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 0 auto 16rpx;
-                box-shadow: 0 8rpx 24rpx rgba(239, 68, 68, 0.4);
-                transition: all 0.3s ease;
-
-                &:active {
-                  transform: scale(0.9);
-                }
-
-                &.recording {
-                  animation: recording-pulse 1s ease-in-out infinite alternate;
-                }
-              }
-
-              .record-hint {
-                font-size: 26rpx;
-                color: #6b7280;
-              }
-            }
-
-            .action-buttons {
-              display: flex;
-              gap: 16rpx;
-
-              .action-btn {
-                flex: 1;
-                height: 88rpx;
-                border-radius: 16rpx;
-                font-size: 28rpx;
-                font-weight: 600;
-                border: none;
-                transition: all 0.3s ease;
-
-                &.skip-btn {
-                  background: #f3f4f6;
-                  color: #6b7280;
-                }
-
-                &.next-btn {
-                  background: #10b981;
-                  color: #fff;
-                  box-shadow: 0 8rpx 24rpx rgba(16, 185, 129, 0.4);
-                }
-
-                &:active {
-                  transform: scale(0.98);
+                &.rating {
+                  gap: 4px;
                 }
               }
             }
@@ -458,149 +385,235 @@
         }
       }
     }
+  }
 
-    .progress-indicator {
-      margin-top: 24rpx;
-      background: #fff;
-      border-radius: 16rpx;
-      padding: 24rpx;
-      box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+  .completion-card {
+    margin: 20px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 
-      .progress-header {
+    .completion-emoji {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .completion-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #1f2937;
+      margin-bottom: 6px;
+    }
+
+    .completion-desc {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .next-topic-btn {
+      width: 100%;
+      padding: 12px;
+      background: #10b981;
+      color: white;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+  }
+
+  .overall-score-section {
+    background: white;
+    margin: 20px;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .score-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+
+      .score-icon {
+        font-size: 20px;
+        margin-right: 8px;
+      }
+
+      .score-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1f2937;
+      }
+    }
+
+    .overall-score {
+      text-align: center;
+      margin-bottom: 16px;
+
+      .score-stars {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 8px;
+
+        .star {
+          color: #fcd34d;
+          font-size: 20px;
+
+          &.empty {
+            color: #e5e7eb;
+          }
+        }
+      }
+
+      .score-text {
+        font-size: 24px;
+        font-weight: bold;
+        color: #059669;
+        margin-bottom: 4px;
+      }
+
+      .score-label {
+        font-size: 12px;
+        color: #6b7280;
+      }
+    }
+
+    .score-breakdown {
+      .score-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 16rpx;
+        margin-bottom: 12px;
 
-        .progress-title {
-          font-size: 28rpx;
-          font-weight: 600;
-          color: #333;
+        .label {
+          font-size: 14px;
+          color: #4b5563;
         }
 
-        .progress-text {
-          font-size: 24rpx;
-          color: #6b7280;
+        .progress-container {
+          flex: 1;
+          margin: 0 12px;
+          height: 6px;
+          background: #e5e7eb;
+          border-radius: 3px;
+          overflow: hidden;
+
+          .progress-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+
+            &.pronunciation {
+              background: #10b981;
+            }
+
+            &.fluency {
+              background: #3b82f6;
+            }
+
+            &.naturalness {
+              background: #f59e0b;
+            }
+          }
         }
-      }
 
-      .progress-bar {
-        height: 12rpx;
-        background: #e5e7eb;
-        border-radius: 6rpx;
-        overflow: hidden;
-
-        .progress-fill {
-          height: 100%;
-          background: linear-gradient(90deg, #10b981 0%, #059669 100%);
-          border-radius: 6rpx;
-          width: 45%;
-          transition: width 0.3s ease;
+        .value {
+          font-size: 14px;
+          font-weight: 500;
+          color: #1f2937;
+          min-width: 36px;
+          text-align: right;
         }
       }
     }
   }
 
-  .completion-modal {
+  .footer-actions {
     position: fixed;
-    top: 0;
+    bottom: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 16px 20px;
+    display: flex;
+    gap: 12px;
+
+    .action-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+
+      &.secondary {
+        background: #f3f4f6;
+        color: #4b5563;
+      }
+
+      &.primary {
+        background: #ff6b35;
+        color: white;
+      }
+    }
+  }
+
+  // 加载状态
+  .loading {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    padding: 40px;
+    color: #6b7280;
+    font-size: 14px;
+  }
 
-    .modal-content {
-      background: #fff;
-      border-radius: 24rpx;
-      padding: 48rpx 32rpx;
-      margin: 32rpx;
-      text-align: center;
-      max-width: 600rpx;
-
-      .completion-icon {
-        font-size: 80rpx;
-        margin-bottom: 24rpx;
-      }
-
-      .completion-title {
-        font-size: 32rpx;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 16rpx;
-      }
-
-      .completion-desc {
-        font-size: 26rpx;
-        color: #6b7280;
-        line-height: 1.5;
-        margin-bottom: 32rpx;
-      }
-
-      .completion-stats {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16rpx;
-        margin-bottom: 32rpx;
-
-        .stat-item {
-          text-align: center;
-          padding: 20rpx 16rpx;
-          background: #f8fafc;
-          border-radius: 12rpx;
-
-          .stat-number {
-            font-size: 32rpx;
-            font-weight: bold;
-            color: #10b981;
-            margin-bottom: 4rpx;
-          }
-
-          .stat-label {
-            font-size: 22rpx;
-            color: #6b7280;
-          }
-        }
-      }
-
-      .completion-actions {
-        display: flex;
-        gap: 16rpx;
-
-        .action-btn {
-          flex: 1;
-          height: 88rpx;
-          border-radius: 16rpx;
-          font-size: 28rpx;
-          font-weight: 600;
-          border: none;
-
-          &.retry-btn {
-            background: #f3f4f6;
-            color: #6b7280;
-          }
-
-          &.continue-btn {
-            background: #10b981;
-            color: #fff;
-          }
-        }
-      }
-    }
+  .error {
+    margin: 20px;
+    padding: 16px;
+    background: #fef2f2;
+    border-radius: 8px;
+    color: #dc2626;
+    text-align: center;
   }
 }
 
-// 动画
-@keyframes recording-pulse {
-  from {
-    box-shadow: 0 8rpx 24rpx rgba(239, 68, 68, 0.4);
-    transform: scale(1);
+// 录音按钮动画
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
   }
-  to {
-    box-shadow: 0 12rpx 32rpx rgba(239, 68, 68, 0.8);
-    transform: scale(1.05);
+  70% {
+    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+// 响应式适配
+@media (max-width: 375px) {
+  .topic-chat-page {
+    .dialogue-container {
+      margin: 0 16px;
+      margin-bottom: 120px;
+    }
+
+    .scene-info {
+      margin: 16px;
+    }
+
+    .completion-card {
+      margin: 16px;
+    }
   }
 }

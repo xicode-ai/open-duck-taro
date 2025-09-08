@@ -111,3 +111,81 @@ export interface PronunciationScore {
   completeness: number
   feedback: string
 }
+
+// 话题对话详情相关类型
+export interface VoiceScore {
+  overallScore: number // 总体评分 0-100
+  pronunciation: number // 发音准确度 0-100%
+  fluency: number // 语音流畅度 0-100%
+  naturalness: number // 语调自然度 0-100%
+  stars: number // 星级评价 1-5
+}
+
+export interface UserRecording {
+  audioUrl: string
+  duration: number
+  transcription: string
+  translation?: string // 添加翻译字段
+  score: VoiceScore
+}
+
+export interface ReferenceAnswer {
+  show: boolean
+  text: string
+}
+
+export interface AIDialogue {
+  id: string
+  speaker: 'ai'
+  speakerName: string
+  english: string
+  chinese: string
+  audioUrl?: string
+  duration?: number
+}
+
+export interface UserDialogue {
+  id: string
+  speaker: 'user'
+  speakerName: string
+  english: string
+  chinese: string
+  referenceAnswer?: ReferenceAnswer
+  userRecording?: UserRecording | null
+  completed?: boolean
+}
+
+export type TopicDialogue = AIDialogue | UserDialogue
+
+export interface TopicScene {
+  location: string
+  description: string
+}
+
+export interface TopicDialogueDetail {
+  id: string
+  title: string
+  subtitle: string
+  scene: TopicScene
+  currentDialogueIndex: number
+  totalDialogues: number
+  progress: number
+  isFavorited: boolean
+  dialogues: TopicDialogue[]
+}
+
+export interface RecordingResult {
+  transcription: string
+  translation: string
+  score: VoiceScore
+  feedback: {
+    strengths: string[]
+    improvements: string[]
+  }
+}
+
+export interface DialogueProgress {
+  currentIndex: number
+  progress: number
+  isCompleted: boolean
+}

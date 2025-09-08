@@ -5,6 +5,9 @@ import type {
   Vocabulary,
   TranslationResult,
   PhotoStory,
+  TopicDialogueDetail,
+  RecordingResult,
+  DialogueProgress,
 } from '@/types'
 
 // 用户相关API
@@ -232,6 +235,52 @@ export const topicApi = {
     httpClient.get<unknown>(`/api/topics/${topicId}/dialogues`, {
       cache: true,
     }),
+
+  // 获取话题对话详情
+  getTopicDialogueDetail: (topicId: string) =>
+    httpClient.get<TopicDialogueDetail>(`/api/topics/${topicId}/dialogue`),
+
+  // 录音跟读
+  recordDialogue: (
+    topicId: string,
+    data: { dialogueId: string; audioBlob: string; duration: number }
+  ) => httpClient.post<RecordingResult>(`/api/topics/${topicId}/record`, data),
+
+  // 获取系统回答
+  getSystemResponse: (topicId: string, currentDialogueId: string) =>
+    httpClient.post<{
+      hasResponse: boolean
+      aiResponse?: {
+        id: string
+        english: string
+        chinese: string
+        speakerName: string
+        audioUrl?: string
+        duration?: number
+      }
+      message?: string
+    }>(`/api/topics/${topicId}/system-response`, { currentDialogueId }),
+
+  // 下一个对话
+  nextDialogue: (topicId: string) =>
+    httpClient.post<DialogueProgress>(`/api/topics/${topicId}/next-dialogue`),
+
+  // 重置练习
+  resetPractice: (topicId: string) =>
+    httpClient.post<TopicDialogueDetail>(`/api/topics/${topicId}/reset`),
+
+  // 切换收藏
+  toggleFavorite: (topicId: string) =>
+    httpClient.post<{ topicId: string; isFavorited: boolean }>(
+      `/api/topics/${topicId}/favorite`
+    ),
+
+  // 切换参考答案
+  toggleReferenceAnswer: (topicId: string, dialogueId: string) =>
+    httpClient.post<{ dialogueId: string; showReference: boolean }>(
+      `/api/topics/${topicId}/toggle-reference`,
+      { dialogueId }
+    ),
 
   // 获取推荐话题
   getRecommendedTopics: (userId: string) =>

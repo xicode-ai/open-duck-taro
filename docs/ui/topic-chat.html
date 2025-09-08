@@ -100,7 +100,7 @@
         </div>
 
         <!-- 用户回答区域 -->
-        <div class="bg-blue-50 rounded-2xl p-4 border-2 border-blue-200 border-dashed">
+        <div class="bg-blue-50 rounded-2xl p-4 border-2 border-blue-200 border-dashed" id="userAnswerArea">
           <div class="flex items-center space-x-3 mb-3">
             <div class="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
               <span class="text-sm">🦆</span>
@@ -112,14 +112,13 @@
           <div class="bg-white rounded-lg p-3 mb-3">
             <div class="flex items-center justify-between mb-2">
               <span class="text-sm font-medium text-blue-600">参考答案</span>
-              <button class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs">
-                <i class="fas fa-eye mr-1"></i>查看
+              <button class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs" onclick="toggleReferenceAnswer()">
+                <i class="fas fa-eye mr-1"></i><span id="referenceToggleText">查看</span>
               </button>
             </div>
-            <div class="hidden">
+            <div id="referenceAnswer" class="hidden transition-all duration-300">
               <p class="text-gray-800 font-medium mb-1">
-                "Hi! I'd like a coffee, please. What do you recommend for someone who likes mild
-                flavors?"
+                "Hi! I'd like a coffee, please. What do you recommend for someone who likes mild flavors?"
               </p>
               <p class="text-gray-600 text-sm">
                 "你好！我想要一杯咖啡。对于喜欢温和口味的人，你推荐什么？"
@@ -127,20 +126,70 @@
             </div>
           </div>
 
+          <!-- 用户录音内容 -->
+          <div id="userRecording" class="bg-white rounded-lg p-3 mb-3 hidden">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-green-600">你的回答</span>
+              <div class="flex items-center space-x-2">
+                <button class="bg-green-100 text-green-600 px-2 py-1 rounded text-xs" onclick="playUserRecording()">
+                  <i class="fas fa-play mr-1"></i>播放
+                </button>
+                <button class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs" onclick="retryRecording()">
+                  <i class="fas fa-redo mr-1"></i>重新录音
+                </button>
+              </div>
+            </div>
+            <div id="userRecordingContent">
+              <!-- 录音内容将在这里显示 -->
+            </div>
+          </div>
+
           <!-- 跟读按钮 -->
           <div class="text-center">
             <button
-              class="bg-blue-500 text-white px-6 py-2 rounded-full flex items-center space-x-2 mx-auto active:scale-95 transition-transform"
+              id="recordButton"
+              class="bg-blue-500 text-white px-6 py-2 rounded-full flex items-center space-x-2 mx-auto active:scale-95 transition-all duration-200"
+              onmousedown="startRecording()"
+              onmouseup="stopRecording()"
+              onmouseleave="stopRecording()"
+              ontouchstart="startRecording()"
+              ontouchend="stopRecording()"
             >
-              <i class="fas fa-microphone text-lg"></i>
-              <span class="font-medium">开始跟读</span>
+              <i id="recordIcon" class="fas fa-microphone text-lg"></i>
+              <span id="recordText" class="font-medium">开始跟读</span>
             </button>
             <p class="text-xs text-gray-500 mt-2">长按录音，松开结束</p>
           </div>
         </div>
 
+        <!-- 系统自动回复区域 -->
+        <div id="systemReply" class="bg-orange-50 rounded-2xl p-4 border border-orange-200 hidden">
+          <div class="flex items-center space-x-3 mb-3">
+            <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+              <i class="fas fa-user-tie text-white text-sm"></i>
+            </div>
+            <span class="font-medium text-gray-800">服务员回复</span>
+            <button class="ml-auto bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs" onclick="playSystemReply()">
+              <i class="fas fa-play mr-1"></i>播放
+            </button>
+          </div>
+          <div id="systemReplyContent" class="bg-white rounded-lg p-3">
+            <!-- 系统回复内容将在这里显示 -->
+          </div>
+        </div>
+
+        <!-- 对话完成提示 -->
+        <div id="dialogueComplete" class="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-4 border border-green-200 text-center hidden">
+          <div class="text-2xl mb-2">🎉</div>
+          <h3 class="text-lg font-bold text-gray-800 mb-2">太棒了！</h3>
+          <p class="text-gray-600 text-sm mb-4">你已经完成了这轮对话，表现很不错！</p>
+          <button class="bg-green-500 text-white px-6 py-2 rounded-full font-medium" onclick="nextDialogue()">
+            <i class="fas fa-arrow-right mr-2"></i>继续下一个对话
+          </button>
+        </div>
+
         <!-- 语音评分结果 -->
-        <div class="bg-green-50 rounded-2xl p-4 border border-green-200">
+        <div id="scoreResult" class="bg-green-50 rounded-2xl p-4 border border-green-200 hidden">
           <div class="flex items-center space-x-3 mb-3">
             <i class="fas fa-chart-line text-green-500 text-lg"></i>
             <span class="font-medium text-gray-800">语音评分</span>
@@ -238,5 +287,361 @@
         </div>
       </div>
     </div>
+
+    <script>
+      // 全局变量
+      let isRecording = false;
+      let recordingTimer = null;
+      let audioStream = null;
+      let isReferenceAnswerVisible = false;
+      let hasUserAnswered = false;
+
+      // 模拟对话数据
+      const dialogueData = {
+        systemReplies: [
+          {
+            english: "Great choice! For mild flavors, I'd recommend our medium roast or maybe a caramel macchiato. Would you like to try one of those?",
+            chinese: "很好的选择！对于温和的口味，我推荐我们的中度烘焙咖啡或者焦糖玛奇朵。你想试试其中一种吗？"
+          },
+          {
+            english: "Perfect! The caramel macchiato is very popular. What size would you like - small, medium, or large?",
+            chinese: "太好了！焦糖玛奇朵很受欢迎。您要什么尺寸的 - 小杯、中杯还是大杯？"
+          }
+        ],
+        currentReply: 0
+      };
+
+      // 参考答案切换功能
+      function toggleReferenceAnswer() {
+        const referenceAnswer = document.getElementById('referenceAnswer');
+        const toggleText = document.getElementById('referenceToggleText');
+        const icon = toggleText.previousElementSibling;
+
+        if (isReferenceAnswerVisible) {
+          referenceAnswer.classList.add('hidden');
+          toggleText.textContent = '查看';
+          icon.className = 'fas fa-eye mr-1';
+          isReferenceAnswerVisible = false;
+        } else {
+          referenceAnswer.classList.remove('hidden');
+          toggleText.textContent = '隐藏';
+          icon.className = 'fas fa-eye-slash mr-1';
+          isReferenceAnswerVisible = true;
+        }
+      }
+
+      // 开始录音
+      function startRecording() {
+        if (isRecording) return;
+
+        isRecording = true;
+        const recordButton = document.getElementById('recordButton');
+        const recordIcon = document.getElementById('recordIcon');
+        const recordText = document.getElementById('recordText');
+
+        // 更新按钮状态
+        recordButton.classList.remove('bg-blue-500');
+        recordButton.classList.add('bg-red-500', 'animate-pulse');
+        recordIcon.className = 'fas fa-stop text-lg';
+        recordText.textContent = '录音中...';
+
+        // 模拟录音开始
+        console.log('开始录音...');
+
+        // 启动录音计时器
+        let recordTime = 0;
+        recordingTimer = setInterval(() => {
+          recordTime++;
+          recordText.textContent = `录音中... ${recordTime}s`;
+        }, 1000);
+
+        // 模拟获取麦克风权限并开始录音
+        navigator.mediaDevices?.getUserMedia({ audio: true })
+          .then(stream => {
+            audioStream = stream;
+          })
+          .catch(err => {
+            console.log('麦克风权限获取失败，使用模拟录音');
+          });
+      }
+
+      // 停止录音
+      function stopRecording() {
+        if (!isRecording) return;
+
+        isRecording = false;
+
+        // 清除计时器
+        if (recordingTimer) {
+          clearInterval(recordingTimer);
+          recordingTimer = null;
+        }
+
+        // 停止音频流
+        if (audioStream) {
+          audioStream.getTracks().forEach(track => track.stop());
+          audioStream = null;
+        }
+
+        // 恢复按钮状态
+        const recordButton = document.getElementById('recordButton');
+        const recordIcon = document.getElementById('recordIcon');
+        const recordText = document.getElementById('recordText');
+
+        recordButton.classList.remove('bg-red-500', 'animate-pulse');
+        recordButton.classList.add('bg-blue-500');
+        recordIcon.className = 'fas fa-microphone text-lg';
+        recordText.textContent = '开始跟读';
+
+        // 处理录音结果
+        processRecordingResult();
+      }
+
+      // 处理录音结果
+      function processRecordingResult() {
+        console.log('处理录音结果...');
+
+        // 显示录音结果
+        showUserRecording();
+
+        // 延迟显示系统回复
+        setTimeout(() => {
+          showSystemReply();
+        }, 2000);
+      }
+
+      // 显示用户录音结果
+      function showUserRecording() {
+        const userRecording = document.getElementById('userRecording');
+        const userRecordingContent = document.getElementById('userRecordingContent');
+
+        // 模拟语音识别和翻译结果
+        const simulatedResult = {
+          english: "Hi! I'd like a coffee please. What do you recommend for mild flavors?",
+          chinese: "你好！我想要一杯咖啡。对于温和口味你推荐什么？",
+          confidence: 0.85
+        };
+
+        userRecordingContent.innerHTML = `
+          <p class="text-gray-800 font-medium mb-1">"${simulatedResult.english}"</p>
+          <p class="text-gray-600 text-sm mb-2">"${simulatedResult.chinese}"</p>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-green-600">识别准确度: ${Math.round(simulatedResult.confidence * 100)}%</span>
+            <div class="flex items-center space-x-1">
+              <i class="fas fa-star text-yellow-400"></i>
+              <span class="text-gray-600">发音评分: 85分</span>
+            </div>
+          </div>
+        `;
+
+        userRecording.classList.remove('hidden');
+        hasUserAnswered = true;
+
+        // 显示评分结果
+        showScoreResult();
+      }
+
+      // 显示语音评分结果
+      function showScoreResult() {
+        const scoreResult = document.getElementById('scoreResult');
+        scoreResult.innerHTML = `
+          <div class="flex items-center space-x-3 mb-3">
+            <i class="fas fa-chart-line text-green-500 text-lg"></i>
+            <span class="font-medium text-gray-800">语音评分</span>
+          </div>
+          <div class="space-y-3">
+            <!-- 总分 -->
+            <div class="flex items-center justify-between">
+              <span class="text-gray-700">总体评分</span>
+              <div class="flex items-center space-x-2">
+                <div class="flex space-x-1">
+                  <i class="fas fa-star text-yellow-400"></i>
+                  <i class="fas fa-star text-yellow-400"></i>
+                  <i class="fas fa-star text-yellow-400"></i>
+                  <i class="fas fa-star text-yellow-400"></i>
+                  <i class="far fa-star text-gray-300"></i>
+                </div>
+                <span class="text-green-600 font-bold text-lg">85分</span>
+              </div>
+            </div>
+            <!-- 详细评分 -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">发音准确度</span>
+                <div class="flex items-center space-x-2">
+                  <div class="w-16 bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-500 h-2 rounded-full w-4/5"></div>
+                  </div>
+                  <span class="text-green-600 font-medium">80%</span>
+                </div>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">语音流畅度</span>
+                <div class="flex items-center space-x-2">
+                  <div class="w-16 bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-500 h-2 rounded-full w-full"></div>
+                  </div>
+                  <span class="text-blue-600 font-medium">90%</span>
+                </div>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">语调自然度</span>
+                <div class="flex items-center space-x-2">
+                  <div class="w-16 bg-gray-200 rounded-full h-2">
+                    <div class="bg-orange-500 h-2 rounded-full w-3/4"></div>
+                  </div>
+                  <span class="text-orange-600 font-medium">75%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        scoreResult.classList.remove('hidden');
+      }
+
+      // 显示系统回复
+      function showSystemReply() {
+        if (!hasUserAnswered) return;
+
+        const systemReply = document.getElementById('systemReply');
+        const systemReplyContent = document.getElementById('systemReplyContent');
+        const currentReplyData = dialogueData.systemReplies[dialogueData.currentReply];
+
+        systemReplyContent.innerHTML = `
+          <p class="text-gray-800 font-medium mb-2">"${currentReplyData.english}"</p>
+          <p class="text-gray-600 text-sm">"${currentReplyData.chinese}"</p>
+        `;
+
+        systemReply.classList.remove('hidden');
+
+        // 显示对话完成提示
+        setTimeout(() => {
+          showDialogueComplete();
+        }, 3000);
+      }
+
+      // 显示对话完成提示
+      function showDialogueComplete() {
+        const dialogueComplete = document.getElementById('dialogueComplete');
+        dialogueComplete.classList.remove('hidden');
+
+        // 滚动到底部
+        setTimeout(() => {
+          dialogueComplete.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+
+      // 播放用户录音
+      function playUserRecording() {
+        // 模拟播放用户录音
+        console.log('播放用户录音...');
+        showToast('播放用户录音');
+      }
+
+      // 播放系统回复
+      function playSystemReply() {
+        // 模拟播放系统回复
+        console.log('播放系统回复...');
+        showToast('播放系统回复');
+      }
+
+      // 重新录音
+      function retryRecording() {
+        const userRecording = document.getElementById('userRecording');
+        const scoreResult = document.getElementById('scoreResult');
+        const systemReply = document.getElementById('systemReply');
+        const dialogueComplete = document.getElementById('dialogueComplete');
+
+        // 隐藏相关元素
+        userRecording.classList.add('hidden');
+        scoreResult.classList.add('hidden');
+        systemReply.classList.add('hidden');
+        dialogueComplete.classList.add('hidden');
+
+        hasUserAnswered = false;
+
+        showToast('请重新录音');
+      }
+
+      // 下一个对话
+      function nextDialogue() {
+        // 增加对话索引
+        dialogueData.currentReply = Math.min(dialogueData.currentReply + 1, dialogueData.systemReplies.length - 1);
+
+        // 重置界面
+        resetDialogueInterface();
+
+        // 更新进度
+        updateProgress();
+
+        showToast('开始下一个对话');
+      }
+
+      // 重置对话界面
+      function resetDialogueInterface() {
+        const userRecording = document.getElementById('userRecording');
+        const scoreResult = document.getElementById('scoreResult');
+        const systemReply = document.getElementById('systemReply');
+        const dialogueComplete = document.getElementById('dialogueComplete');
+        const referenceAnswer = document.getElementById('referenceAnswer');
+        const toggleText = document.getElementById('referenceToggleText');
+        const icon = toggleText.previousElementSibling;
+
+        // 隐藏所有动态元素
+        userRecording.classList.add('hidden');
+        scoreResult.classList.add('hidden');
+        systemReply.classList.add('hidden');
+        dialogueComplete.classList.add('hidden');
+
+        // 重置参考答案
+        referenceAnswer.classList.add('hidden');
+        toggleText.textContent = '查看';
+        icon.className = 'fas fa-eye mr-1';
+        isReferenceAnswerVisible = false;
+
+        hasUserAnswered = false;
+      }
+
+      // 更新进度
+      function updateProgress() {
+        const progressBar = document.querySelector('.bg-orange-500');
+        const progressText = document.querySelector('.text-orange-500.font-medium');
+        const dialogueCount = document.querySelector('.text-xs.opacity-80');
+
+        const currentProgress = Math.min((dialogueData.currentReply + 1) * 20, 100);
+        progressBar.style.width = `${currentProgress}%`;
+        progressText.textContent = `${currentProgress}%`;
+        dialogueCount.textContent = `对话 ${dialogueData.currentReply + 4}/15`;
+      }
+
+      // 显示提示消息
+      function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+          toast.remove();
+        }, 2000);
+      }
+
+      // 初始化
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('话题对话模块初始化完成');
+
+        // 防止页面滚动时录音中断
+        document.addEventListener('touchmove', function(e) {
+          if (isRecording) {
+            e.preventDefault();
+          }
+        }, { passive: false });
+      });
+
+      // 防止默认长按菜单
+      document.getElementById('recordButton').addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+      });
+    </script>
   </body>
 </html>

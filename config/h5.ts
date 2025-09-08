@@ -98,7 +98,7 @@ export default defineConfig({
           ...args[0].meta,
           viewport:
             'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover',
-          'apple-mobile-web-app-capable': 'yes',
+          'mobile-web-app-capable': 'yes',
           'apple-mobile-web-app-status-bar-style': 'black-translucent',
           'format-detection': 'telephone=no',
           'msapplication-tap-highlight': 'no',

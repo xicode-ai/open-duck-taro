@@ -147,6 +147,115 @@ export const useTopicDialogues = (topicId: string) => {
   })
 }
 
+/**
+ * 获取话题对话详情 (替换 useTopicDialogues)
+ */
+export const useTopicDialogueDetail = (topicId: string) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.TOPIC_DIALOGUES(topicId),
+    queryFn: () => topicApi.getTopicDialogueDetail(topicId),
+    enabled: !!topicId,
+    staleTime: 5 * 60 * 1000, // 5分钟
+  })
+}
+
+/**
+ * 录音跟读
+ */
+export const useRecordDialogue = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (variables: {
+      topicId: string
+      dialogueId: string
+      audioBlob: string
+      duration: number
+    }) =>
+      topicApi.recordDialogue(variables.topicId, {
+        dialogueId: variables.dialogueId,
+        audioBlob: variables.audioBlob,
+        duration: variables.duration,
+      }),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.TOPIC_DIALOGUES(variables.topicId),
+      })
+    },
+  })
+}
+
+/**
+ * 下一个对话
+ */
+export const useNextDialogue = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (topicId: string) => topicApi.nextDialogue(topicId),
+    onSuccess: (data, topicId) => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.TOPIC_DIALOGUES(topicId),
+      })
+    },
+  })
+}
+
+/**
+ * 重置练习
+ */
+export const useResetTopicPractice = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (topicId: string) => topicApi.resetPractice(topicId),
+    onSuccess: (data, topicId) => {
+      queryClient.setQueryData(QUERY_KEYS.TOPIC_DIALOGUES(topicId), data)
+    },
+  })
+}
+
+/**
+ * 切换话题收藏
+ */
+export const useToggleTopicFavorite = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (topicId: string) => topicApi.toggleFavorite(topicId),
+    onSuccess: (data, topicId) => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.TOPIC_DIALOGUES(topicId),
+      })
+    },
+  })
+}
+
+/**
+ * 切换参考答案
+ */
+export const useToggleReferenceAnswer = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (variables: { topicId: string; dialogueId: string }) =>
+      topicApi.toggleReferenceAnswer(variables.topicId, variables.dialogueId),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.TOPIC_DIALOGUES(variables.topicId),
+      })
+    },
+  })
+}
+
+/**
+ * 获取系统回答
+ */
+export const useGetSystemResponse = () => {
+  return useMutation({
+    mutationFn: (variables: { topicId: string; currentDialogueId: string }) =>
+      topicApi.getSystemResponse(
+        variables.topicId,
+        variables.currentDialogueId
+      ),
+  })
+}
+
 // ============ 词汇相关 Hooks ============
 
 /**
