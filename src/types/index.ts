@@ -81,9 +81,27 @@ export interface Vocabulary {
 
 // 翻译相关类型
 export interface TranslationResult {
-  original: string
-  formal: string
-  casual: string
+  id: string
+  originalText: string
+  standardTranslation: string
+  colloquialTranslation: string
+  comparisonNotes?: Array<{
+    id: string
+    point: string
+    standard: string
+    colloquial: string
+    explanation: string
+  }>
+  relatedPhrases: Array<{
+    id: string
+    chinese: string
+    english: string
+    pinyin?: string
+  }>
+  from?: string
+  to?: string
+  mode?: string
+  timestamp?: string
   audioUrl?: string
 }
 

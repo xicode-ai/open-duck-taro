@@ -30,47 +30,234 @@ export const translateHandlers = [
       mode?: 'text' | 'voice' | 'image'
     }
 
-    // 简单的翻译模拟
-    const translations: Record<string, string> = {
-      Hello: '你好',
-      'Thank you': '谢谢',
-      'Good morning': '早上好',
-      'How are you?': '你好吗？',
-      你好: 'Hello',
-      谢谢: 'Thank you',
-      早上好: 'Good morning',
-    }
+    // 根据输入内容返回不同的翻译结果
+    let standardTranslation = ''
+    let colloquialTranslation = ''
+    let comparisonNotes: Array<{
+      id: string
+      point: string
+      standard: string
+      colloquial: string
+      explanation: string
+    }> = []
+    let relatedPhrases: Array<{
+      id: string
+      chinese: string
+      english: string
+      pinyin?: string
+    }> = []
 
-    const translatedText =
-      translations[body.text] ||
-      (body.from === 'zh'
-        ? `[Translation] ${body.text}`
-        : `[翻译] ${body.text}`)
+    // 检查输入内容并生成相应的翻译
+    if (
+      body.text.includes('咖啡') ||
+      body.text.toLowerCase().includes('coffee')
+    ) {
+      standardTranslation =
+        body.from === 'zh'
+          ? "I want to go to a coffee shop to buy a latte, but I don't know how to order in English."
+          : '我想去咖啡店买一杯拿铁，但不知道怎么用英语点单。'
+
+      colloquialTranslation =
+        body.from === 'zh'
+          ? "Hey, I'd like to grab a latte from the coffee shop, but I'm not sure how to order it in English."
+          : '嘿，我想从咖啡店来一杯拿铁，但不太确定怎么用英语点单。'
+
+      comparisonNotes =
+        body.from === 'zh'
+          ? [
+              {
+                id: '1',
+                point: '"grab a latte"',
+                standard: '"buy a latte"',
+                colloquial: '"grab a latte"',
+                explanation: '"grab a latte" 比 "buy a latte" 更口语化，更自然',
+              },
+              {
+                id: '2',
+                point: '"I\'m not sure"',
+                standard: '"I don\'t know"',
+                colloquial: '"I\'m not sure"',
+                explanation:
+                  '"I\'m not sure" 比 "I don\'t know" 更礼貌，更委婉',
+              },
+            ]
+          : [
+              {
+                id: '1',
+                point: '嘿',
+                standard: '你好',
+                colloquial: '嘿',
+                explanation: '"嘿" 比 "你好" 更随意亲近，适合朋友间使用',
+              },
+              {
+                id: '2',
+                point: '来一杯',
+                standard: '买一杯',
+                colloquial: '来一杯',
+                explanation: '"来一杯" 是更地道的中文表达，"买一杯" 稍显生硬',
+              },
+            ]
+
+      relatedPhrases = [
+        {
+          id: '1',
+          chinese: '请给我一杯拿铁，好吗？',
+          english: 'Can I have a latte, please?',
+          pinyin: 'qǐng gěi wǒ yī bēi ná tiě, hǎo ma?',
+        },
+        {
+          id: '2',
+          chinese: '我想点一杯咖啡。',
+          english: "I'd like to order a coffee.",
+          pinyin: 'wǒ xiǎng diǎn yī bēi kā fēi',
+        },
+        {
+          id: '3',
+          chinese: '你有什么推荐吗？',
+          english: 'What would you recommend?',
+          pinyin: 'nǐ yǒu shén me tuī jiàn ma?',
+        },
+      ]
+    } else if (
+      body.text.includes('你好') ||
+      body.text.toLowerCase().includes('hello')
+    ) {
+      standardTranslation =
+        body.from === 'zh' ? 'Hello, nice to meet you.' : '你好，很高兴认识你。'
+
+      colloquialTranslation =
+        body.from === 'zh'
+          ? 'Hey there! Great to meet you!'
+          : '嗨！很高兴见到你！'
+
+      comparisonNotes =
+        body.from === 'zh'
+          ? [
+              {
+                id: '1',
+                point: '"Hey there"',
+                standard: '"Hello"',
+                colloquial: '"Hey there"',
+                explanation: '"Hey there" 比 "Hello" 更随意亲切',
+              },
+              {
+                id: '2',
+                point: '"Great to meet you"',
+                standard: '"nice to meet you"',
+                colloquial: '"Great to meet you"',
+                explanation: '"Great to meet you" 比 "nice to meet you" 更热情',
+              },
+            ]
+          : [
+              {
+                id: '1',
+                point: '嗨',
+                standard: '你好',
+                colloquial: '嗨',
+                explanation: '"嗨" 比 "你好" 更随意亲近',
+              },
+              {
+                id: '2',
+                point: '很高兴见到你',
+                standard: '很高兴认识你',
+                colloquial: '很高兴见到你',
+                explanation: '"很高兴见到你" 比 "很高兴认识你" 更直接热情',
+              },
+            ]
+
+      relatedPhrases = [
+        {
+          id: '1',
+          chinese: '早上好',
+          english: 'Good morning',
+          pinyin: 'zǎo shàng hǎo',
+        },
+        {
+          id: '2',
+          chinese: '晚上好',
+          english: 'Good evening',
+          pinyin: 'wǎn shàng hǎo',
+        },
+        {
+          id: '3',
+          chinese: '你好吗？',
+          english: 'How are you?',
+          pinyin: 'nǐ hǎo ma?',
+        },
+      ]
+    } else {
+      // 默认翻译
+      standardTranslation =
+        body.from === 'zh'
+          ? `[Standard Translation] ${body.text}`
+          : `[标准翻译] ${body.text}`
+
+      colloquialTranslation =
+        body.from === 'zh'
+          ? `[Colloquial Translation] ${body.text}`
+          : `[口语翻译] ${body.text}`
+
+      // 添加默认对比说明
+      comparisonNotes =
+        body.from === 'zh'
+          ? [
+              {
+                id: '1',
+                point: 'Colloquial',
+                standard: 'Standard Translation',
+                colloquial: 'Colloquial Translation',
+                explanation:
+                  'Colloquial Translation 比 Standard Translation 更自然口语化',
+              },
+            ]
+          : [
+              {
+                id: '1',
+                point: '口语翻译',
+                standard: '标准翻译',
+                colloquial: '口语翻译',
+                explanation: '口语翻译 比 标准翻译 更自然生动',
+              },
+            ]
+
+      relatedPhrases = [
+        {
+          id: '1',
+          chinese: '谢谢你',
+          english: 'Thank you',
+          pinyin: 'xiè xiè nǐ',
+        },
+        {
+          id: '2',
+          chinese: '不客气',
+          english: "You're welcome",
+          pinyin: 'bù kè qì',
+        },
+      ]
+    }
 
     const result = {
       id: `trans-${Date.now()}`,
       originalText: body.text,
-      translatedText,
+      standardTranslation,
+      colloquialTranslation,
+      comparisonNotes: comparisonNotes.length > 0 ? comparisonNotes : undefined,
+      relatedPhrases,
       from: body.from || 'auto',
       to: body.to || (body.from === 'zh' ? 'en' : 'zh'),
       mode: body.mode || 'text',
       timestamp: new Date().toISOString(),
-      pronunciation: body.to === 'en' ? '/prəˌnʌnsiˈeɪʃən/' : null,
       audioUrl: `/mock-audio/translation-${Date.now()}.mp3`,
-      alternativeTranslations: [
-        translatedText + ' (formal)',
-        translatedText + ' (casual)',
-      ],
-      examples: [
-        {
-          original: `This is how you use "${body.text}"`,
-          translated: `这是如何使用 "${translatedText}"`,
-        },
-      ],
     }
 
-    // 添加到历史
-    translateHistory.unshift(result)
+    // 添加到历史（简化版）
+    translateHistory.unshift({
+      ...result,
+      translatedText: standardTranslation,
+      pronunciation: body.to === 'en' ? '/prəˌnʌnsiˈeɪʃən/' : null,
+      alternativeTranslations: [standardTranslation, colloquialTranslation],
+      examples: [],
+    })
 
     return HttpResponse.json({
       code: 200,

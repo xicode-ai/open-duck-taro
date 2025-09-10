@@ -294,7 +294,7 @@ export const translateApi = {
   // 文本翻译
   translateText: (text: string, from = 'zh', to = 'en') =>
     httpClient.post<TranslationResult>(
-      '/translate',
+      '/api/translate',
       { text, from, to },
       { showLoading: true }
     ),
@@ -302,18 +302,20 @@ export const translateApi = {
   // 文本翻译（别名，保持兼容性）
   translate: (text: string, from = 'zh', to = 'en') =>
     httpClient.post<TranslationResult>(
-      '/translate',
+      '/api/translate',
       { text, from, to },
       { showLoading: true }
     ),
 
   // 获取翻译历史
   getTranslationHistory: () =>
-    httpClient.get<TranslationResult[]>('/translate/history', { cache: true }),
+    httpClient.get<TranslationResult[]>('/api/translate/history', {
+      cache: true,
+    }),
 
   // 删除翻译历史
   deleteTranslationHistory: (id: string) =>
-    httpClient.delete(`/translate/history/${id}`, { showLoading: true }),
+    httpClient.delete(`/api/translate/history/${id}`, { showLoading: true }),
 }
 
 // 拍照短文相关API

@@ -1,458 +1,440 @@
 .translate-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 0 32rpx 120rpx;
+  background: #f5f5f5;
 
-  .page-header {
-    padding: 40rpx 0 32rpx;
-    text-align: center;
+  .nav-right-btn {
+    padding: 16px;
+  }
 
-    .header-title {
-      font-size: 48rpx;
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 16rpx;
-    }
+  .page-content {
+    height: calc(100vh - 88px);
+    padding: 16px;
+  }
 
-    .header-desc {
-      font-size: 28rpx;
-      color: #666;
+  // 语言选择器卡片
+  .language-selector-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+    .language-selector {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .language-pair {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .language-item {
+          font-size: 18px;
+          font-weight: 500;
+          color: #333;
+        }
+      }
+
+      .swap-button {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #f3f0ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+
+        &:active {
+          transform: rotate(180deg);
+          background: #e9e3ff;
+        }
+      }
     }
   }
 
-  .translate-card {
+  // 翻译输入卡片
+  .translate-input-card {
     background: #fff;
-    border-radius: 24rpx;
-    padding: 32rpx;
-    margin-bottom: 32rpx;
-    box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
-    border: 1rpx solid #f0f0f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    min-height: 120px;
+    position: relative;
 
-    .input-section {
-      margin-bottom: 32rpx;
+    .input-placeholder {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 46px;
+      pointer-events: none;
+      z-index: 1;
 
-      .section-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 16rpx;
-
-        .section-title {
-          font-size: 32rpx;
-          font-weight: 600;
-          color: #333;
-          display: flex;
-          align-items: center;
-
-          .flag-icon {
-            margin-right: 12rpx;
-            font-size: 28rpx;
-          }
-        }
-
-        .language-switch {
-          padding: 8rpx 16rpx;
-          background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-          color: #fff;
-          border-radius: 20rpx;
-          font-size: 24rpx;
-          font-weight: 500;
-          border: none;
-          box-shadow: 0 4rpx 12rpx rgba(139, 92, 246, 0.3);
-
-          &:active {
-            transform: scale(0.95);
-          }
-        }
-      }
-
-      .input-container {
-        position: relative;
-
-        .text-input {
-          width: 100%;
-          min-height: 200rpx;
-          padding: 24rpx;
-          border: 2rpx solid #e5e5e5;
-          border-radius: 16rpx;
-          font-size: 32rpx;
-          line-height: 1.5;
-          color: #333;
-          background: #fff;
-          resize: none;
-          transition: border-color 0.3s ease;
-
-          &:focus {
-            border-color: #8b5cf6;
-            outline: none;
-          }
-
-          &.disabled {
-            background: #f8f9fa;
-            color: #6c757d;
-          }
-        }
-
-        .input-actions {
-          position: absolute;
-          bottom: 16rpx;
-          right: 16rpx;
-          display: flex;
-          gap: 12rpx;
-
-          .action-btn {
-            width: 64rpx;
-            height: 64rpx;
-            border-radius: 50%;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28rpx;
-            box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
-            transition: all 0.3s ease;
-
-            &:active {
-              transform: scale(0.9);
-            }
-
-            &.clear-btn {
-              background: #f8f9fa;
-              color: #6c757d;
-            }
-
-            &.voice-btn {
-              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-              color: #fff;
-
-              &.recording {
-                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-                animation: recording 1s ease-in-out infinite alternate;
-              }
-            }
-          }
-        }
-
-        .char-count {
-          position: absolute;
-          bottom: -40rpx;
-          right: 0;
-          font-size: 24rpx;
-          color: #999;
-
-          &.warning {
-            color: #f59e0b;
-          }
-
-          &.error {
-            color: #ef4444;
-          }
-        }
+      text {
+        font-size: 14px;
+        color: #999;
+        line-height: 1.5;
       }
     }
 
-    .translate-button {
+    .text-input {
       width: 100%;
-      height: 96rpx;
-      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-      color: #fff;
+      min-height: 88px;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #333;
       border: none;
-      border-radius: 16rpx;
-      font-size: 32rpx;
-      font-weight: 600;
+      background: transparent;
+      resize: none;
+      position: relative;
+      z-index: 2;
+      padding-right: 40px;
+    }
+
+    .clear-button {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #f5f5f5;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12rpx;
-      box-shadow: 0 8rpx 24rpx rgba(139, 92, 246, 0.4);
-      transition: all 0.3s ease;
-      margin-bottom: 32rpx;
+      z-index: 3;
+      transition: all 0.3s;
+
+      &:active {
+        background: #e0e0e0;
+        transform: scale(0.95);
+      }
+    }
+  }
+
+  // 操作按钮
+  .action-buttons {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+    justify-content: center;
+
+    .action-btn {
+      flex: 0 0 auto;
+      min-width: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 8px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s;
+      height: 44px;
 
       &:active {
         transform: scale(0.98);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
       }
 
-      &:disabled {
-        background: #d1d5db;
-        color: #9ca3af;
-        box-shadow: none;
-        cursor: not-allowed;
+      &.recording {
+        background: #ffebeb;
+        animation: pulse 1.5s infinite;
       }
 
-      &.loading {
-        .translate-icon {
-          animation: spin 1s linear infinite;
+      text {
+        font-size: 14px;
+        color: #666;
+      }
+    }
+  }
+
+  // 结果卡片通用样式
+  .result-card,
+  .phrases-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+
+      .card-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .title-icon {
+          width: 24px;
+          height: 24px;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          &.book-icon {
+            background: #e3f2fd;
+          }
+
+          &.chat-icon {
+            background: #e8f5e9;
+          }
         }
-      }
 
-      .translate-icon {
-        font-size: 28rpx;
+        .title-text {
+          font-size: 16px;
+          font-weight: 500;
+          color: #333;
+        }
+
+        .emoji-icon {
+          font-size: 16px;
+        }
+
+        .tag {
+          padding: 2px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          margin-left: 6px;
+
+          &.tag-written {
+            background: #e3f2fd;
+            color: #2196f3;
+          }
+
+          &.tag-recommended {
+            background: #e8f5e9;
+            color: #4caf50;
+          }
+        }
       }
     }
 
-    .result-section {
-      &.show {
-        animation: slideDown 0.3s ease-out;
+    .card-content {
+      margin-bottom: 12px;
+
+      .translation-section {
+        margin-bottom: 12px;
+
+        .translation-text {
+          font-size: 16px;
+          line-height: 1.5;
+          color: #333;
+          display: block;
+          padding: 16px;
+          background: #f8f9fb;
+          border-radius: 8px;
+          margin-bottom: 12px;
+        }
+
+        .play-button-row {
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          margin-top: 12px;
+          padding: 0 16px;
+
+          .play-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f0f9ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+            &:active {
+              transform: scale(0.95);
+            }
+
+            &.playing {
+              background: #2196f3;
+              box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+            }
+          }
+        }
       }
+    }
 
-      .result-tabs {
-        display: flex;
-        margin-bottom: 24rpx;
-        background: #f8f9fa;
-        border-radius: 12rpx;
-        padding: 8rpx;
+    // 地道口语卡片特殊样式
+    &.colloquial-card {
+      .translation-section {
+        margin-bottom: 16px;
 
-        .tab-item {
-          flex: 1;
-          padding: 16rpx 24rpx;
-          text-align: center;
-          border-radius: 8rpx;
-          font-size: 26rpx;
-          font-weight: 500;
-          color: #6c757d;
-          background: transparent;
-          border: none;
-          transition: all 0.3s ease;
+        .translation-text {
+          background: #f0f9ff;
+        }
 
-          &.active {
-            background: #fff;
-            color: #8b5cf6;
-            box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+        .play-button-row {
+          .play-button {
+            background: #e8f5e9;
+
+            &.playing {
+              background: #4caf50;
+            }
           }
         }
       }
 
-      .result-content {
-        .result-item {
-          margin-bottom: 24rpx;
+      .comparison-section {
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-top: 1px solid #e8f5e9;
+        margin-top: 12px;
+        margin-bottom: 12px;
+
+        .comparison-title {
+          font-size: 14px;
+          color: #4caf50;
+          font-weight: 500;
+          display: block;
+          margin-bottom: 8px;
+        }
+
+        .comparison-item {
+          margin-bottom: 6px;
 
           &:last-child {
             margin-bottom: 0;
           }
 
-          .result-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12rpx;
-
-            .result-title {
-              font-size: 26rpx;
-              font-weight: 600;
-              color: #333;
-              display: flex;
-              align-items: center;
-
-              .title-icon {
-                margin-right: 8rpx;
-                font-size: 24rpx;
-
-                &.standard {
-                  color: #6b7280;
-                }
-
-                &.colloquial {
-                  color: #f59e0b;
-                }
-              }
-            }
-
-            .result-actions {
-              display: flex;
-              gap: 8rpx;
-
-              .action-btn {
-                padding: 8rpx 12rpx;
-                border-radius: 8rpx;
-                border: none;
-                font-size: 22rpx;
-                display: flex;
-                align-items: center;
-                gap: 4rpx;
-                transition: all 0.3s ease;
-
-                &.copy-btn {
-                  background: rgba(107, 114, 128, 0.1);
-                  color: #6b7280;
-
-                  &:active {
-                    background: rgba(107, 114, 128, 0.2);
-                  }
-                }
-
-                &.play-btn {
-                  background: rgba(139, 92, 246, 0.1);
-                  color: #8b5cf6;
-
-                  &:active {
-                    background: rgba(139, 92, 246, 0.2);
-                  }
-
-                  &.playing {
-                    background: rgba(139, 92, 246, 0.2);
-                  }
-                }
-              }
-            }
-          }
-
-          .result-text {
-            font-size: 30rpx;
-            line-height: 1.6;
-            color: #333;
-            padding: 20rpx;
-            background: #f8fafc;
-            border-radius: 12rpx;
-            border-left: 4rpx solid #8b5cf6;
-
-            &.colloquial {
-              background: #fffbeb;
-              border-left-color: #f59e0b;
-            }
+          .comparison-text {
+            font-size: 13px;
+            color: #4caf50;
+            line-height: 1.4;
+            display: block;
           }
         }
       }
     }
-  }
 
-  .quick-phrases {
-    margin-top: 32rpx;
-
-    .section-title {
-      font-size: 36rpx;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 24rpx;
-      display: flex;
-      align-items: center;
-
-      .title-icon {
-        margin-right: 12rpx;
-      }
-    }
-
-    .phrases-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16rpx;
-
-      .phrase-item {
-        background: #fff;
-        border-radius: 16rpx;
-        padding: 24rpx 20rpx;
-        text-align: center;
-        box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
-        border: 1rpx solid #f0f0f0;
-        transition: all 0.3s ease;
-
-        &:active {
-          transform: scale(0.98);
-          box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);
-        }
-
-        .phrase-icon {
-          font-size: 32rpx;
-          margin-bottom: 12rpx;
-          display: block;
-        }
-
-        .phrase-text {
-          font-size: 26rpx;
-          font-weight: 500;
-          color: #333;
-        }
-      }
-    }
-  }
-
-  .history-section {
-    margin-top: 48rpx;
-
-    .section-header {
+    .card-footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 24rpx;
+      padding-top: 12px;
+      border-top: 1px solid #f0f0f0;
 
-      .section-title {
-        font-size: 36rpx;
-        font-weight: 600;
-        color: #333;
+      .copy-button {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        background: #f5f5f5;
+        border: 1px solid #e0e0e0;
         display: flex;
         align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
 
-        .title-icon {
-          margin-right: 12rpx;
+        &:active {
+          transform: scale(0.95);
+          background: #e0e0e0;
         }
       }
 
-      .view-all-btn {
-        padding: 8rpx 16rpx;
-        background: rgba(139, 92, 246, 0.1);
-        color: #8b5cf6;
-        border: none;
-        border-radius: 16rpx;
-        font-size: 24rpx;
-        font-weight: 500;
+      .footer-action {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s;
+        cursor: pointer;
+
+        &:active {
+          transform: scale(0.95);
+        }
+
+        &.favorite-action {
+          background: #fffbf0;
+          border-color: #ffd700;
+
+          &:hover {
+            background: #fff8e1;
+          }
+
+          &:active {
+            background: #ffecb3;
+          }
+        }
       }
     }
+  }
 
-    .history-list {
+  // 相关短语卡片
+  .phrases-card {
+    .phrases-list {
       display: flex;
       flex-direction: column;
-      gap: 16rpx;
+      gap: 8px;
 
-      .history-item {
-        background: #fff;
-        border-radius: 16rpx;
-        padding: 24rpx;
-        box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
-        border: 1rpx solid #f0f0f0;
+      .phrase-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #f5f5f5;
 
-        .history-content {
+        &:last-child {
+          border-bottom: none;
+          padding-bottom: 0;
+        }
+
+        .phrase-content {
+          flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 12rpx;
+          gap: 3px;
 
-          .original-text {
-            font-size: 28rpx;
+          .phrase-english {
+            font-size: 15px;
             color: #333;
-            line-height: 1.5;
+            font-weight: 500;
           }
 
-          .translated-text {
-            font-size: 26rpx;
+          .phrase-chinese {
+            font-size: 14px;
             color: #666;
-            line-height: 1.5;
-            padding: 12rpx 16rpx;
-            background: #f8fafc;
-            border-radius: 8rpx;
-          }
 
-          .history-time {
-            font-size: 22rpx;
-            color: #999;
-            text-align: right;
+            .phrase-pinyin {
+              font-size: 12px;
+              color: #999;
+              margin-left: 6px;
+            }
           }
         }
 
-        .history-actions {
+        .phrase-action {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: #f3f0ff;
           display: flex;
-          justify-content: flex-end;
-          gap: 8rpx;
-          margin-top: 12rpx;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s;
 
-          .history-action-btn {
-            padding: 8rpx 12rpx;
-            border: none;
-            border-radius: 8rpx;
-            font-size: 22rpx;
-            background: rgba(139, 92, 246, 0.1);
-            color: #8b5cf6;
+          &:active {
+            transform: scale(0.9);
+            background: #e9e3ff;
+          }
 
-            &:active {
-              background: rgba(139, 92, 246, 0.2);
-            }
+          &.playing {
+            background: #e9e3ff;
           }
         }
       }
@@ -461,31 +443,24 @@
 }
 
 // 动画定义
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20rpx);
-  }
-  to {
+@keyframes pulse {
+  0%,
+  100% {
     opacity: 1;
-    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.7;
   }
 }
 
-@keyframes recording {
-  from {
-    box-shadow: 0 4rpx 12rpx rgba(239, 68, 68, 0.4);
+@keyframes shimmer {
+  0% {
+    opacity: 0.6;
   }
-  to {
-    box-shadow: 0 4rpx 12rpx rgba(239, 68, 68, 0.8);
+  50% {
+    opacity: 1;
   }
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+  100% {
+    opacity: 0.6;
   }
 }

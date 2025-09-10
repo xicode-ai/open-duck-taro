@@ -1,24 +1,13 @@
-import { useState, useRef } from 'react'
-import { View, Text, Textarea } from '@tarojs/components'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { View, Text, Textarea, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
 import CustomNavBar from '../../components/common/CustomNavBar'
+import CopyIcon from '../../components/common/CopyIcon'
 import { useUserStore } from '../../stores/user'
+import { translateApi } from '../../services/api'
+import type { TranslationResult } from '@/types'
 import './index.scss'
-
-interface TranslateResult {
-  standard: string
-  colloquial: string
-  audioUrl?: string
-}
-
-interface TranslateHistory {
-  id: string
-  original: string
-  result: TranslateResult
-  timestamp: number
-  sourceLanguage: 'zh' | 'en'
-}
 
 const TranslatePage = () => {
   const { updateDailyUsage, checkUsage } = useUserStore()
@@ -26,66 +15,54 @@ const TranslatePage = () => {
   // 状态管理
   const [inputText, setInputText] = useState('')
   const [sourceLanguage, setSourceLanguage] = useState<'zh' | 'en'>('zh')
-  const [isTranslating, setIsTranslating] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
-  const [translateResult, setTranslateResult] =
-    useState<TranslateResult | null>(null)
-  const [activeTab, setActiveTab] = useState<'standard' | 'colloquial'>(
-    'standard'
-  )
+  const [translationResult, setTranslationResult] =
+    useState<TranslationResult | null>(null)
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
-
-  // 历史记录(模拟数据)
-  const [history] = useState<TranslateHistory[]>([
-    {
-      id: '1',
-      original: '你好，很高兴认识你',
-      result: {
-        standard: 'Hello, nice to meet you',
-        colloquial: 'Hi there! Great to meet you!',
-      },
-      timestamp: Date.now() - 3600000,
-      sourceLanguage: 'zh',
-    },
-    {
-      id: '2',
-      original: '今天天气真不错',
-      result: {
-        standard: 'The weather is really nice today',
-        colloquial: 'What a beautiful day!',
-      },
-      timestamp: Date.now() - 7200000,
-      sourceLanguage: 'zh',
-    },
-  ])
-
-  // 常用短语
-  const quickPhrases = [
-    { icon: '👋', text: '问候语', template: '你好，很高兴认识你' },
-    { icon: '🍽️', text: '点餐', template: '我想点一杯咖啡' },
-    { icon: '🛣️', text: '问路', template: '请问洗手间在哪里？' },
-    { icon: '🛒', text: '购物', template: '这个多少钱？' },
-  ]
+  const audioContextRef = useRef<Taro.InnerAudioContext | null>(null)
 
   const recordingTimer = useRef<NodeJS.Timeout | null>(null)
+
+  // 组件卸载时清理音频上下文
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.stop()
+        audioContextRef.current.destroy()
+        audioContextRef.current = null
+      }
+      if (recordingTimer.current) {
+        clearTimeout(recordingTimer.current)
+        recordingTimer.current = null
+      }
+    }
+  }, [])
 
   // 切换语言
   const toggleLanguage = () => {
     setSourceLanguage(sourceLanguage === 'zh' ? 'en' : 'zh')
     setInputText('')
-    setTranslateResult(null)
+    setTranslationResult(null)
   }
 
-  // 检查输入限制
-  const checkInputLimit = () => {
+  // 清空输入内容
+  const clearInput = () => {
+    setInputText('')
+    setTranslationResult(null)
+  }
+
+  // 翻译功能 - 调用API
+  const handleTranslate = useCallback(async () => {
+    // 检查输入
     if (!inputText.trim()) {
       Taro.showToast({
         title: '请输入要翻译的内容',
         icon: 'none',
       })
-      return false
+      return
     }
 
+    // 检查使用限制
     const usage = checkUsage('translate')
     if (!usage.canUse) {
       Taro.showModal({
@@ -99,51 +76,31 @@ const TranslatePage = () => {
           }
         },
       })
-      return false
+      return
     }
 
-    return true
-  }
-
-  // 翻译功能
-  const handleTranslate = async () => {
-    if (!checkInputLimit()) return
-
-    setIsTranslating(true)
     updateDailyUsage('translate')
 
     try {
-      // 模拟API调用延迟
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      const response = await translateApi.translate(
+        inputText,
+        sourceLanguage,
+        sourceLanguage === 'zh' ? 'en' : 'zh'
+      )
 
-      // 模拟翻译结果
-      const result: TranslateResult = {
-        standard:
-          sourceLanguage === 'zh'
-            ? 'This is a standard translation result'
-            : '这是一个标准翻译结果',
-        colloquial:
-          sourceLanguage === 'zh'
-            ? "Hey! This is how we'd actually say it!"
-            : '嘿！我们平时会这么说！',
+      if (response.code === 200 && response.data) {
+        setTranslationResult(response.data)
+      } else {
+        throw new Error(response.message || '翻译失败')
       }
-
-      setTranslateResult(result)
-
-      Taro.showToast({
-        title: '翻译完成',
-        icon: 'success',
-      })
     } catch (error) {
       console.error('翻译失败:', error)
       Taro.showToast({
         title: '翻译失败，请重试',
         icon: 'error',
       })
-    } finally {
-      setIsTranslating(false)
     }
-  }
+  }, [inputText, sourceLanguage, updateDailyUsage, checkUsage])
 
   // 语音输入
   const handleVoiceInput = async () => {
@@ -231,10 +188,42 @@ const TranslatePage = () => {
     })
   }
 
-  // 清空输入
-  const clearInput = () => {
-    setInputText('')
-    setTranslateResult(null)
+  // 拍照识别功能
+  const handlePhotoRecognition = async () => {
+    try {
+      const { tempFilePaths } = await Taro.chooseImage({
+        count: 1,
+        sizeType: ['original', 'compressed'],
+        sourceType: ['album', 'camera'],
+      })
+
+      if (tempFilePaths && tempFilePaths.length > 0) {
+        Taro.showLoading({ title: '识别中...' })
+
+        // 模拟OCR识别
+        await new Promise(resolve => setTimeout(resolve, 2000))
+
+        // 模拟识别结果
+        const recognizedText =
+          sourceLanguage === 'zh'
+            ? '我想去咖啡店买一杯拿铁，但不知道怎么用英语点单。'
+            : "I want to order a coffee but I'm not sure how to say it in Chinese."
+
+        setInputText(recognizedText)
+
+        Taro.hideLoading()
+        Taro.showToast({
+          title: '识别成功',
+          icon: 'success',
+        })
+      }
+    } catch (error) {
+      console.error('拍照识别失败:', error)
+      Taro.showToast({
+        title: '识别失败，请重试',
+        icon: 'error',
+      })
+    }
   }
 
   // 复制文本
@@ -243,8 +232,9 @@ const TranslatePage = () => {
       data: text,
       success: () => {
         Taro.showToast({
-          title: '已复制到剪贴板',
+          title: '已复制',
           icon: 'success',
+          duration: 1500,
         })
       },
     })
@@ -256,40 +246,79 @@ const TranslatePage = () => {
 
     if (playingAudio === audioId) {
       // 停止播放
-      Taro.stopBackgroundAudio()
-      setPlayingAudio(null)
-    } else {
-      // 开始播放 - 这里应该调用TTS API
-      setPlayingAudio(audioId)
-
-      // 模拟播放完成
-      setTimeout(() => {
+      try {
+        if (audioContextRef.current) {
+          audioContextRef.current.stop()
+          audioContextRef.current.destroy()
+          audioContextRef.current = null
+        }
         setPlayingAudio(null)
-      }, 3000)
-
-      Taro.showToast({
-        title: '播放中',
-        icon: 'success',
-      })
-    }
-  }
-
-  // 使用快速短语 - 已移除，直接使用 setInputText
-
-  // 格式化时间
-  const formatTime = (timestamp: number) => {
-    const now = Date.now()
-    const diff = now - timestamp
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-
-    if (hours < 1) {
-      const minutes = Math.floor(diff / (1000 * 60))
-      return `${minutes}分钟前`
-    } else if (hours < 24) {
-      return `${hours}小时前`
+        Taro.showToast({
+          title: '已停止播放',
+          icon: 'success',
+        })
+      } catch (error) {
+        console.error('停止播放失败:', error)
+        setPlayingAudio(null)
+      }
     } else {
-      const days = Math.floor(hours / 24)
-      return `${days}天前`
+      // 先停止当前播放的音频
+      if (audioContextRef.current) {
+        audioContextRef.current.stop()
+        audioContextRef.current.destroy()
+        audioContextRef.current = null
+      }
+
+      // 开始播放 - 这里应该调用TTS API
+      try {
+        setPlayingAudio(audioId)
+
+        // 创建音频上下文
+        const audioContext = Taro.createInnerAudioContext()
+        audioContextRef.current = audioContext
+
+        // 模拟音频播放（实际应该使用TTS API获取音频URL）
+        // audioContext.src = 'your-tts-audio-url'
+
+        // 监听播放结束事件
+        audioContext.onEnded(() => {
+          setPlayingAudio(null)
+          audioContextRef.current = null
+        })
+
+        // 监听播放错误事件
+        audioContext.onError(error => {
+          console.error('音频播放错误:', error)
+          setPlayingAudio(null)
+          audioContextRef.current = null
+          Taro.showToast({
+            title: '播放失败',
+            icon: 'error',
+          })
+        })
+
+        // 模拟播放完成（实际应该调用audioContext.play()）
+        setTimeout(() => {
+          if (audioContextRef.current) {
+            setPlayingAudio(null)
+            audioContextRef.current.destroy()
+            audioContextRef.current = null
+          }
+        }, 3000)
+
+        Taro.showToast({
+          title: '播放中',
+          icon: 'success',
+        })
+      } catch (error) {
+        console.error('播放失败:', error)
+        setPlayingAudio(null)
+        audioContextRef.current = null
+        Taro.showToast({
+          title: '播放失败',
+          icon: 'error',
+        })
+      }
     }
   }
 
@@ -297,8 +326,8 @@ const TranslatePage = () => {
     <View className="translate-page">
       {/* 导航栏 */}
       <CustomNavBar
-        title="智能翻译"
-        backgroundColor="#2196F3"
+        title="翻译功能"
+        backgroundColor="#8B5CF6"
         renderRight={
           <View
             className="nav-right-btn"
@@ -306,225 +335,263 @@ const TranslatePage = () => {
               Taro.navigateTo({ url: '/pages/translate-history/index' })
             }
           >
-            <AtIcon value="clock" size="20" />
+            <AtIcon value="clock" size="20" color="#fff" />
           </View>
         }
       />
 
-      <View className="page-content">
-        {/* 翻译卡片 */}
-        <View className="translate-card">
-          {/* 输入区域 */}
-          <View className="input-section">
-            <View className="section-header">
-              <Text className="section-title">
-                <Text className="flag-icon">
-                  {sourceLanguage === 'zh' ? '🇨🇳' : '🇺🇸'}
-                </Text>
+      <ScrollView className="page-content" scrollY>
+        {/* 语言选择器 */}
+        <View className="language-selector-card">
+          <View className="language-selector">
+            <View className="language-pair">
+              <Text className="language-item">
                 {sourceLanguage === 'zh' ? '中文' : 'English'}
               </Text>
-              <View className="language-switch" onClick={toggleLanguage}>
-                <AtIcon value="reload" size="16" />
-              </View>
-            </View>
-
-            <View className="input-container">
-              <Textarea
-                className="text-input"
-                value={inputText}
-                onInput={(e: { detail: { value: string } }) =>
-                  setInputText(e.detail.value)
-                }
-                placeholder={
-                  sourceLanguage === 'zh'
-                    ? '请输入要翻译的中文...'
-                    : 'Please enter English text...'
-                }
-                maxlength={1000}
-                autoHeight
-              />
-
-              <View className="input-actions">
-                {inputText && (
-                  <View className="action-btn clear-btn" onClick={clearInput}>
-                    <AtIcon value="close" />
-                  </View>
-                )}
-
-                <View
-                  className={`action-btn voice-btn ${isRecording ? 'recording' : ''}`}
-                  onClick={handleVoiceInput}
-                >
-                  <AtIcon value="sound" />
-                </View>
-              </View>
-
-              <Text
-                className={`char-count ${inputText.length > 800 ? 'warning' : inputText.length > 900 ? 'error' : ''}`}
-              >
-                {inputText.length}/1000
+              <AtIcon value="arrow-right" size="14" color="#8B5CF6" />
+              <Text className="language-item">
+                {sourceLanguage === 'zh' ? 'English' : '中文'}
               </Text>
             </View>
+            <View className="swap-button" onClick={toggleLanguage}>
+              <AtIcon value="reload" size="16" color="#8B5CF6" />
+            </View>
           </View>
+        </View>
 
-          {/* 翻译按钮 */}
-          <View
-            className={`translate-button ${isTranslating ? 'loading' : ''}`}
-            onClick={handleTranslate}
-          >
-            <AtIcon
-              value={isTranslating ? 'loading-3' : 'reload'}
-              className="translate-icon"
-            />
-            <Text>{isTranslating ? '翻译中...' : '开始翻译'}</Text>
-          </View>
-
-          {/* 翻译结果 */}
-          {translateResult && (
-            <View className="result-section show">
-              <View className="result-tabs">
-                <View
-                  className={`tab-item ${activeTab === 'standard' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('standard')}
-                >
-                  标准翻译
-                </View>
-                <View
-                  className={`tab-item ${activeTab === 'colloquial' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('colloquial')}
-                >
-                  地道口语
-                </View>
-              </View>
-
-              <View className="result-content">
-                <View className="result-item">
-                  <View className="result-header">
-                    <Text className="result-title">
-                      <Text className={`title-icon ${activeTab}`}>
-                        {activeTab === 'standard' ? '📖' : '💬'}
-                      </Text>
-                      {activeTab === 'standard' ? '标准翻译' : '地道表达'}
-                    </Text>
-
-                    <View className="result-actions">
-                      <View
-                        className="action-btn copy-btn"
-                        onClick={() =>
-                          copyText(
-                            activeTab === 'standard'
-                              ? translateResult.standard
-                              : translateResult.colloquial
-                          )
-                        }
-                      >
-                        <AtIcon value="copy" />
-                        <Text>复制</Text>
-                      </View>
-
-                      <View
-                        className={`action-btn play-btn ${playingAudio === `${activeTab}-audio` ? 'playing' : ''}`}
-                        onClick={() =>
-                          playAudio(
-                            activeTab === 'standard'
-                              ? translateResult.standard
-                              : translateResult.colloquial,
-                            activeTab
-                          )
-                        }
-                      >
-                        <AtIcon
-                          value={
-                            playingAudio === `${activeTab}-audio`
-                              ? 'pause'
-                              : 'play'
-                          }
-                        />
-                        <Text>
-                          {playingAudio === `${activeTab}-audio`
-                            ? '停止'
-                            : '朗读'}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  <Text className={`result-text ${activeTab}`}>
-                    {activeTab === 'standard'
-                      ? translateResult.standard
-                      : translateResult.colloquial}
-                  </Text>
-                </View>
-              </View>
+        {/* 翻译输入模块 */}
+        <View className="translate-input-card">
+          {!inputText && (
+            <View className="input-placeholder">
+              <Text>
+                {sourceLanguage === 'zh'
+                  ? '请输入要翻译的中文内容...'
+                  : 'Please enter English text to translate...'}
+              </Text>
+            </View>
+          )}
+          <Textarea
+            className="text-input"
+            value={inputText}
+            onInput={(e: { detail: { value: string } }) => {
+              setInputText(e.detail.value)
+              // 如果按下了回车键，在下一个tick触发翻译
+              if (e.detail.value.includes('\n')) {
+                const cleanText = e.detail.value.replace(/\n/g, '')
+                setInputText(cleanText)
+                if (cleanText.trim()) {
+                  setTimeout(() => handleTranslate(), 0)
+                }
+              }
+            }}
+            placeholder=""
+            maxlength={1000}
+            autoHeight
+            showConfirmBar={false}
+          />
+          {inputText && (
+            <View className="clear-button" onClick={clearInput}>
+              <AtIcon value="close" size="14" color="#999" />
             </View>
           )}
         </View>
 
-        {/* 快速短语 */}
-        <View className="quick-phrases">
-          <Text className="section-title">
-            <Text className="title-icon">⚡</Text>
-            常用短语
-          </Text>
-
-          <View className="phrases-grid">
-            {quickPhrases.map((phrase, index) => (
-              <View
-                key={index}
-                className="phrase-item"
-                onClick={() => setInputText(phrase.template)}
-              >
-                <Text className="phrase-icon">{phrase.icon}</Text>
-                <Text className="phrase-text">{phrase.text}</Text>
-              </View>
-            ))}
+        {/* 操作按钮 */}
+        <View className="action-buttons">
+          <View
+            className={`action-btn ${isRecording ? 'recording' : ''}`}
+            onClick={handleVoiceInput}
+          >
+            <AtIcon
+              value={isRecording ? 'stop-circle' : 'volume-plus'}
+              size="18"
+              color={isRecording ? '#ff4757' : '#666'}
+            />
+            <Text>{isRecording ? '停止录音' : '语音输入'}</Text>
+          </View>
+          <View className="action-btn" onClick={handlePhotoRecognition}>
+            <AtIcon value="image" size="18" color="#666" />
+            <Text>拍照识别</Text>
           </View>
         </View>
 
-        {/* 翻译历史 */}
-        <View className="history-section">
-          <View className="section-header">
-            <Text className="section-title">
-              <Text className="title-icon">📝</Text>
-              翻译历史
-            </Text>
-
-            <View
-              className="view-all-btn"
-              onClick={() =>
-                Taro.navigateTo({ url: '/pages/translate-history/index' })
-              }
-            >
-              查看全部
-            </View>
-          </View>
-
-          <View className="history-list">
-            {history.slice(0, 3).map(item => (
-              <View key={item.id} className="history-item">
-                <View className="history-content">
-                  <Text className="original-text">{item.original}</Text>
-                  <Text className="translated-text">
-                    {item.result.standard}
-                  </Text>
-                  <Text className="history-time">
-                    {formatTime(item.timestamp)}
+        {/* 翻译结果展示 */}
+        {translationResult && (
+          <>
+            {/* 标准翻译卡片 */}
+            <View className="result-card">
+              <View className="card-header">
+                <View className="card-title">
+                  <View className="title-icon book-icon">
+                    <AtIcon value="bookmark" size="16" color="#2196F3" />
+                  </View>
+                  <Text className="title-text">标准翻译</Text>
+                  <Text className="tag tag-written">书面语</Text>
+                </View>
+              </View>
+              <View className="card-content">
+                <View className="translation-section">
+                  <Text className="translation-text">
+                    {translationResult.standardTranslation}
                   </Text>
                 </View>
-
-                <View className="history-actions">
+                <View className="play-button-row">
                   <View
-                    className="history-action-btn"
-                    onClick={() => setInputText(item.original)}
+                    className={`play-button ${playingAudio === 'standard' ? 'playing' : ''}`}
+                    onClick={() =>
+                      playAudio(
+                        translationResult.standardTranslation,
+                        'standard'
+                      )
+                    }
                   >
-                    重新翻译
+                    <AtIcon
+                      value="volume-plus"
+                      size="20"
+                      color={playingAudio === 'standard' ? '#fff' : '#2196F3'}
+                    />
                   </View>
                 </View>
               </View>
-            ))}
-          </View>
-        </View>
-      </View>
+              <View className="card-footer">
+                <View
+                  className="copy-button"
+                  onClick={() =>
+                    copyText(translationResult.standardTranslation)
+                  }
+                >
+                  <CopyIcon size={16} color="#666" />
+                </View>
+                <View className="footer-action favorite-action">
+                  <AtIcon value="star-2" size="18" color="#FFD700" />
+                </View>
+              </View>
+            </View>
+
+            {/* 地道口语卡片 */}
+            <View className="result-card colloquial-card">
+              <View className="card-header">
+                <View className="card-title">
+                  <View className="title-icon chat-icon">
+                    <AtIcon value="message" size="16" color="#4CAF50" />
+                  </View>
+                  <Text className="title-text">地道口语</Text>
+                  <Text className="tag tag-recommended">推荐</Text>
+                </View>
+              </View>
+
+              {/* 翻译内容区域 */}
+              <View className="card-content">
+                <View className="translation-section">
+                  <Text className="translation-text">
+                    {translationResult.colloquialTranslation}
+                  </Text>
+                </View>
+
+                {/* 对比说明区域 */}
+                {translationResult.comparisonNotes &&
+                  translationResult.comparisonNotes.length > 0 && (
+                    <View className="comparison-section">
+                      <Text className="comparison-title">更自然的表达：</Text>
+                      {translationResult.comparisonNotes.map(note => (
+                        <View key={note.id} className="comparison-item">
+                          <Text className="comparison-text">
+                            • &ldquo;{note.colloquial}&rdquo; 比 &ldquo;
+                            {note.standard}&rdquo;{' '}
+                            {note.explanation.split('比')[1]}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                <View className="play-button-row">
+                  <View
+                    className={`play-button ${playingAudio === 'colloquial' ? 'playing' : ''}`}
+                    onClick={() =>
+                      playAudio(
+                        translationResult.colloquialTranslation,
+                        'colloquial'
+                      )
+                    }
+                  >
+                    <AtIcon
+                      value="volume-plus"
+                      size="20"
+                      color={playingAudio === 'colloquial' ? '#fff' : '#4CAF50'}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              <View className="card-footer">
+                <View
+                  className="copy-button"
+                  onClick={() =>
+                    copyText(translationResult.colloquialTranslation)
+                  }
+                >
+                  <CopyIcon size={16} color="#666" />
+                </View>
+                <View className="footer-action favorite-action">
+                  <AtIcon value="star-2" size="18" color="#FFD700" />
+                </View>
+              </View>
+            </View>
+
+            {/* 相关实用短语 */}
+            {translationResult.relatedPhrases &&
+              translationResult.relatedPhrases.length > 0 && (
+                <View className="phrases-card">
+                  <View className="card-header">
+                    <View className="card-title">
+                      <View className="title-icon">
+                        <Text className="emoji-icon">💡</Text>
+                      </View>
+                      <Text className="title-text">相关实用短语</Text>
+                    </View>
+                  </View>
+                  <View className="phrases-list">
+                    {translationResult.relatedPhrases.map(phrase => (
+                      <View key={phrase.id} className="phrase-item">
+                        <View className="phrase-content">
+                          <Text className="phrase-english">
+                            {phrase.english}
+                          </Text>
+                          <Text className="phrase-chinese">
+                            {phrase.chinese}
+                            {phrase.pinyin && (
+                              <Text className="phrase-pinyin">
+                                {' '}
+                                ({phrase.pinyin})
+                              </Text>
+                            )}
+                          </Text>
+                        </View>
+                        <View
+                          className={`phrase-action ${playingAudio === `phrase-${phrase.id}` ? 'playing' : ''}`}
+                          onClick={() =>
+                            playAudio(phrase.english, `phrase-${phrase.id}`)
+                          }
+                        >
+                          <AtIcon
+                            value={
+                              playingAudio === `phrase-${phrase.id}`
+                                ? 'pause'
+                                : 'play'
+                            }
+                            size="20"
+                            color="#8B5CF6"
+                          />
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+          </>
+        )}
+      </ScrollView>
     </View>
   )
 }

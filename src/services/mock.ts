@@ -303,21 +303,27 @@ export const mockVocabularies: Vocabulary[] = [
 // 模拟翻译历史数据
 export const mockTranslationHistory: TranslationResult[] = [
   {
-    original: '你好，很高兴认识你',
-    formal: "Hello, it's a pleasure to meet you.",
-    casual: 'Hi, nice to meet you!',
+    id: 'trans-1',
+    originalText: '你好，很高兴认识你',
+    standardTranslation: "Hello, it's a pleasure to meet you.",
+    colloquialTranslation: 'Hi, nice to meet you!',
+    relatedPhrases: [],
     audioUrl: 'mock-audio-translation-1',
   },
   {
-    original: '今天天气怎么样？',
-    formal: 'How is the weather today?',
-    casual: "What's the weather like today?",
+    id: 'trans-2',
+    originalText: '今天天气怎么样？',
+    standardTranslation: 'How is the weather today?',
+    colloquialTranslation: "What's the weather like today?",
+    relatedPhrases: [],
     audioUrl: 'mock-audio-translation-2',
   },
   {
-    original: '我想学习英语',
-    formal: 'I would like to learn English.',
-    casual: 'I want to learn English.',
+    id: 'trans-3',
+    originalText: '我想学习英语',
+    standardTranslation: 'I would like to learn English.',
+    colloquialTranslation: 'I want to learn English.',
+    relatedPhrases: [],
     audioUrl: 'mock-audio-translation-3',
   },
 ]
