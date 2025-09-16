@@ -48,7 +48,9 @@
     <div class="bg-orange-500 text-white px-4 py-3 flex items-center">
       <i class="fas fa-arrow-left text-xl mr-4"></i>
       <h2 class="text-lg font-semibold flex-1">拍照短文</h2>
-      <i class="fas fa-image text-xl"></i>
+      <button onclick="window.location.href='photo-story-history.html'" class="text-xl">
+        <i class="fas fa-history"></i>
+      </button>
     </div>
 
     <!-- 主内容区域 -->
@@ -65,9 +67,9 @@
             class="w-full h-full object-cover"
           />
 
-          <!-- 重新拍照按钮 -->
+          <!-- 拍照按钮 -->
           <div class="absolute top-3 right-3">
-            <button class="bg-white bg-opacity-90 text-gray-700 p-2 rounded-full shadow-sm">
+            <button onclick="showActionSheet()" class="bg-white bg-opacity-90 text-gray-700 p-2 rounded-full shadow-sm hover:bg-white transition-colors">
               <i class="fas fa-camera text-sm"></i>
             </button>
           </div>
@@ -87,36 +89,28 @@
           </div>
         </div>
 
-        <div class="flex items-center justify-between mt-4">
-          <div class="flex space-x-2">
-            <button class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-sm">
-              <i class="fas fa-image mr-1"></i>相册选择
-            </button>
-            <button class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-sm">
-              <i class="fas fa-redo mr-1"></i>重新拍照
-            </button>
-          </div>
+        <div class="flex justify-center mt-6">
           <button
-            class="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium"
+            class="bg-orange-500 text-white px-8 py-3 rounded-xl font-medium text-lg shadow-sm hover:bg-orange-600 transition-colors"
             onclick="handleGenerateStory()"
           >
-            <i class="fas fa-magic mr-1"></i>生成描述
+            <i class="fas fa-magic mr-2"></i>生成描述
           </button>
         </div>
       </div>
 
-      <!-- AI生成的短文 -->
+      <!-- 标准短文 -->
       <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
         <div class="flex items-center space-x-2 mb-4">
           <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-            <i class="fas fa-robot text-blue-500"></i>
+            <i class="fas fa-graduation-cap text-blue-500"></i>
           </div>
-          <span class="font-semibold text-gray-800">AI生成描述</span>
-          <span class="bg-green-100 text-green-600 px-2 py-1 rounded text-xs">已生成</span>
+          <span class="font-semibold text-gray-800">标准短文</span>
+          <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs">Standard</span>
         </div>
 
-        <div class="bg-blue-50 rounded-lg p-4 mb-4">
-          <p class="text-gray-800 leading-relaxed text-sm">
+        <div class="bg-blue-50 rounded-lg p-4 mb-4 relative" ontouchstart="handleLongPress(event, 'standard')" ontouchend="clearLongPress()">
+          <p class="text-gray-800 leading-relaxed text-sm" id="standardText">
             "This is a cozy coffee shop with warm lighting and comfortable seating. There are
             several customers enjoying their drinks while working on laptops or chatting with
             friends. The barista behind the counter is preparing fresh coffee, and the aroma fills
@@ -125,25 +119,58 @@
           </p>
         </div>
 
-        <div class="bg-gray-50 rounded-lg p-3 mb-4">
-          <h4 class="text-gray-700 font-medium text-sm mb-2">中文对照:</h4>
-          <p class="text-gray-600 text-sm leading-relaxed">
-            这是一家温馨的咖啡店，有着温暖的灯光和舒适的座椅。几位顾客一边享受着饮品，一边用笔记本电脑工作或与朋友聊天。
-            柜台后的咖啡师正在制作新鲜咖啡，香气弥漫整个空间。大窗户让自然光洒进来，营造出非常适合放松或工作的温馨氛围。
+        <div class="flex items-center justify-between">
+          <div class="flex space-x-2">
+            <button class="bg-blue-100 text-blue-600 px-3 py-2 rounded-lg text-sm flex items-center" onclick="playAudio('standard')">
+              <i class="fas fa-play mr-1"></i>播放
+            </button>
+            <button class="bg-blue-100 text-blue-600 px-3 py-2 rounded-lg text-sm flex items-center" onclick="startFollowReading('standard')">
+              <i class="fas fa-microphone mr-1"></i>跟读
+            </button>
+          </div>
+          <button class="bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm flex items-center" onclick="toggleFavorite('standard')" id="favoriteBtn-standard">
+            <i class="far fa-heart mr-1"></i>收藏
+          </button>
+        </div>
+
+        <div class="text-center text-gray-500 text-xs mt-2">词汇难度: 中级 | 预计时长: 15秒</div>
+      </div>
+
+      <!-- 地道短文 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
+        <div class="flex items-center space-x-2 mb-4">
+          <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-comments text-green-500"></i>
+          </div>
+          <span class="font-semibold text-gray-800">地道短文</span>
+          <span class="bg-green-100 text-green-600 px-2 py-1 rounded text-xs">Native</span>
+        </div>
+
+        <div class="bg-green-50 rounded-lg p-4 mb-4 relative" ontouchstart="handleLongPress(event, 'native')" ontouchend="clearLongPress()">
+          <p class="text-gray-800 leading-relaxed text-sm" id="nativeText">
+            "What a lovely little café! The vibe here is so chill with all these soft lights and comfy chairs.
+            You've got people scattered around - some folks tapping away on their laptops, others just hanging out
+            and catching up over coffee. The barista's working his magic behind the counter, and man, that coffee
+            smell is incredible! Those big windows really brighten up the place - it's the perfect spot to either
+            get some work done or just kick back and relax."
           </p>
         </div>
 
         <div class="flex items-center justify-between">
           <div class="flex space-x-2">
-            <button class="bg-blue-100 text-blue-600 px-3 py-2 rounded-lg text-sm">
-              <i class="fas fa-volume-up mr-1"></i>播放
+            <button class="bg-green-100 text-green-600 px-3 py-2 rounded-lg text-sm flex items-center" onclick="playAudio('native')">
+              <i class="fas fa-play mr-1"></i>播放
             </button>
-            <button class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-sm">
-              <i class="fas fa-copy mr-1"></i>复制
+            <button class="bg-green-100 text-green-600 px-3 py-2 rounded-lg text-sm flex items-center" onclick="startFollowReading('native')">
+              <i class="fas fa-microphone mr-1"></i>跟读
             </button>
           </div>
-          <div class="text-gray-500 text-xs">词汇难度: 中级 | 时长: 15秒</div>
+          <button class="bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm flex items-center" onclick="toggleFavorite('native')" id="favoriteBtn-native">
+            <i class="far fa-heart mr-1"></i>收藏
+          </button>
         </div>
+
+        <div class="text-center text-gray-500 text-xs mt-2">词汇难度: 初中级 | 预计时长: 18秒</div>
       </div>
 
       <!-- 跟读练习区域 -->
@@ -275,60 +302,370 @@
         </button>
       </div>
 
-      <!-- 历史记录 -->
-      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">📚 历史记录</h3>
-        <div class="space-y-3">
-          <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <i class="fas fa-camera text-orange-500"></i>
-            </div>
-            <div class="flex-1">
-              <div class="font-medium text-gray-800 text-sm">咖啡店场景</div>
-              <div class="text-gray-500 text-xs">得分: 85分 | 2天前</div>
-            </div>
-            <div class="text-green-500 text-sm font-medium">B+</div>
-          </div>
+    </div>
 
-          <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <i class="fas fa-camera text-blue-500"></i>
-            </div>
-            <div class="flex-1">
-              <div class="font-medium text-gray-800 text-sm">公园风景</div>
-              <div class="text-gray-500 text-xs">得分: 78分 | 3天前</div>
-            </div>
-            <div class="text-blue-500 text-sm font-medium">B</div>
-          </div>
 
-          <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <i class="fas fa-camera text-green-500"></i>
-            </div>
-            <div class="flex-1">
-              <div class="font-medium text-gray-800 text-sm">餐厅美食</div>
-              <div class="text-gray-500 text-xs">得分: 92分 | 5天前</div>
-            </div>
-            <div class="text-green-500 text-sm font-medium">A</div>
+    <!-- 拍照选项动作表单 -->
+    <div id="actionSheet" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+      <div class="absolute inset-x-0 bottom-0 bg-white rounded-t-2xl">
+        <div class="p-4">
+          <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+          <div class="space-y-3">
+            <button
+              onclick="selectFromCamera()"
+              class="w-full flex items-center space-x-3 p-4 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-camera text-orange-500"></i>
+              </div>
+              <div class="text-left">
+                <div class="font-medium text-gray-800">拍照</div>
+                <div class="text-sm text-gray-500">使用相机拍摄新照片</div>
+              </div>
+            </button>
+            <button
+              onclick="selectFromAlbum()"
+              class="w-full flex items-center space-x-3 p-4 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-image text-blue-500"></i>
+              </div>
+              <div class="text-left">
+                <div class="font-medium text-gray-800">从相册选择</div>
+                <div class="text-sm text-gray-500">从手机相册中选择图片</div>
+              </div>
+            </button>
           </div>
+          <button
+            onclick="hideActionSheet()"
+            class="w-full mt-4 p-3 bg-gray-100 rounded-lg font-medium text-gray-700"
+          >
+            取消
+          </button>
         </div>
       </div>
     </div>
 
     <script>
+      let longPressTimer;
+      const translations = {
+        standard: "这是一家温馨的咖啡店，有着温暖的灯光和舒适的座椅。几位顾客一边享受着饮品，一边用笔记本电脑工作或与朋友聊天。柜台后的咖啡师正在制作新鲜咖啡，香气弥漫整个空间。大窗户让自然光洒进来，营造出非常适合放松或工作的温馨氛围。",
+        native: "多么可爱的小咖啡厅啊！这里的氛围很轻松，有柔和的灯光和舒适的椅子。你可以看到人们分散坐着——有些人在笔记本电脑上忙碌，其他人只是闲逛，边喝咖啡边聊天。咖啡师在柜台后面施展魔法，天哪，那咖啡香味太棒了！那些大窗户真的照亮了这个地方——这是工作或放松的完美场所。"
+      };
+
       function handleGenerateStory() {
         const usage = checkUsage('photo')
         if (usage.canUse) {
           incrementUsage('photo')
           const remaining = isMember() ? '∞' : usage.remaining - 1
           alert(
-            `生成描述成功！\n\n"This is a beautiful sunset over the ocean. The golden light reflects on the calm water, creating a peaceful and serene atmosphere."\n\n今日剩余免费次数: ${remaining}`,
+            `生成描述成功！\n\n标准短文和地道短文已生成，长按文本可查看翻译。\n\n今日剩余免费次数: ${remaining}`,
           )
           // 在这里可以显示生成的内容
         } else {
           showMembershipPrompt('今日拍照短文生成次数已用完。')
         }
       }
+
+      // 长按处理
+      function handleLongPress(event, type) {
+        event.preventDefault();
+        longPressTimer = setTimeout(() => {
+          showContextMenu(event, type);
+        }, 500); // 500ms长按
+      }
+
+      function clearLongPress() {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+        }
+      }
+
+      // 显示上下文菜单（复制和翻译按钮）
+      function showContextMenu(event, type) {
+        event.preventDefault();
+
+        // 移除已存在的菜单
+        const existingMenu = document.querySelector('.context-menu');
+        if (existingMenu) {
+          existingMenu.remove();
+        }
+
+        const menu = document.createElement('div');
+        menu.className = 'context-menu fixed bg-white rounded-xl shadow-lg border border-gray-200 z-50 p-2';
+        menu.style.top = (event.touches ? event.touches[0].clientY : event.clientY) + 'px';
+        menu.style.left = (event.touches ? event.touches[0].clientX : event.clientX) + 'px';
+        menu.innerHTML = `
+          <div class="flex space-x-2">
+            <button onclick="copyText('${type}Text'); removeContextMenu();" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm flex items-center hover:bg-gray-200 transition-colors">
+              <i class="fas fa-copy mr-1"></i>复制
+            </button>
+            <button onclick="showTranslation('${type}'); removeContextMenu();" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm flex items-center hover:bg-blue-200 transition-colors">
+              <i class="fas fa-language mr-1"></i>翻译
+            </button>
+          </div>
+        `;
+
+        document.body.appendChild(menu);
+
+        // 调整位置确保不超出屏幕
+        const rect = menu.getBoundingClientRect();
+        if (rect.right > window.innerWidth) {
+          menu.style.left = (window.innerWidth - rect.width - 10) + 'px';
+        }
+        if (rect.bottom > window.innerHeight) {
+          menu.style.top = (window.innerHeight - rect.height - 10) + 'px';
+        }
+
+        // 点击其他地方关闭菜单
+        setTimeout(() => {
+          document.addEventListener('click', removeContextMenu, { once: true });
+          document.addEventListener('touchstart', removeContextMenu, { once: true });
+        }, 100);
+      }
+
+      function removeContextMenu() {
+        const menu = document.querySelector('.context-menu');
+        if (menu) {
+          menu.remove();
+        }
+      }
+
+      // 显示翻译
+      function showTranslation(type) {
+        const translation = translations[type];
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+          <div class="bg-white rounded-2xl p-6 max-w-sm w-full max-h-96 overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold text-gray-800">${type === 'standard' ? '标准短文' : '地道短文'}翻译</h3>
+              <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+              <p class="text-gray-800 leading-relaxed text-sm">${translation}</p>
+            </div>
+            <button onclick="copyTranslation('${translation}')" class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm w-full">
+              <i class="fas fa-copy mr-1"></i>复制翻译
+            </button>
+          </div>
+        `;
+        document.body.appendChild(modal);
+
+        // 点击背景关闭
+        modal.addEventListener('click', function(e) {
+          if (e.target === this) {
+            this.remove();
+          }
+        });
+      }
+
+      // 复制文本
+      function copyText(elementId) {
+        const text = document.getElementById(elementId).textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          alert('文本已复制到剪贴板');
+        }).catch(() => {
+          alert('复制失败，请手动复制');
+        });
+      }
+
+      // 复制翻译
+      function copyTranslation(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert('翻译已复制到剪贴板');
+        }).catch(() => {
+          alert('复制失败，请手动复制');
+        });
+      }
+
+      // 播放音频
+      function playAudio(type) {
+        alert(`正在播放${type === 'standard' ? '标准' : '地道'}短文语音...`);
+        // 这里可以集成真实的TTS API
+      }
+
+      // 显示拍照选项动作表单
+      function showActionSheet() {
+        document.getElementById('actionSheet').classList.remove('hidden')
+      }
+
+      // 隐藏拍照选项动作表单
+      function hideActionSheet() {
+        document.getElementById('actionSheet').classList.add('hidden')
+      }
+
+      // 从相机拍照
+      function selectFromCamera() {
+        hideActionSheet()
+        alert('正在打开相机...')
+        // 在这里可以调用相机API
+      }
+
+      // 从相册选择
+      function selectFromAlbum() {
+        hideActionSheet()
+        alert('正在打开相册...')
+        // 在这里可以调用相册选择API
+      }
+
+      // 收藏功能
+      let favorites = JSON.parse(localStorage.getItem('photoStoryFavorites') || '[]');
+
+      function toggleFavorite(type) {
+        const btn = document.getElementById(`favoriteBtn-${type}`);
+        const icon = btn.querySelector('i');
+        const text = btn.querySelector('span') || btn.childNodes[btn.childNodes.length - 1];
+        const textElement = document.getElementById(`${type}Text`);
+        const content = textElement.textContent;
+
+        const favoriteItem = {
+          id: Date.now(),
+          type: type,
+          content: content,
+          translation: translations[type],
+          timestamp: new Date().toISOString()
+        };
+
+        const existingIndex = favorites.findIndex(fav => fav.content === content);
+
+        if (existingIndex === -1) {
+          // 添加收藏
+          favorites.push(favoriteItem);
+          icon.className = 'fas fa-heart mr-1';
+          btn.className = 'bg-red-500 text-white px-3 py-2 rounded-lg text-sm flex items-center';
+          if (text.nodeType === Node.TEXT_NODE) {
+            text.textContent = '已收藏';
+          } else {
+            text.textContent = '已收藏';
+          }
+        } else {
+          // 取消收藏
+          favorites.splice(existingIndex, 1);
+          icon.className = 'far fa-heart mr-1';
+          btn.className = 'bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm flex items-center';
+          if (text.nodeType === Node.TEXT_NODE) {
+            text.textContent = '收藏';
+          } else {
+            text.textContent = '收藏';
+          }
+        }
+
+        localStorage.setItem('photoStoryFavorites', JSON.stringify(favorites));
+      }
+
+      // 跟读功能
+      function startFollowReading(type) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+          <div class="bg-white rounded-2xl p-6 max-w-sm w-full">
+            <div class="text-center mb-6">
+              <h3 class="font-semibold text-gray-800 text-lg mb-2">跟读练习</h3>
+              <p class="text-gray-600 text-sm">请跟着音频朗读以下内容</p>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+              <p class="text-gray-800 leading-relaxed text-sm" id="followReadingText">
+                ${document.getElementById(type + 'Text').textContent}
+              </p>
+            </div>
+
+            <div class="space-y-4">
+              <button onclick="playFollowReadingAudio('${type}')" class="w-full bg-blue-500 text-white py-3 rounded-lg font-medium flex items-center justify-center">
+                <i class="fas fa-play mr-2"></i>播放示范音频
+              </button>
+
+              <button onclick="startRecording('${type}')" id="recordBtn" class="w-full bg-green-500 text-white py-3 rounded-lg font-medium flex items-center justify-center">
+                <i class="fas fa-microphone mr-2"></i>开始录音跟读
+              </button>
+            </div>
+
+            <div id="recordingResult" class="hidden mt-4 bg-blue-50 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-blue-700">发音评分</span>
+                <div class="flex items-center space-x-2">
+                  <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <span class="text-lg font-bold text-green-600" id="scoreDisplay">88</span>
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">发音准确度:</span>
+                  <span class="text-green-600 font-medium">85%</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">语音流畅度:</span>
+                  <span class="text-blue-600 font-medium">90%</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">语速控制:</span>
+                  <span class="text-orange-600 font-medium">88%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex space-x-3 mt-6">
+              <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-medium">
+                关闭
+              </button>
+              <button onclick="retryFollowReading('${type}')" class="flex-1 bg-orange-500 text-white py-3 rounded-lg font-medium">
+                重新练习
+              </button>
+            </div>
+          </div>
+        `;
+
+        document.body.appendChild(modal);
+      }
+
+      function playFollowReadingAudio(type) {
+        alert(`正在播放${type === 'standard' ? '标准' : '地道'}短文示范音频...`);
+        // 这里可以集成真实的TTS API
+      }
+
+      function startRecording(type) {
+        const recordBtn = document.getElementById('recordBtn');
+        recordBtn.innerHTML = '<i class="fas fa-stop mr-2"></i>停止录音';
+        recordBtn.className = 'w-full bg-red-500 text-white py-3 rounded-lg font-medium flex items-center justify-center';
+        recordBtn.onclick = () => stopRecording(type);
+
+        // 模拟录音过程
+        setTimeout(() => {
+          stopRecording(type);
+        }, 3000);
+      }
+
+      function stopRecording(type) {
+        const recordBtn = document.getElementById('recordBtn');
+        recordBtn.innerHTML = '<i class="fas fa-microphone mr-2"></i>开始录音跟读';
+        recordBtn.className = 'w-full bg-green-500 text-white py-3 rounded-lg font-medium flex items-center justify-center';
+        recordBtn.onclick = () => startRecording(type);
+
+        // 显示评分结果
+        const resultDiv = document.getElementById('recordingResult');
+        resultDiv.classList.remove('hidden');
+
+        // 随机生成评分（在实际应用中这里会是AI评分结果）
+        const score = Math.floor(Math.random() * 20 + 80);
+        document.getElementById('scoreDisplay').textContent = score;
+      }
+
+      function retryFollowReading(type) {
+        const resultDiv = document.getElementById('recordingResult');
+        resultDiv.classList.add('hidden');
+        startRecording(type);
+      }
+
+      // 点击背景关闭模态框
+      document.getElementById('actionSheet').addEventListener('click', function(e) {
+        if (e.target === this) {
+          hideActionSheet()
+        }
+      })
     </script>
     <!-- 底部导航栏 -->
     <div class="bg-white border-t border-gray-200">

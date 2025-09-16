@@ -3,16 +3,17 @@
   padding-top: max(env(safe-area-inset-top, 0px) + 20px, 60px);
   background-color: #d9534f;
   color: white;
-  position: relative;
-  z-index: 10;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
   box-sizing: border-box;
   margin: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
-  // 使用相对定位的容器
+  // 使用固定定位的容器
   display: block;
-  position: relative;
-  min-height: 120px; // 增加最小高度，让导航栏更高
+  min-height: 120px; // 恢复原始高度，保持与其他页面一致
 
   .nav-bar-left-group {
     position: absolute;

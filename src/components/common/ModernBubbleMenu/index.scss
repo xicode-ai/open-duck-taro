@@ -1,0 +1,146 @@
+// 现代化气泡菜单组件样式
+.bubble-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: transparent;
+}
+
+.modern-bubble-menu {
+  position: fixed;
+  z-index: 1001;
+  animation: bubbleMenuSlide 0.3s ease-out;
+
+  // 默认居中显示
+  &.centered {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  // 按位置显示
+  &.positioned {
+    // 位置由 style 属性控制
+  }
+
+  // 菜单容器
+  .bubble-menu-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background: #333;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+  }
+
+  // 菜单项基础样式 - 参照对话模式设计，调大尺寸
+  .bubble-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    background: transparent;
+    min-width: 90px;
+
+    &:hover,
+    &:active {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    // 第一个按钮圆角（横向布局 - 左边圆角）
+    &:first-child {
+      border-radius: 12px 0 0 12px;
+    }
+
+    // 最后一个按钮圆角（横向布局 - 右边圆角）
+    &:last-child {
+      border-radius: 0 12px 12px 0;
+    }
+
+    // 如果只有一个按钮，四个角都圆
+    &:only-child {
+      border-radius: 12px;
+    }
+
+    // 分割线 - 除了最后一个按钮（横向布局 - 垂直分割线）
+    &:not(:last-child) {
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    // 图标样式 - 调大尺寸
+    .bubble-menu-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    // 文字样式 - 调大字体
+    .bubble-menu-text {
+      font-size: 18px;
+      font-weight: 500;
+      color: #ffffff;
+    }
+  }
+
+  // 向下的箭头 - 调大尺寸
+  .bubble-menu-arrow {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #333;
+  }
+}
+
+// 出现动画
+@keyframes bubbleMenuSlide {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.8) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1) translateY(0);
+  }
+}
+
+// 居中显示的动画
+@keyframes bubbleMenuSlideCenter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) translateY(0);
+  }
+}
+
+.modern-bubble-menu.centered {
+  animation: bubbleMenuSlideCenter 0.3s ease-out;
+}
+
+// 响应式适配
+@media (max-width: 375px) {
+  .modern-bubble-menu {
+    .bubble-menu-item {
+      padding: 16px 20px;
+      min-width: 80px;
+
+      .bubble-menu-text {
+        font-size: 16px;
+      }
+    }
+  }
+}

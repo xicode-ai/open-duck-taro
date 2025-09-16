@@ -1,630 +1,439 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { View, Text, Input } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import React, { useCallback, useMemo } from 'react'
+import { View, Text, ScrollView } from '@tarojs/components'
+import Taro, { useReady } from '@tarojs/taro'
+import { AtLoadMore, AtIcon } from 'taro-ui'
+import CustomNavBar from '@/components/common/CustomNavBar'
 import {
-  AtIcon,
-  AtModal,
-  AtModalHeader,
-  AtModalContent,
-  AtModalAction,
-  AtButton,
-} from 'taro-ui'
-import CustomNavBar from '../../components/common/CustomNavBar'
+  useInfiniteTranslateHistory,
+  useToggleFavorite,
+  useDeleteHistoryItem,
+  useClearHistory,
+  useClearFavorites,
+} from '@/hooks/useTranslateHistory'
+import { useTranslateHistoryStore } from '@/stores/translateHistory'
+import type { TranslateHistoryItem } from '@/types'
 import './index.scss'
 
-interface TranslateHistoryItem {
-  id: string
-  original: string
-  standard: string
-  colloquial: string
-  sourceLanguage: 'zh' | 'en'
-  timestamp: number
-  favorite: boolean
-  tags: string[]
+// 日期格式化工具函数
+const formatDate = (timestamp: string): string => {
+  const date = new Date(timestamp)
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+
+  return `${year}年${month}月${day}日`
 }
 
-const TranslateHistoryPage = () => {
-  // const { } = useUserStore() // 暂时不使用
+// 时间格式化工具函数
+const formatTime = (timestamp: string): string => {
+  const date = new Date(timestamp)
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
 
-  // 状态管理
-  const [historyList, setHistoryList] = useState<TranslateHistoryItem[]>([])
-  const [filteredList, setFilteredList] = useState<TranslateHistoryItem[]>([])
-  const [searchText, setSearchText] = useState('')
-  const [selectedLanguage, setSelectedLanguage] = useState<'all' | 'zh' | 'en'>(
-    'all'
-  )
-  const [selectedTime, setSelectedTime] = useState<
-    'all' | 'today' | 'week' | 'month'
-  >('all')
-  const [selectedItems, setSelectedItems] = useState<string[]>([])
-  const [showBatchActions, setShowBatchActions] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasMore] = useState(true)
-  const [playingAudio, setPlayingAudio] = useState<string | null>(null)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+// 按日期分组数据
+const groupByDate = (
+  items: TranslateHistoryItem[]
+): Record<string, TranslateHistoryItem[]> => {
+  const grouped: Record<string, TranslateHistoryItem[]> = {}
 
-  // 模拟历史数据
-  const mockHistory: TranslateHistoryItem[] = useMemo(
-    () => [
-      {
-        id: '1',
-        original: '你好，很高兴认识你',
-        standard: 'Hello, nice to meet you',
-        colloquial: 'Hi there! Great to meet you!',
-        sourceLanguage: 'zh',
-        timestamp: Date.now() - 1800000,
-        favorite: true,
-        tags: ['问候', '社交'],
-      },
-      {
-        id: '2',
-        original: '今天天气真不错',
-        standard: 'The weather is really nice today',
-        colloquial: 'What a beautiful day!',
-        sourceLanguage: 'zh',
-        timestamp: Date.now() - 3600000,
-        favorite: false,
-        tags: ['天气', '日常'],
-      },
-      {
-        id: '3',
-        original: 'How are you doing?',
-        standard: '你好吗？',
-        colloquial: '你最近怎么样？',
-        sourceLanguage: 'en',
-        timestamp: Date.now() - 7200000,
-        favorite: true,
-        tags: ['问候', '关心'],
-      },
-      {
-        id: '4',
-        original: '我想点一杯咖啡',
-        standard: 'I would like a cup of coffee',
-        colloquial: "I'll have a coffee, please",
-        sourceLanguage: 'zh',
-        timestamp: Date.now() - 86400000,
-        favorite: false,
-        tags: ['点餐', '咖啡'],
-      },
-      {
-        id: '5',
-        original: '请问洗手间在哪里？',
-        standard: 'Excuse me, where is the restroom?',
-        colloquial: 'Where can I find the bathroom?',
-        sourceLanguage: 'zh',
-        timestamp: Date.now() - 172800000,
-        favorite: false,
-        tags: ['问路', '设施'],
-      },
-    ],
-    []
-  )
-
-  // 加载历史数据
-  const loadHistory = useCallback(async () => {
-    setIsLoading(true)
-
-    // 模拟网络延迟
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    setHistoryList(mockHistory)
-    setIsLoading(false)
-  }, [mockHistory])
-
-  // 筛选历史记录
-  const filterHistory = useCallback(() => {
-    let filtered = [...historyList]
-
-    // 按语言筛选
-    if (selectedLanguage !== 'all') {
-      filtered = filtered.filter(
-        item => item.sourceLanguage === selectedLanguage
-      )
+  items.forEach(item => {
+    const dateKey = formatDate(item.timestamp)
+    if (!grouped[dateKey]) {
+      grouped[dateKey] = []
     }
+    grouped[dateKey].push(item)
+  })
 
-    // 按时间筛选
-    const now = Date.now()
-    switch (selectedTime) {
-      case 'today':
-        filtered = filtered.filter(
-          item => now - item.timestamp < 24 * 60 * 60 * 1000
-        )
-        break
-      case 'week':
-        filtered = filtered.filter(
-          item => now - item.timestamp < 7 * 24 * 60 * 60 * 1000
-        )
-        break
-      case 'month':
-        filtered = filtered.filter(
-          item => now - item.timestamp < 30 * 24 * 60 * 60 * 1000
-        )
-        break
-    }
+  // 对每个日期组内的数据按时间倒序排列（最新的在上面）
+  Object.keys(grouped).forEach(dateKey => {
+    grouped[dateKey].sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    )
+  })
 
-    // 按搜索文本筛选
-    if (searchText) {
-      filtered = filtered.filter(
-        item =>
-          item.original.includes(searchText) ||
-          item.standard.includes(searchText) ||
-          item.colloquial.includes(searchText)
-      )
-    }
+  return grouped
+}
 
-    setFilteredList(filtered)
-  }, [historyList, selectedLanguage, selectedTime, searchText])
-
-  // 页面初始化
-  useEffect(() => {
-    loadHistory()
-  }, [loadHistory])
-
-  // 筛选数据
-  useEffect(() => {
-    filterHistory()
-  }, [filterHistory])
-
-  // 播放音频
-  const playAudio = (itemId: string, type: 'standard' | 'colloquial') => {
-    const audioId = `${itemId}-${type}`
-
-    if (playingAudio === audioId) {
-      setPlayingAudio(null)
-      Taro.stopBackgroundAudio()
-    } else {
-      setPlayingAudio(audioId)
-
-      // 模拟音频播放
-      setTimeout(() => {
-        setPlayingAudio(null)
-      }, 3000)
-
-      Taro.showToast({
-        title: '播放中',
-        icon: 'none',
-      })
-    }
-  }
-
-  // 复制文本
-  const copyText = (text: string) => {
+// 历史记录卡片组件
+const HistoryCard: React.FC<{
+  item: TranslateHistoryItem
+  onToggleFavorite: (id: string, isFavorited: boolean) => void
+  onDelete: (id: string) => void
+}> = React.memo(({ item, onToggleFavorite, onDelete }) => {
+  // 复制文本功能
+  const handleCopy = useCallback((text: string) => {
     Taro.setClipboardData({
       data: text,
       success: () => {
         Taro.showToast({
-          title: '已复制到剪贴板',
+          title: '已复制',
           icon: 'success',
+          duration: 1500,
         })
       },
     })
-  }
+  }, [])
 
-  // 收藏/取消收藏
-  const toggleFavorite = (itemId: string) => {
-    setHistoryList(prev =>
-      prev.map(item =>
-        item.id === itemId ? { ...item, favorite: !item.favorite } : item
-      )
-    )
-
-    const item = historyList.find(item => item.id === itemId)
+  // 播放音频（预留功能）
+  const handlePlayAudio = useCallback(() => {
     Taro.showToast({
-      title: item?.favorite ? '已取消收藏' : '已收藏',
-      icon: 'success',
+      title: '功能开发中',
+      icon: 'none',
+      duration: 1500,
     })
-  }
+  }, [])
+
+  // 切换收藏
+  const handleToggleFavorite = useCallback(() => {
+    onToggleFavorite(item.id, !item.isFavorited)
+  }, [item.id, item.isFavorited, onToggleFavorite])
 
   // 删除记录
-  const deleteItem = (itemId: string) => {
-    setDeleteTarget(itemId)
-    setShowDeleteModal(true)
-  }
-
-  // 确认删除
-  const confirmDelete = () => {
-    if (deleteTarget) {
-      setHistoryList(prev => prev.filter(item => item.id !== deleteTarget))
-
-      Taro.showToast({
-        title: '删除成功',
-        icon: 'success',
-      })
-    }
-
-    setDeleteTarget(null)
-    setShowDeleteModal(false)
-  }
-
-  // 重新翻译
-  const retranslate = (original: string) => {
-    Taro.navigateTo({
-      url: `/pages/translate/index?text=${encodeURIComponent(original)}`,
-    })
-  }
-
-  // 批量选择
-  const toggleSelect = (itemId: string) => {
-    if (selectedItems.includes(itemId)) {
-      const newSelected = selectedItems.filter(id => id !== itemId)
-      setSelectedItems(newSelected)
-      setShowBatchActions(newSelected.length > 0)
-    } else {
-      const newSelected = [...selectedItems, itemId]
-      setSelectedItems(newSelected)
-      setShowBatchActions(true)
-    }
-  }
-
-  // 批量导出
-  const batchExport = () => {
-    const exportData = historyList
-      .filter(item => selectedItems.includes(item.id))
-      .map(item => ({
-        原文: item.original,
-        标准翻译: item.standard,
-        口语翻译: item.colloquial,
-        时间: new Date(item.timestamp).toLocaleString(),
-      }))
-
-    console.log('导出数据:', exportData)
-
-    Taro.showToast({
-      title: '导出功能开发中',
-      icon: 'none',
-    })
-  }
-
-  // 批量删除
-  const batchDelete = () => {
+  const handleDelete = useCallback(() => {
     Taro.showModal({
-      title: '批量删除',
-      content: `确定要删除选中的${selectedItems.length}条翻译记录吗？`,
+      title: '确认删除',
+      content: '确定要删除这条翻译记录吗？',
       success: res => {
         if (res.confirm) {
-          setHistoryList(prev =>
-            prev.filter(item => !selectedItems.includes(item.id))
-          )
-          setSelectedItems([])
-          setShowBatchActions(false)
-
-          Taro.showToast({
-            title: '删除成功',
-            icon: 'success',
-          })
+          onDelete(item.id)
         }
       },
     })
-  }
+  }, [item.id, onDelete])
 
-  // 清空选择
-  const clearSelection = () => {
-    setSelectedItems([])
-    setShowBatchActions(false)
-  }
+  return (
+    <View className="history-card">
+      {/* 原文 */}
+      <View className="source-text">
+        <Text className="text">{item.sourceText}</Text>
+      </View>
 
-  // 下拉刷新
-  // const onPullDownRefresh = () => {
-  //   loadHistory().then(() => {
-  //     Taro.stopPullDownRefresh()
-  //   })
-  // }
+      {/* 标准翻译 */}
+      <View className="translation-section">
+        <View className="section-header">
+          <View className="icon-wrapper standard">
+            <AtIcon className="icon standard-icon" value="bookmark" size="12" />
+          </View>
+          <Text className="section-title">标准翻译</Text>
+          <Text className="badge standard-badge">书面语</Text>
+        </View>
+        <View className="content-wrapper standard-bg">
+          <Text className="translation-text">{item.standardTranslation}</Text>
+          <View
+            className="audio-button standard-audio"
+            onClick={handlePlayAudio}
+          >
+            <AtIcon className="audio-icon" value="volume-plus" size="12" />
+          </View>
+        </View>
+      </View>
 
-  // 格式化时间
-  const formatTime = (timestamp: number) => {
-    const now = Date.now()
-    const diff = now - timestamp
-    const hours = Math.floor(diff / (1000 * 60 * 60))
+      {/* 地道口语 */}
+      <View className="translation-section">
+        <View className="section-header">
+          <View className="icon-wrapper colloquial">
+            <AtIcon
+              className="icon colloquial-icon"
+              value="message"
+              size="12"
+            />
+          </View>
+          <Text className="section-title">地道口语</Text>
+          <Text className="badge colloquial-badge">推荐</Text>
+        </View>
+        <View className="content-wrapper colloquial-bg">
+          <Text className="translation-text">{item.colloquialTranslation}</Text>
+          {item.colloquialNotes && (
+            <View className="comparison-notes colloquial-notes">
+              <Text className="notes-title colloquial-color">
+                更自然的表达：
+              </Text>
+              <Text className="notes-content colloquial-color">
+                {item.colloquialNotes}
+              </Text>
+            </View>
+          )}
+          <View
+            className="audio-button colloquial-audio"
+            onClick={handlePlayAudio}
+          >
+            <AtIcon className="audio-icon" value="volume-plus" size="12" />
+          </View>
+        </View>
+      </View>
 
-    if (hours < 1) {
-      const minutes = Math.floor(diff / (1000 * 60))
-      return `${minutes}分钟前`
-    } else if (hours < 24) {
-      return `${hours}小时前`
-    } else {
-      const days = Math.floor(hours / 24)
-      return `${days}天前`
+      {/* 操作栏 */}
+      <View className="action-bar">
+        <View className="action-buttons">
+          <View className="action-button" onClick={handleToggleFavorite}>
+            <AtIcon
+              className={`action-icon ${item.isFavorited ? 'favorited' : ''}`}
+              value={item.isFavorited ? 'heart-2' : 'heart'}
+              size="14"
+            />
+          </View>
+          <View
+            className="action-button"
+            onClick={() => handleCopy(item.colloquialTranslation)}
+          >
+            <AtIcon className="action-icon" value="file-generic" size="14" />
+          </View>
+          <View className="action-button" onClick={handleDelete}>
+            <AtIcon className="action-icon" value="trash" size="14" />
+          </View>
+        </View>
+        <Text className="timestamp">{formatTime(item.timestamp)}</Text>
+      </View>
+    </View>
+  )
+})
+
+HistoryCard.displayName = 'HistoryCard'
+
+// 主页面组件
+const TranslateHistory: React.FC = () => {
+  const { currentFilter, setCurrentFilter } = useTranslateHistoryStore()
+
+  // 获取翻译历史数据
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    refetch,
+  } = useInfiniteTranslateHistory(20)
+
+  // 使用变更 hooks
+  const toggleFavoriteMutation = useToggleFavorite()
+  const deleteHistoryMutation = useDeleteHistoryItem()
+  const clearHistoryMutation = useClearHistory()
+  const clearFavoritesMutation = useClearFavorites()
+
+  // 合并所有分页数据
+  const allItems = useMemo(() => {
+    if (!data?.pages) return []
+
+    const items = data.pages.flatMap(page => page.list)
+
+    // 根据筛选条件过滤
+    if (currentFilter === 'favorite') {
+      return items.filter(item => item.isFavorited)
     }
+
+    return items
+  }, [data, currentFilter])
+
+  // 按日期分组
+  const groupedItems = useMemo(() => groupByDate(allItems), [allItems])
+
+  // 获取排序后的日期键
+  const sortedDateKeys = useMemo(() => {
+    const keys = Object.keys(groupedItems)
+    // 按日期倒序排列，最新的日期在最上面
+    return keys.sort((a, b) => {
+      // 从每个分组中取第一条记录的时间戳来比较（因为组内已经按时间排序）
+      const timestampA = groupedItems[a][0]?.timestamp || ''
+      const timestampB = groupedItems[b][0]?.timestamp || ''
+      return new Date(timestampB).getTime() - new Date(timestampA).getTime()
+    })
+  }, [groupedItems])
+
+  // 页面加载完成
+  useReady(() => {
+    // 初始化时自动加载第一页数据
+    if (!data && !isLoading) {
+      refetch()
+    }
+  })
+
+  // 滚动到底部加载更多
+  const handleScrollToLower = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  // 切换Tab
+  const handleTabChange = useCallback(
+    (filter: 'all' | 'favorite') => {
+      setCurrentFilter(filter)
+    },
+    [setCurrentFilter]
+  )
+
+  // 切换收藏
+  const handleToggleFavorite = useCallback(
+    (id: string, isFavorited: boolean) => {
+      toggleFavoriteMutation.mutate({ id, isFavorited })
+    },
+    [toggleFavoriteMutation]
+  )
+
+  // 删除记录
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteHistoryMutation.mutate(id)
+    },
+    [deleteHistoryMutation]
+  )
+
+  // 清空历史
+  const handleClearHistory = useCallback(() => {
+    const isShowingFavorites = currentFilter === 'favorite'
+    const modalConfig = isShowingFavorites
+      ? {
+          title: '清空收藏',
+          content: '确定要清空所有收藏记录吗？此操作不可恢复。',
+          confirmText: '清空收藏',
+        }
+      : {
+          title: '清空历史',
+          content: '确定要清空所有翻译历史吗？收藏的记录将会保留。',
+          confirmText: '清空历史',
+        }
+
+    Taro.showModal({
+      title: modalConfig.title,
+      content: modalConfig.content,
+      confirmColor: '#ef4444',
+      confirmText: modalConfig.confirmText,
+      success: res => {
+        if (res.confirm) {
+          if (isShowingFavorites) {
+            clearFavoritesMutation.mutate()
+          } else {
+            clearHistoryMutation.mutate()
+          }
+        }
+      },
+    })
+  }, [currentFilter, clearHistoryMutation, clearFavoritesMutation])
+
+  // 渲染加载状态
+  if (isLoading) {
+    return (
+      <View className="translate-history">
+        <CustomNavBar
+          title="翻译历史"
+          showBackButton
+          backgroundColor="#8B5CF6"
+          renderRight={
+            <View onClick={handleClearHistory}>
+              <AtIcon value="trash" size="20" color="#fff" />
+            </View>
+          }
+        />
+        <View className="loading-container">
+          <AtLoadMore status="loading" />
+        </View>
+      </View>
+    )
+  }
+
+  // 渲染错误状态
+  if (isError) {
+    return (
+      <View className="translate-history">
+        <CustomNavBar
+          title="翻译历史"
+          showBackButton
+          backgroundColor="#8B5CF6"
+        />
+        <View className="error-state">
+          <Text className="error-text">加载失败，请重试</Text>
+          <View className="retry-button" onClick={() => refetch()}>
+            重试
+          </View>
+        </View>
+      </View>
+    )
   }
 
   return (
-    <View className="translate-history-page">
-      {/* 导航栏 */}
+    <View className="translate-history">
       <CustomNavBar
         title="翻译历史"
-        backgroundColor="#607D8B"
+        showBackButton
+        backgroundColor="#8B5CF6"
         renderRight={
-          <View className="nav-right-btn" onClick={batchExport}>
-            <AtIcon value="download" size="20" />
-          </View>
+          allItems.length > 0 ? (
+            <View onClick={handleClearHistory}>
+              <AtIcon value="trash" size="20" color="#fff" />
+            </View>
+          ) : null
         }
       />
 
-      <View className="history-content">
-        {/* 统计信息 */}
-        <View className="stats-section">
-          <View className="header-stats">
-            <View className="stat-item">
-              <Text className="stat-number">{historyList.length}</Text>
-              <Text className="stat-label">总记录</Text>
-            </View>
-            <View className="stat-item">
-              <Text className="stat-number">
-                {historyList.filter(item => item.favorite).length}
-              </Text>
-              <Text className="stat-label">收藏</Text>
-            </View>
-            <View className="stat-item">
-              <Text className="stat-number">
-                {
-                  historyList.filter(
-                    item => Date.now() - item.timestamp < 24 * 60 * 60 * 1000
-                  ).length
-                }
-              </Text>
-              <Text className="stat-label">今日</Text>
-            </View>
+      {/* Tab 切换 */}
+      <View className="tab-container">
+        <View className="tab-wrapper">
+          <View
+            className={`tab-item ${currentFilter === 'all' ? 'active' : ''}`}
+            onClick={() => handleTabChange('all')}
+          >
+            全部
+          </View>
+          <View
+            className={`tab-item ${currentFilter === 'favorite' ? 'active' : ''}`}
+            onClick={() => handleTabChange('favorite')}
+          >
+            收藏
           </View>
         </View>
       </View>
 
-      <View className="history-content">
-        {/* 筛选器 */}
-        <View className="filter-section">
-          <View className="filter-row">
-            <Text className="filter-label">语言:</Text>
-            <View className="filter-options">
-              {[
-                { id: 'all', name: '全部' },
-                { id: 'zh', name: '中文' },
-                { id: 'en', name: 'English' },
-              ].map(option => (
-                <View
-                  key={option.id}
-                  className={`filter-option ${selectedLanguage === option.id ? 'active' : ''}`}
-                  onClick={() =>
-                    setSelectedLanguage(option.id as 'all' | 'zh' | 'en')
-                  }
-                >
-                  {option.name}
-                </View>
-              ))}
-            </View>
-          </View>
-
-          <View className="filter-row">
-            <Text className="filter-label">时间:</Text>
-            <View className="filter-options">
-              {[
-                { id: 'all', name: '全部' },
-                { id: 'today', name: '今天' },
-                { id: 'week', name: '本周' },
-                { id: 'month', name: '本月' },
-              ].map(option => (
-                <View
-                  key={option.id}
-                  className={`filter-option ${selectedTime === option.id ? 'active' : ''}`}
-                  onClick={() =>
-                    setSelectedTime(
-                      option.id as 'all' | 'today' | 'week' | 'month'
-                    )
-                  }
-                >
-                  {option.name}
-                </View>
-              ))}
-            </View>
-          </View>
-
-          <View className="filter-row search-row">
-            <Text className="filter-label">搜索:</Text>
-            <Input
-              className="search-input"
-              value={searchText}
-              onInput={e => setSearchText(e.detail.value)}
-              placeholder="搜索翻译内容..."
-            />
-            {searchText && (
-              <View className="search-btn" onClick={() => setSearchText('')}>
-                清空
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* 历史记录列表 */}
-        {isLoading ? (
-          <View className="loading-more">
-            <AtIcon value="loading-3" className="loading-icon" />
-            <Text className="loading-text">加载中...</Text>
-          </View>
-        ) : filteredList.length === 0 ? (
-          <View className="empty-state">
-            <Text className="empty-icon">📝</Text>
-            <Text className="empty-title">暂无翻译记录</Text>
-            <Text className="empty-desc">
-              开始使用翻译功能
-              {'\n'}
-              积累你的学习历程
-            </Text>
-            <View
-              className="empty-action"
-              onClick={() => Taro.navigateTo({ url: '/pages/translate/index' })}
-            >
-              <AtIcon value="add" />
-              <Text>开始翻译</Text>
-            </View>
-          </View>
-        ) : (
-          <View className="history-list">
-            {filteredList.map(item => (
-              <View
-                key={item.id}
-                className={`history-item swipe-action ${item.favorite ? 'favorite' : ''} ${
-                  Date.now() - item.timestamp < 60 * 60 * 1000 ? 'recent' : ''
-                } ${selectedItems.includes(item.id) ? 'selected' : ''}`}
-                onLongPress={() => toggleSelect(item.id)}
-              >
-                <View className="swipe-content">
-                  <View className="item-header">
-                    <View className="language-indicator">
-                      <Text className="language-flag">
-                        {item.sourceLanguage === 'zh' ? '🇨🇳' : '🇺🇸'}
-                      </Text>
-                      <AtIcon value="arrow-right" className="language-arrow" />
-                      <Text className="language-flag">
-                        {item.sourceLanguage === 'zh' ? '🇺🇸' : '🇨🇳'}
-                      </Text>
-                    </View>
-
-                    <View className="item-actions">
-                      <View
-                        className={`action-btn play-btn ${playingAudio?.startsWith(item.id) ? 'playing' : ''}`}
-                        onClick={() => playAudio(item.id, 'standard')}
-                      >
-                        <AtIcon
-                          value={
-                            playingAudio?.startsWith(item.id)
-                              ? 'pause'
-                              : 'sound'
-                          }
-                        />
-                      </View>
-
-                      <View
-                        className="action-btn copy-btn"
-                        onClick={() => copyText(item.standard)}
-                      >
-                        <AtIcon value="copy" />
-                      </View>
-
-                      <View
-                        className={`action-btn favorite-btn ${item.favorite ? 'active' : ''}`}
-                        onClick={() => toggleFavorite(item.id)}
-                      >
-                        <AtIcon value="heart" />
-                      </View>
-
-                      <View
-                        className="action-btn delete-btn"
-                        onClick={() => deleteItem(item.id)}
-                      >
-                        <AtIcon value="trash" />
-                      </View>
-                    </View>
-
-                    <Text className="item-time">
-                      {formatTime(item.timestamp)}
-                    </Text>
-                  </View>
-
-                  <View className="item-content">
-                    <Text className="original-text">{item.original}</Text>
-
-                    <View className="translation-results">
-                      <View className="translation-item">
-                        <Text className="translation-label">
-                          <Text className="label-icon standard">📖</Text>
-                          标准翻译
-                        </Text>
-                        <Text className="translation-text standard">
-                          {item.standard}
-                        </Text>
-                      </View>
-
-                      <View className="translation-item">
-                        <Text className="translation-label">
-                          <Text className="label-icon colloquial">💬</Text>
-                          口语表达
-                        </Text>
-                        <Text className="translation-text colloquial">
-                          {item.colloquial}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  <View className="item-footer">
-                    <View className="footer-info">
-                      <View className="info-item">
-                        <AtIcon value="tag" className="info-icon" />
-                        <Text>{item.tags.join(', ')}</Text>
-                      </View>
-                    </View>
-
-                    <View className="footer-actions">
-                      <View
-                        className="footer-btn reuse-btn"
-                        onClick={() => retranslate(item.original)}
-                      >
-                        <AtIcon value="reload" />
-                        <Text>重新翻译</Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-
-                {/* 滑动删除 */}
-                <View className="swipe-actions">
-                  <View
-                    className="swipe-btn"
-                    onClick={() => deleteItem(item.id)}
-                  >
-                    <AtIcon value="trash" />
-                    <Text>删除</Text>
-                  </View>
-                </View>
-              </View>
-            ))}
-
-            {/* 加载更多 */}
-            {hasMore && (
-              <View className="loading-more">
-                <AtIcon value="loading-3" className="loading-icon" />
-                <Text className="loading-text">加载更多...</Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* 批量操作栏 */}
-        <View className={`batch-actions ${showBatchActions ? 'show' : ''}`}>
-          <Text className="selected-count">
-            已选择 {selectedItems.length} 项
+      {/* 内容区域 */}
+      {allItems.length === 0 ? (
+        <View className="empty-state">
+          <AtIcon className="empty-icon" value="clock" size="48" />
+          <Text className="empty-text">
+            {currentFilter === 'favorite' ? '还没有收藏记录' : '还没有翻译记录'}
           </Text>
-
-          <View className="batch-btn export-btn" onClick={batchExport}>
-            <AtIcon value="download" />
-            <Text>导出</Text>
-          </View>
-
-          <View className="batch-btn delete-btn" onClick={batchDelete}>
-            <AtIcon value="trash" />
-            <Text>删除</Text>
-          </View>
-
-          <View className="batch-btn" onClick={clearSelection}>
-            <AtIcon value="close" />
-          </View>
         </View>
-      </View>
+      ) : (
+        <ScrollView
+          className="scroll-container"
+          scrollY
+          lowerThreshold={50}
+          onScrollToLower={handleScrollToLower}
+        >
+          {sortedDateKeys.map(dateKey => (
+            <View key={dateKey} className="date-group">
+              <Text className="date-title">{dateKey}</Text>
+              <View className="history-list">
+                {groupedItems[dateKey].map(item => (
+                  <HistoryCard
+                    key={item.id}
+                    item={item}
+                    onToggleFavorite={handleToggleFavorite}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </View>
+            </View>
+          ))}
 
-      {/* 删除确认弹窗 */}
-      <AtModal isOpened={showDeleteModal}>
-        <AtModalHeader>确认删除</AtModalHeader>
-        <AtModalContent>
-          确定要删除这条翻译记录吗？删除后无法恢复。
-        </AtModalContent>
-        <AtModalAction>
-          <AtButton onClick={() => setShowDeleteModal(false)}>取消</AtButton>
-          <AtButton type="primary" onClick={confirmDelete}>
-            确认删除
-          </AtButton>
-        </AtModalAction>
-      </AtModal>
+          {/* 加载更多状态 */}
+          {allItems.length > 0 && (
+            <View className="load-more">
+              {isFetchingNextPage ? (
+                <AtLoadMore status="loading" />
+              ) : hasNextPage ? (
+                <Text className="loading-text">上拉加载更多</Text>
+              ) : (
+                <Text className="no-more-text">没有更多了</Text>
+              )}
+            </View>
+          )}
+        </ScrollView>
+      )}
     </View>
   )
 }
 
-export default TranslateHistoryPage
+export default TranslateHistory

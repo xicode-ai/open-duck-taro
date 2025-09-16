@@ -1,23 +1,96 @@
-/* eslint-disable no-undef */
 import { http, HttpResponse, delay } from 'msw'
 import type { ExtendedFormData, TranslateParams } from '../types'
 
 // Mock翻译历史
 interface TranslateHistoryItem {
   id: string
-  originalText: string
-  translatedText: string
-  from: string
-  to: string
-  mode: string
+  sourceText: string
+  standardTranslation: string
+  colloquialTranslation: string
+  colloquialNotes: string
   timestamp: string
-  pronunciation?: string | null
-  audioUrl: string
-  alternativeTranslations: string[]
-  examples: Array<{ original: string; translated: string }>
+  sourceLanguage: 'zh' | 'en'
+  targetLanguage: 'zh' | 'en'
+  isFavorited?: boolean
+  favoritedAt?: string
+  comparisonNotes?: Array<{
+    id: string
+    point: string
+    standard: string
+    colloquial: string
+    explanation: string
+  }>
+  relatedPhrases?: Array<{
+    id: string
+    chinese: string
+    english: string
+    pinyin?: string
+  }>
 }
 
-const translateHistory: TranslateHistoryItem[] = []
+const translateHistory: TranslateHistoryItem[] = [
+  {
+    id: 'mock-1',
+    sourceText: '你好，很高兴见到你！',
+    standardTranslation: 'Hello, nice to meet you.',
+    colloquialTranslation: 'Hey there! Great to meet you!',
+    colloquialNotes:
+      '• "Hey there" 比 "Hello" 更随意亲切\n• "Great to meet you" 比 "nice to meet you" 更热情',
+    timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5分钟前
+    sourceLanguage: 'zh',
+    targetLanguage: 'en',
+    isFavorited: true,
+    favoritedAt: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'mock-2',
+    sourceText: 'I want to grab a latte from the coffee shop.',
+    standardTranslation: '我想去咖啡店买一杯拿铁。',
+    colloquialTranslation: '我想从咖啡店来一杯拿铁。',
+    colloquialNotes: '• "来一杯" 是更地道的中文表达，"买一杯" 稍显生硬',
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2小时前
+    sourceLanguage: 'en',
+    targetLanguage: 'zh',
+    isFavorited: false,
+  },
+  {
+    id: 'mock-3',
+    sourceText: '今天天气真不错！',
+    standardTranslation: "Today's weather is really nice!",
+    colloquialTranslation: 'What a beautiful day!',
+    colloquialNotes:
+      '• "What a beautiful day!" 比 "Today\'s weather is really nice!" 更自然简洁',
+    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 昨天
+    sourceLanguage: 'zh',
+    targetLanguage: 'en',
+    isFavorited: true,
+    favoritedAt: new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'mock-4',
+    sourceText: 'How much does this cost?',
+    standardTranslation: '这个多少钱？',
+    colloquialTranslation: '这个多少钱啊？',
+    colloquialNotes: '• 加上语气词"啊"让表达更自然亲切',
+    timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(), // 前天
+    sourceLanguage: 'en',
+    targetLanguage: 'zh',
+    isFavorited: false,
+  },
+  {
+    id: 'mock-5',
+    sourceText: '谢谢你的帮助！',
+    standardTranslation: 'Thank you for your help!',
+    colloquialTranslation: 'Thanks so much for helping me out!',
+    colloquialNotes:
+      '• "Thanks so much" 比 "Thank you" 更热情\n• "helping me out" 比 "your help" 更口语化',
+    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3天前
+    sourceLanguage: 'zh',
+    targetLanguage: 'en',
+    isFavorited: true,
+    favoritedAt: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+  },
+]
 
 export const translateHandlers = [
   // 文本翻译
@@ -250,14 +323,26 @@ export const translateHandlers = [
       audioUrl: `/mock-audio/translation-${Date.now()}.mp3`,
     }
 
-    // 添加到历史（简化版）
-    translateHistory.unshift({
-      ...result,
-      translatedText: standardTranslation,
-      pronunciation: body.to === 'en' ? '/prəˌnʌnsiˈeɪʃən/' : null,
-      alternativeTranslations: [standardTranslation, colloquialTranslation],
-      examples: [],
-    })
+    // 添加到历史
+    const historyItem: TranslateHistoryItem = {
+      id: result.id,
+      sourceText: body.text,
+      standardTranslation,
+      colloquialTranslation,
+      colloquialNotes: comparisonNotes
+        .map(note => `• "${note.colloquial}" ${note.explanation}`)
+        .join('\n'),
+      timestamp: new Date().toISOString(),
+      sourceLanguage: (body.from || 'zh') as 'zh' | 'en',
+      targetLanguage: (body.to || (body.from === 'zh' ? 'en' : 'zh')) as
+        | 'zh'
+        | 'en',
+      isFavorited: false,
+      comparisonNotes: comparisonNotes.length > 0 ? comparisonNotes : undefined,
+      relatedPhrases: relatedPhrases.length > 0 ? relatedPhrases : undefined,
+    }
+
+    translateHistory.unshift(historyItem)
 
     return HttpResponse.json({
       code: 200,
@@ -272,17 +357,26 @@ export const translateHandlers = [
     const url = new URL(request.url)
     const page = parseInt(url.searchParams.get('page') || '1')
     const pageSize = parseInt(url.searchParams.get('pageSize') || '20')
+    const type = url.searchParams.get('type') // 'all' | 'favorite'
+
+    // 过滤数据
+    let filteredHistory = [...translateHistory]
+    if (type === 'favorite') {
+      filteredHistory = filteredHistory.filter(item => item.isFavorited)
+    }
 
     const start = (page - 1) * pageSize
     const end = start + pageSize
+    const paginatedList = filteredHistory.slice(start, end)
 
     return HttpResponse.json({
       code: 200,
       data: {
-        list: translateHistory.slice(start, end),
-        total: translateHistory.length,
+        list: paginatedList,
+        total: filteredHistory.length,
         page,
         pageSize,
+        hasMore: end < filteredHistory.length,
       },
       message: 'success',
     })
@@ -307,44 +401,96 @@ export const translateHandlers = [
   ),
 
   // 清空翻译历史
-  http.delete('/api/translate/history', async () => {
+  http.delete('/api/translate/history', async ({ request }) => {
     await delay(300)
-    translateHistory.length = 0
+    const url = new URL(request.url)
+    const type = url.searchParams.get('type') // 'history' | null
+
+    if (type === 'history') {
+      // 只清空历史记录，保留收藏
+      for (let i = translateHistory.length - 1; i >= 0; i--) {
+        if (!translateHistory[i].isFavorited) {
+          translateHistory.splice(i, 1)
+        }
+      }
+      return HttpResponse.json({
+        code: 200,
+        message: '历史记录已清空',
+      })
+    } else {
+      // 清空所有记录（向后兼容）
+      translateHistory.length = 0
+      return HttpResponse.json({
+        code: 200,
+        message: '历史已清空',
+      })
+    }
+  }),
+
+  // 清空收藏记录
+  http.delete('/api/translate/favorites', async () => {
+    await delay(300)
+
+    // 将所有收藏的记录取消收藏
+    translateHistory.forEach(item => {
+      if (item.isFavorited) {
+        item.isFavorited = false
+        delete item.favoritedAt
+      }
+    })
 
     return HttpResponse.json({
       code: 200,
-      message: '历史已清空',
+      message: '收藏记录已清空',
     })
   }),
 
-  // 收藏翻译
-  http.post('/api/translate/favorite', async ({ request }) => {
+  // 切换收藏状态
+  http.post('/api/translate/favorite/toggle', async ({ request }) => {
     await delay(300)
-    const body = (await request.json()) as { translationId: string }
+    const body = (await request.json()) as { id: string; isFavorited: boolean }
+
+    // 更新历史记录中的收藏状态
+    const item = translateHistory.find(h => h.id === body.id)
+    if (item) {
+      item.isFavorited = body.isFavorited
+      if (body.isFavorited) {
+        item.favoritedAt = new Date().toISOString()
+      } else {
+        delete item.favoritedAt
+      }
+    }
 
     return HttpResponse.json({
       code: 200,
       data: {
-        favorited: true,
-        translationId: body.translationId,
+        id: body.id,
+        isFavorited: body.isFavorited,
       },
-      message: '已收藏',
+      message: body.isFavorited ? '已收藏' : '已取消收藏',
     })
   }),
 
   // 获取收藏列表
-  http.get('/api/translate/favorites', async () => {
+  http.get('/api/translate/favorites', async ({ request }) => {
     await delay(400)
+    const url = new URL(request.url)
+    const page = parseInt(url.searchParams.get('page') || '1')
+    const pageSize = parseInt(url.searchParams.get('pageSize') || '20')
 
-    const favorites = translateHistory.slice(0, 5).map(item => ({
-      ...item,
-      favorited: true,
-      favoritedAt: new Date().toISOString(),
-    }))
+    const favorites = translateHistory.filter(item => item.isFavorited)
+    const start = (page - 1) * pageSize
+    const end = start + pageSize
 
     return HttpResponse.json({
       code: 200,
-      data: favorites,
+      data: {
+        list: favorites.slice(start, end),
+        total: favorites.length,
+        page,
+        pageSize,
+        hasMore: end < favorites.length,
+      },
       message: 'success',
     })
   }),

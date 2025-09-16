@@ -333,18 +333,36 @@ export const mockPhotoStories: PhotoStory[] = [
   {
     id: '1',
     imageUrl: 'https://img.icons8.com/color/96/000000/camera.png',
-    story:
+    title: 'Mountain Sunset',
+    titleCn: '山间日落',
+    standardStory:
       "This is a beautiful sunset over the mountains. The golden light creates a magical atmosphere that makes you feel peaceful and grateful for nature's beauty.",
-    audioUrl: 'mock-audio-story-1',
-    createdAt: Date.now() - 86400000, // 1天前
+    standardStoryCn:
+      '这是山间美丽的日落。金色的光芒创造了一种神奇的氛围，让你感到平静并对大自然的美丽心存感激。',
+    nativeStory:
+      'Wow, check out this amazing sunset over the mountains! The golden light is just incredible - it makes everything look so peaceful and magical.',
+    nativeStoryCn:
+      '哇，看看这山间惊人的日落！金色的光芒真是太不可思议了——它让一切看起来如此平静和神奇。',
+    sentences: [],
+    createdAt: new Date(Date.now() - 86400000).toISOString(), // 1天前
+    status: 'completed',
   },
   {
     id: '2',
     imageUrl: 'https://img.icons8.com/color/96/000000/camera.png',
-    story:
+    title: 'Cozy Coffee Shop',
+    titleCn: '温馨咖啡店',
+    standardStory:
       "A cozy coffee shop with warm lighting and comfortable seating. It's the perfect place to relax, read a book, or catch up with friends over a cup of coffee.",
-    audioUrl: 'mock-audio-story-2',
-    createdAt: Date.now() - 172800000, // 2天前
+    standardStoryCn:
+      '一家温馨的咖啡店，有着温暖的灯光和舒适的座椅。这是放松、读书或和朋友喝咖啡聊天的完美场所。',
+    nativeStory:
+      "This coffee shop is so cozy! Love the warm lighting and comfy seats. It's my go-to spot for chilling with a book or catching up with friends.",
+    nativeStoryCn:
+      '这家咖啡店太舒适了！喜欢温暖的灯光和舒适的座椅。这是我看书放松或和朋友聚会的首选地点。',
+    sentences: [],
+    createdAt: new Date(Date.now() - 172800000).toISOString(), // 2天前
+    status: 'completed',
   },
 ]
 

@@ -30,6 +30,7 @@ export default [
         fetch: 'readonly',
         File: 'readonly',
         FormData: 'readonly',
+        URL: 'readonly',
         URLSearchParams: 'readonly',
         RequestInit: 'readonly',
         // Node.js 环境
@@ -51,6 +52,7 @@ export default [
       ...reactHooks.configs.recommended.rules,
       'react/jsx-uses-react': 'off',
       'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off', // 使用 TypeScript 代替 prop-types
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {

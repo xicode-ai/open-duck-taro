@@ -1,5 +1,5 @@
 export default {
-  navigationBarTitleText: '拍照短文',
+  navigationBarTitleText: '拍照历史',
   navigationStyle: 'custom',
   enablePullDownRefresh: false,
 }

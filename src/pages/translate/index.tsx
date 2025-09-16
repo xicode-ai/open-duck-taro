@@ -2,15 +2,21 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { View, Text, Textarea, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
+import { useQueryClient } from '@tanstack/react-query'
 import CustomNavBar from '../../components/common/CustomNavBar'
 import CopyIcon from '../../components/common/CopyIcon'
 import { useUserStore } from '../../stores/user'
 import { translateApi } from '../../services/api'
+import {
+  TRANSLATE_HISTORY_KEYS,
+  useToggleFavorite,
+} from '@/hooks/useTranslateHistory'
 import type { TranslationResult } from '@/types'
 import './index.scss'
 
 const TranslatePage = () => {
   const { updateDailyUsage, checkUsage } = useUserStore()
+  const queryClient = useQueryClient()
 
   // 状态管理
   const [inputText, setInputText] = useState('')
@@ -19,7 +25,11 @@ const TranslatePage = () => {
   const [translationResult, setTranslationResult] =
     useState<TranslationResult | null>(null)
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
+  const [isFavorited, setIsFavorited] = useState(false)
   const audioContextRef = useRef<Taro.InnerAudioContext | null>(null)
+
+  // 使用收藏Hook
+  const toggleFavoriteMutation = useToggleFavorite()
 
   const recordingTimer = useRef<NodeJS.Timeout | null>(null)
 
@@ -43,12 +53,14 @@ const TranslatePage = () => {
     setSourceLanguage(sourceLanguage === 'zh' ? 'en' : 'zh')
     setInputText('')
     setTranslationResult(null)
+    setIsFavorited(false)
   }
 
   // 清空输入内容
   const clearInput = () => {
     setInputText('')
     setTranslationResult(null)
+    setIsFavorited(false)
   }
 
   // 翻译功能 - 调用API
@@ -90,6 +102,13 @@ const TranslatePage = () => {
 
       if (response.code === 200 && response.data) {
         setTranslationResult(response.data)
+        // 重置收藏状态为false（新的翻译结果默认未收藏）
+        setIsFavorited(false)
+
+        // 使翻译历史缓存失效，触发重新获取
+        queryClient.invalidateQueries({
+          queryKey: TRANSLATE_HISTORY_KEYS.lists(),
+        })
       } else {
         throw new Error(response.message || '翻译失败')
       }
@@ -100,7 +119,7 @@ const TranslatePage = () => {
         icon: 'error',
       })
     }
-  }, [inputText, sourceLanguage, updateDailyUsage, checkUsage])
+  }, [inputText, sourceLanguage, updateDailyUsage, checkUsage, queryClient])
 
   // 语音输入
   const handleVoiceInput = async () => {
@@ -322,6 +341,31 @@ const TranslatePage = () => {
     }
   }
 
+  // 切换收藏状态
+  const handleToggleFavorite = useCallback(async () => {
+    if (!translationResult?.id) {
+      Taro.showToast({
+        title: '翻译结果无效',
+        icon: 'none',
+      })
+      return
+    }
+
+    const newFavoriteStatus = !isFavorited
+    try {
+      setIsFavorited(newFavoriteStatus) // 乐观更新UI
+
+      await toggleFavoriteMutation.mutateAsync({
+        id: translationResult.id,
+        isFavorited: newFavoriteStatus,
+      })
+    } catch (error) {
+      // 失败时回滚状态
+      setIsFavorited(!newFavoriteStatus)
+      console.error('切换收藏状态失败:', error)
+    }
+  }, [translationResult?.id, isFavorited, toggleFavoriteMutation])
+
   return (
     <View className="translate-page">
       {/* 导航栏 */}
@@ -462,8 +506,15 @@ const TranslatePage = () => {
                 >
                   <CopyIcon size={16} color="#666" />
                 </View>
-                <View className="footer-action favorite-action">
-                  <AtIcon value="star-2" size="18" color="#FFD700" />
+                <View
+                  className="footer-action favorite-action"
+                  onClick={handleToggleFavorite}
+                >
+                  <AtIcon
+                    value={isFavorited ? 'star-2' : 'star'}
+                    size="18"
+                    color={isFavorited ? '#FFD700' : '#cccccc'}
+                  />
                 </View>
               </View>
             </View>
@@ -533,8 +584,15 @@ const TranslatePage = () => {
                 >
                   <CopyIcon size={16} color="#666" />
                 </View>
-                <View className="footer-action favorite-action">
-                  <AtIcon value="star-2" size="18" color="#FFD700" />
+                <View
+                  className="footer-action favorite-action"
+                  onClick={handleToggleFavorite}
+                >
+                  <AtIcon
+                    value={isFavorited ? 'star-2' : 'star'}
+                    size="18"
+                    color={isFavorited ? '#FFD700' : '#cccccc'}
+                  />
                 </View>
               </View>
             </View>

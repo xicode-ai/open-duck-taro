@@ -105,13 +105,116 @@ export interface TranslationResult {
   audioUrl?: string
 }
 
+// 翻译历史记录类型
+export interface TranslateHistoryItem {
+  id: string
+  sourceText: string
+  standardTranslation: string
+  colloquialTranslation: string
+  colloquialNotes: string
+  timestamp: string
+  sourceLanguage: 'zh' | 'en'
+  targetLanguage: 'zh' | 'en'
+  isFavorited?: boolean
+  favoritedAt?: string
+  comparisonNotes?: Array<{
+    id: string
+    point: string
+    standard: string
+    colloquial: string
+    explanation: string
+  }>
+  relatedPhrases?: Array<{
+    id: string
+    chinese: string
+    english: string
+    pinyin?: string
+  }>
+}
+
+// 翻译历史分页响应
+export interface TranslateHistoryResponse {
+  list: TranslateHistoryItem[]
+  total: number
+  page: number
+  pageSize: number
+  hasMore?: boolean
+}
+
 // 拍照短文相关类型
 export interface PhotoStory {
   id: string
   imageUrl: string
-  story: string
+  imageBase64?: string
+  title: string
+  titleCn: string
+  standardStory: string // 标准短文
+  standardStoryCn: string // 标准短文中文翻译
+  nativeStory: string // 地道短文
+  nativeStoryCn: string // 地道短文中文翻译
+  sentences: StoryPractice[] // 练习句子列表
+  createdAt: string
+  score?: PhotoStoryScore
+  status: 'generating' | 'generated' | 'practicing' | 'completed'
+  isFavorite?: boolean // 是否收藏
+  favoritedAt?: string // 收藏时间
+}
+
+export interface StoryPractice {
+  id: string
+  sentence: string
+  sentenceCn: string
   audioUrl?: string
-  createdAt: number
+  score?: number
+  practiced: boolean
+  order: number
+}
+
+export interface PhotoStoryScore {
+  overall: number // 总分
+  grade: string // 等级 A+, A, B+, B, C+, C
+  accuracy: number // 发音准确度
+  fluency: number // 流畅度
+  speed: number // 语速
+  completeness: number // 完整度
+  feedback: string // 反馈建议
+}
+
+export interface GenerateStoryRequest {
+  imageBase64: string
+  userId?: string
+}
+
+export interface GenerateStoryResponse {
+  story: PhotoStory
+}
+
+export interface SpeechScoreRequest {
+  audioBase64: string
+  sentenceId: string
+  expectedText: string
+}
+
+export interface SpeechScoreResponse {
+  score: PhotoStoryScore
+  detailScores: {
+    words: Array<{
+      word: string
+      score: number
+      feedback?: string
+    }>
+  }
+}
+
+export interface PhotoStoryHistoryParams {
+  page: number
+  pageSize: number
+}
+
+export interface PhotoStoryHistoryResponse {
+  items: PhotoStory[]
+  hasMore: boolean
+  total: number
 }
 
 // API 响应类型

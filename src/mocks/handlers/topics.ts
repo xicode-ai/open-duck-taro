@@ -1069,7 +1069,6 @@ export const topicsHandlers = [
   // 获取热门话题列表
   http.get('/api/topics/hot', async ({ request }) => {
     await delay(500)
-    // eslint-disable-next-line no-undef
     const url = new URL(request.url)
     const category = url.searchParams.get('category')
     const difficulty = url.searchParams.get('difficulty')
@@ -1207,7 +1206,6 @@ export const topicsHandlers = [
   // 获取话题列表（兼容旧接口）
   http.get('/api/topics', async ({ request }) => {
     await delay(500)
-    // eslint-disable-next-line no-undef
     const url = new URL(request.url)
     const category = url.searchParams.get('category')
     const difficulty = url.searchParams.get('difficulty')

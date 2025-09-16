@@ -5,6 +5,8 @@ export { useTopicStore } from './topics'
 export { useVocabularyStore } from './vocabulary'
 export { useSettingsStore } from './settings'
 export { useTopicChatStore } from './topicChat'
+export { useTranslateHistoryStore } from './translateHistory'
+export { usePhotoStoryStore } from './photoStory'
 
 // 导出类型
 export type { UserState } from './user'

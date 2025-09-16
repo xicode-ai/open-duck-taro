@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import { http, HttpResponse, delay } from 'msw'
 import type { BookParams, WordParams } from '../types'
 

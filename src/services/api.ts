@@ -4,6 +4,7 @@ import type {
   Topic,
   Vocabulary,
   TranslationResult,
+  TranslateHistoryItem,
   PhotoStory,
   TopicDialogueDetail,
   RecordingResult,
@@ -307,15 +308,66 @@ export const translateApi = {
       { showLoading: true }
     ),
 
-  // 获取翻译历史
-  getTranslationHistory: () =>
-    httpClient.get<TranslationResult[]>('/api/translate/history', {
-      cache: true,
-    }),
+  // 获取翻译历史（分页）
+  getTranslationHistory: (page = 1, pageSize = 20, type = 'all') => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+      type,
+    })
+    return httpClient.get<{
+      list: TranslateHistoryItem[]
+      total: number
+      page: number
+      pageSize: number
+      hasMore?: boolean
+    }>(`/api/translate/history?${params.toString()}`, {
+      cache: false,
+    })
+  },
+
+  // 获取收藏历史
+  getFavoriteHistory: (page = 1, pageSize = 20) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+    })
+    return httpClient.get<{
+      list: TranslateHistoryItem[]
+      total: number
+      page: number
+      pageSize: number
+      hasMore?: boolean
+    }>(`/api/translate/favorites?${params.toString()}`, {
+      cache: false,
+    })
+  },
+
+  // 切换收藏状态
+  toggleFavorite: (id: string, isFavorited: boolean) =>
+    httpClient.post<{ id: string; isFavorited: boolean }>(
+      '/api/translate/favorite/toggle',
+      { id, isFavorited },
+      { showLoading: false }
+    ),
 
   // 删除翻译历史
   deleteTranslationHistory: (id: string) =>
     httpClient.delete(`/api/translate/history/${id}`, { showLoading: true }),
+
+  // 清空翻译历史
+  clearTranslationHistory: () =>
+    httpClient.delete('/api/translate/history', { showLoading: true }),
+
+  // 清空翻译历史（只清空历史，保留收藏）
+  clearTranslationHistoryOnly: () =>
+    httpClient.delete('/api/translate/history?type=history', {
+      showLoading: true,
+    }),
+
+  // 清空收藏记录
+  clearFavorites: () =>
+    httpClient.delete('/api/translate/favorites', { showLoading: true }),
 }
 
 // 拍照短文相关API

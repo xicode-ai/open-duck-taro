@@ -9,6 +9,7 @@ export default {
     'pages/topic-chat/index',
     'pages/translate-history/index',
     'pages/photo-story/index',
+    'pages/photo-story-history/index',
     'pages/vocabulary-study/index',
     'pages/progress/index',
     'pages/membership/index',
