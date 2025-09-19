@@ -1,646 +1,411 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { View, Text } from '@tarojs/components'
+import { useRouter } from '@tarojs/taro'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
-import CustomNavBar from '../../components/common/CustomNavBar'
-import { useUserStore } from '../../stores/user'
+import CustomNavBar from '@/components/common/CustomNavBar'
+import IconFont from '@/components/IconFont'
+import Loading from '@/components/common/Loading'
+import AnimatedNumber from '@/components/common/AnimatedNumber'
+import {
+  useStudyWordsByStage,
+  useDailyProgress,
+  useSubmitStudyRecord,
+  useToggleWordFavorite,
+} from '@/hooks/useApiQueries'
+import { useVocabularyStudyStore } from '@/stores'
+import type { WordKnowledgeLevel } from '@/types'
 import './index.scss'
 
-interface Vocabulary {
-  id: string
-  word: string
-  pronunciation: {
-    us: string
-    uk: string
-  }
-  meaning: string
-  partOfSpeech: string
-  example: {
-    english: string
-    chinese: string
-  }
-  level: string
-}
-
-interface StudySession {
-  mode: 'new' | 'review' | 'test' | 'challenge'
-  level: string
-  wordCount: number
-  correctCount: number
-  incorrectCount: number
-  startTime: number
-  currentIndex: number
-  words: Vocabulary[]
-}
-
-const VocabularyStudyPage = () => {
-  const { updateDailyUsage } = useUserStore()
-  // const { updateWordProgress } = useVocabularyStore() // 功能暂未实现
-
-  // 状态管理
-  const [session, setSession] = useState<StudySession | null>(null)
-  const [currentWord, setCurrentWord] = useState<Vocabulary | null>(null)
-  const [showMeaning, setShowMeaning] = useState(true)
-  const [selectedOption, setSelectedOption] = useState<number | null>(null)
-  const [showAnswer, setShowAnswer] = useState(false)
-  const [isCompleted, setIsCompleted] = useState(false)
+const VocabularyStudy = () => {
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
-  const [timeRemaining, setTimeRemaining] = useState(0)
-  const [isPaused, setIsPaused] = useState(false)
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  // 从路由参数获取学习阶段
+  const stage = router.params.stage || 'beginner'
+  const stageName = router.params.stageName || '萌芽期'
 
-  // 模拟单词数据
-  const mockWords: Vocabulary[] = useMemo(
-    () => [
-      {
-        id: '1',
-        word: 'immense',
-        pronunciation: {
-          us: '/ɪˈmens/',
-          uk: '/ɪˈmens/',
-        },
-        meaning: 'adj. 极大的，巨大的',
-        partOfSpeech: 'adjective',
-        example: {
-          english: 'He inherited an immense fortune.',
-          chinese: '他继承了巨额财富。',
-        },
-        level: 'university',
-      },
-      {
-        id: '2',
-        word: 'brilliant',
-        pronunciation: {
-          us: '/ˈbrɪljənt/',
-          uk: '/ˈbrɪljənt/',
-        },
-        meaning: 'adj. 杰出的，聪明的',
-        partOfSpeech: 'adjective',
-        example: {
-          english: 'She gave a brilliant performance.',
-          chinese: '她的表演非常精彩。',
-        },
-        level: 'high',
-      },
-      {
-        id: '3',
-        word: 'fascinating',
-        pronunciation: {
-          us: '/ˈfæsɪneɪtɪŋ/',
-          uk: '/ˈfæsɪneɪtɪŋ/',
-        },
-        meaning: 'adj. 迷人的，极有趣的',
-        partOfSpeech: 'adjective',
-        example: {
-          english: 'The documentary was absolutely fascinating.',
-          chinese: '这部纪录片非常引人入胜。',
-        },
-        level: 'university',
-      },
-    ],
-    []
-  )
+  // React Query hooks
+  const { data: stageWordsData, isLoading: isLoadingWords } =
+    useStudyWordsByStage(stage)
+  const { data: dailyProgress, isLoading: isLoadingProgress } =
+    useDailyProgress()
+  const submitStudyRecord = useSubmitStudyRecord()
+  const toggleWordFavorite = useToggleWordFavorite()
+
+  // Zustand store
+  const {
+    currentWord,
+    currentWordIndex,
+    dailyProgress: storedProgress,
+    setCurrentWord,
+    setCurrentWordIndex,
+    setTotalWords,
+    setDailyProgress,
+    submitStudyRecord: storeSubmitStudyRecord,
+    toggleWordFavorite: storeToggleWordFavorite,
+    startStudySession,
+    isCurrentWordFavorited,
+  } = useVocabularyStudyStore()
 
   // 初始化学习会话
-  const initializeSession = useCallback(
-    (mode: StudySession['mode'], level: string, wordCount: number) => {
-      const newSession: StudySession = {
-        mode,
-        level,
-        wordCount,
-        correctCount: 0,
-        incorrectCount: 0,
-        startTime: Date.now(),
-        currentIndex: 0,
-        words: mockWords.slice(0, wordCount),
-      }
-
-      setSession(newSession)
-      setCurrentWord(newSession.words[0])
-
-      // 挑战模式设置计时器
-      if (mode === 'challenge') {
-        setTimeRemaining(wordCount * 10) // 每个单词10秒
-      }
-
-      // 测试模式隐藏词义
-      if (mode === 'test') {
-        setShowMeaning(false)
-      }
-    },
-    [mockWords]
-  )
-
-  // 页面初始化
   useEffect(() => {
-    const instance = Taro.getCurrentInstance()
-    const { mode, level, wordCount } = instance.router?.params || {}
-
-    if (mode && level && wordCount) {
-      initializeSession(
-        mode as StudySession['mode'],
-        level,
-        parseInt(wordCount)
-      )
-    } else {
-      Taro.navigateBack()
+    if (stage) {
+      startStudySession(stage)
     }
-  }, [initializeSession])
+  }, [stage, startStudySession])
 
-  // 计时器
+  // 加载阶段单词数据
   useEffect(() => {
-    if (
-      session?.mode === 'challenge' &&
-      timeRemaining > 0 &&
-      !isPaused &&
-      !isCompleted
-    ) {
-      timerRef.current = setTimeout(() => {
-        setTimeRemaining(timeRemaining - 1)
-      }, 1000)
-    }
-
-    if (timeRemaining === 0 && session?.mode === 'challenge') {
-      completeSession()
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current)
+    if (stageWordsData?.words && stageWordsData.words.length > 0) {
+      setTotalWords(stageWordsData.words.length)
+      // 设置第一个单词为当前单词
+      if (currentWordIndex < stageWordsData.words.length) {
+        setCurrentWord(stageWordsData.words[currentWordIndex])
       }
     }
-  }, [timeRemaining, isPaused, isCompleted, session])
+  }, [stageWordsData, currentWordIndex, setTotalWords, setCurrentWord])
 
-  // 播放音频
-  const playAudio = (type: 'us' | 'uk' | 'sentence') => {
-    const audioId = `${currentWord?.id}-${type}`
+  // 加载今日进度数据
+  useEffect(() => {
+    if (dailyProgress) {
+      setDailyProgress(dailyProgress)
+    }
+  }, [dailyProgress, setDailyProgress])
 
-    if (playingAudio === audioId) {
-      setPlayingAudio(null)
-      Taro.stopBackgroundAudio()
+  // 切换到下一个单词
+  const moveToNextWord = useCallback(() => {
+    if (!stageWordsData?.words) return
+
+    const nextIndex = currentWordIndex + 1
+    if (nextIndex < stageWordsData.words.length) {
+      setCurrentWordIndex(nextIndex)
+      setCurrentWord(stageWordsData.words[nextIndex])
     } else {
-      setPlayingAudio(audioId)
-
-      // 模拟音频播放
-      setTimeout(() => {
-        setPlayingAudio(null)
-      }, 2000)
-
-      Taro.showToast({
-        title: '播放中',
-        icon: 'none',
+      // 学习完成
+      Taro.showModal({
+        title: '恭喜！',
+        content: '本阶段单词学习完成！',
+        showCancel: false,
+        success: () => {
+          Taro.navigateBack()
+        },
       })
     }
-  }
+  }, [stageWordsData, currentWordIndex, setCurrentWordIndex, setCurrentWord])
 
-  // 处理答案选择
-  const handleAnswer = (action: 'know' | 'unknown' | 'hard') => {
-    if (!session || !currentWord) return
+  // 处理认识程度按钮点击
+  const handleKnowledgeLevel = useCallback(
+    async (level: WordKnowledgeLevel) => {
+      if (!currentWord || isSubmitting) return
 
-    const isCorrect = action === 'know'
+      setIsSubmitting(true)
 
-    // 更新会话统计
-    setSession(prev =>
-      prev
-        ? {
-            ...prev,
-            correctCount: prev.correctCount + (isCorrect ? 1 : 0),
-            incorrectCount: prev.incorrectCount + (isCorrect ? 0 : 1),
-          }
-        : null
-    )
+      try {
+        // 记录反应时间（模拟）
+        const responseTime = Math.floor(Math.random() * 3000) + 1000
 
-    // 更新单词学习进度
-    // updateWordProgress(currentWord.id, action) // 功能暂未实现
-    updateDailyUsage('vocabulary')
+        // 提交到服务器
+        await submitStudyRecord.mutateAsync({
+          wordId: currentWord.id,
+          knowledgeLevel: level,
+          stage: stage,
+          responseTime,
+        })
 
-    // 下一个单词或完成
-    nextWord()
-  }
+        // 更新本地状态
+        storeSubmitStudyRecord(currentWord.id, level, responseTime)
 
-  // 下一个单词
-  const nextWord = () => {
-    if (!session) return
+        // 显示反馈
+        const messages = {
+          unknown: '继续努力！多练习会掌握的',
+          vague: '还不错！继续巩固一下',
+          known: '很棒！掌握了一个新单词',
+        }
 
-    const nextIndex = session.currentIndex + 1
+        Taro.showToast({
+          title: messages[level],
+          icon: 'success',
+          duration: 1500,
+        })
 
-    if (nextIndex >= session.words.length) {
-      completeSession()
-    } else {
-      setSession(prev => (prev ? { ...prev, currentIndex: nextIndex } : null))
-      setCurrentWord(session.words[nextIndex])
-      setSelectedOption(null)
-      setShowAnswer(false)
-
-      // 重置显示状态
-      if (session.mode !== 'test') {
-        setShowMeaning(true)
+        // 延迟切换到下一个单词
+        setTimeout(() => {
+          moveToNextWord()
+        }, 1500)
+      } catch (error) {
+        console.error('提交学习记录失败:', error)
+        Taro.showToast({
+          title: '提交失败，请重试',
+          icon: 'error',
+        })
+      } finally {
+        setIsSubmitting(false)
       }
+    },
+    [
+      currentWord,
+      stage,
+      submitStudyRecord,
+      storeSubmitStudyRecord,
+      isSubmitting,
+      moveToNextWord,
+    ]
+  )
+
+  // 处理收藏按钮点击
+  const handleToggleFavorite = useCallback(async () => {
+    if (!currentWord) return
+
+    const newFavoriteStatus = !isCurrentWordFavorited()
+
+    try {
+      await toggleWordFavorite.mutateAsync({
+        wordId: currentWord.id,
+        isFavorited: newFavoriteStatus,
+      })
+
+      storeToggleWordFavorite(currentWord.id, newFavoriteStatus)
+
+      Taro.showToast({
+        title: newFavoriteStatus ? '已收藏' : '已取消收藏',
+        icon: 'success',
+      })
+    } catch (error) {
+      console.error('收藏操作失败:', error)
+      Taro.showToast({
+        title: '操作失败，请重试',
+        icon: 'error',
+      })
     }
-  }
+  }, [
+    currentWord,
+    isCurrentWordFavorited,
+    toggleWordFavorite,
+    storeToggleWordFavorite,
+  ])
 
-  // 完成学习会话
-  const completeSession = () => {
-    setIsCompleted(true)
+  // 处理历史按钮点击
+  const handleHistoryClick = useCallback(() => {
+    Taro.navigateTo({
+      url: '/pages/vocabulary-history/index',
+    })
+  }, [])
 
-    if (timerRef.current) {
-      clearTimeout(timerRef.current)
-    }
-  }
+  // 播放音频
+  const handlePlayAudio = useCallback(
+    (audioId: string, _text: string) => {
+      if (playingAudio === audioId) {
+        // 停止播放
+        setPlayingAudio(null)
+        Taro.showToast({
+          title: '已停止播放',
+          icon: 'success',
+        })
+      } else {
+        // 开始播放
+        setPlayingAudio(audioId)
 
-  // 暂停/继续
-  const togglePause = () => {
-    setIsPaused(!isPaused)
-  }
+        // 模拟播放完成
+        setTimeout(() => {
+          setPlayingAudio(null)
+        }, 3000)
 
-  // 重新开始
-  const restartSession = () => {
-    if (session) {
-      setSession(prev =>
-        prev
-          ? {
-              ...prev,
-              currentIndex: 0,
-              correctCount: 0,
-              incorrectCount: 0,
-              startTime: Date.now(),
-            }
-          : null
-      )
-      setCurrentWord(session.words[0])
-      setIsCompleted(false)
-      setSelectedOption(null)
-      setShowAnswer(false)
-
-      if (session.mode === 'challenge') {
-        setTimeRemaining(session.wordCount * 10)
-        setIsPaused(false)
+        Taro.showToast({
+          title: '播放中',
+          icon: 'success',
+        })
       }
+    },
+    [playingAudio]
+  )
+
+  // 获取当前显示的进度数据
+  const displayProgress = storedProgress ||
+    dailyProgress || {
+      date: new Date().toISOString().split('T')[0],
+      studiedWords: 0,
+      masteredWords: 0,
+      continuousDays: 0,
     }
-  }
 
-  // 继续学习
-  const continueLearning = () => {
-    Taro.navigateBack()
-  }
-
-  // 格式化时间
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
-
-  // 获取模式信息
-  const getModeInfo = () => {
-    const modeMap = {
-      new: { title: '学新单词', icon: '📖', desc: '学习新单词，建立词汇基础' },
-      review: { title: '复习巩固', icon: '🔄', desc: '复习已学单词，加深记忆' },
-      test: { title: '单词测试', icon: '✅', desc: '测试掌握程度，查漏补缺' },
-      challenge: {
-        title: '挑战模式',
-        icon: '⚡',
-        desc: '限时挑战，检验学习成果',
-      },
-    }
-    return session ? modeMap[session.mode] : null
-  }
-
-  if (!session || !currentWord) {
+  // 加载状态
+  if (isLoadingWords || isLoadingProgress) {
     return (
       <View className="vocabulary-study-page">
-        <View className="empty-state">
-          <Text className="empty-icon">📚</Text>
-          <Text className="empty-title">加载中...</Text>
-        </View>
+        <CustomNavBar
+          title={`背单词 - ${stageName}`}
+          backgroundColor="#f56c6c"
+        />
+        <Loading />
       </View>
     )
   }
 
-  const modeInfo = getModeInfo()
-  const progress = Math.round(
-    ((session.currentIndex + 1) / session.wordCount) * 100
-  )
-  const timerClass =
-    timeRemaining < 30 ? 'danger' : timeRemaining < 60 ? 'warning' : ''
+  // 无数据状态
+  if (!currentWord) {
+    return (
+      <View className="vocabulary-study-page">
+        <CustomNavBar
+          title={`背单词 - ${stageName}`}
+          backgroundColor="#f56c6c"
+        />
+        <View className="page-content">
+          <View className="empty-state">
+            <Text>暂无单词数据</Text>
+          </View>
+        </View>
+      </View>
+    )
+  }
 
   return (
     <View className="vocabulary-study-page">
-      {/* 导航栏 */}
       <CustomNavBar
-        title={
-          session
-            ? `${session.mode === 'new' ? '学新单词' : session.mode === 'review' ? '复习巩固' : session.mode === 'test' ? '单词测试' : '挑战模式'}`
-            : '单词学习'
-        }
-        backgroundColor="#E91E63"
+        title={`背单词 - ${stageName}`}
+        backgroundColor="linear-gradient(135deg, #ef5350 0%, #e53935 100%)"
         renderRight={
-          session && (
-            <View className="nav-right-btn" onClick={togglePause}>
-              <AtIcon value={isPaused ? 'play' : 'pause'} size="20" />
-            </View>
-          )
+          <View className="nav-right-btn" onClick={handleHistoryClick}>
+            <AtIcon value="clock" size="20" color="#fff" />
+          </View>
         }
       />
-      {/* 学习头部 */}
-      <View className="study-header">
-        <View className="header-content">
-          <View className="mode-info">
-            <View className="mode-icon">
-              <Text>{modeInfo?.icon}</Text>
-            </View>
-            <View className="mode-details">
-              <Text className="mode-title">{modeInfo?.title}</Text>
-              <Text className="mode-desc">{modeInfo?.desc}</Text>
-            </View>
-          </View>
-
-          <View className="study-progress">
-            <View className="progress-info">
-              <Text className="progress-title">学习进度</Text>
-              <Text className="progress-detail">
-                {session.currentIndex + 1} / {session.wordCount}
-              </Text>
-            </View>
-            <View className="progress-stats">
-              <Text className="current-count">{progress}%</Text>
-              <Text className="total-count">已完成</Text>
+      <View className="page-content">
+        {/* Word Card */}
+        <View className="word-card">
+          <View className="word-header">
+            <Text className="word-text">{currentWord.word}</Text>
+            <View
+              className={`favorite-button ${isCurrentWordFavorited() ? 'favorited' : ''}`}
+              onClick={handleToggleFavorite}
+            >
+              <AtIcon
+                value={isCurrentWordFavorited() ? 'star-2' : 'star'}
+                size={18}
+                color={isCurrentWordFavorited() ? '#FFD700' : '#cccccc'}
+              />
             </View>
           </View>
-        </View>
-      </View>
-
-      {/* 单词卡片 */}
-      <View className="word-card-container">
-        <View className={`word-card ${session.mode}-mode`}>
-          {/* 挑战模式计时器 */}
-          {session.mode === 'challenge' && (
-            <View className={`challenge-timer ${timerClass}`}>
-              <AtIcon value="clock" className="timer-icon" />
-              <Text>{formatTime(timeRemaining)}</Text>
+          <Text className="word-definition">
+            {currentWord.partOfSpeech}. {currentWord.meaning}
+          </Text>
+          <View className="pronunciation">
+            <Text className="region">英</Text>
+            <Text className="phonetic">{currentWord.pronunciation.uk}</Text>
+            <View
+              className={`play-button ${playingAudio === 'uk-audio' ? 'playing' : ''}`}
+              onClick={() =>
+                handlePlayAudio('uk-audio', currentWord.pronunciation.uk)
+              }
+            >
+              <AtIcon
+                value="volume-plus"
+                size={20}
+                color={playingAudio === 'uk-audio' ? '#fff' : '#2196F3'}
+              />
             </View>
-          )}
-
-          <View className="card-content">
-            <View className="word-main">
-              <Text className="word-text">{currentWord.word}</Text>
-              <Text className="word-type">{currentWord.partOfSpeech}</Text>
-
-              <View className="pronunciations">
-                <View className="pronunciation">
-                  <Text className="accent-label">美式</Text>
-                  <Text className="phonetic">
-                    {currentWord.pronunciation.us}
-                  </Text>
-                  <View
-                    className={`play-btn ${playingAudio === `${currentWord.id}-us` ? 'playing' : ''}`}
-                    onClick={() => playAudio('us')}
-                  >
-                    <AtIcon
-                      value={
-                        playingAudio === `${currentWord.id}-us`
-                          ? 'pause'
-                          : 'sound'
-                      }
-                    />
-                  </View>
-                </View>
-
-                <View className="pronunciation">
-                  <Text className="accent-label">英式</Text>
-                  <Text className="phonetic">
-                    {currentWord.pronunciation.uk}
-                  </Text>
-                  <View
-                    className={`play-btn ${playingAudio === `${currentWord.id}-uk` ? 'playing' : ''}`}
-                    onClick={() => playAudio('uk')}
-                  >
-                    <AtIcon
-                      value={
-                        playingAudio === `${currentWord.id}-uk`
-                          ? 'pause'
-                          : 'sound'
-                      }
-                    />
-                  </View>
-                </View>
-              </View>
-
-              {showMeaning && (
-                <Text className="word-meaning">{currentWord.meaning}</Text>
-              )}
+            <Text className="region" style={{ marginLeft: '20px' }}>
+              美
+            </Text>
+            <Text className="phonetic">{currentWord.pronunciation.us}</Text>
+            <View
+              className={`play-button ${playingAudio === 'us-audio' ? 'playing' : ''}`}
+              onClick={() =>
+                handlePlayAudio('us-audio', currentWord.pronunciation.us)
+              }
+            >
+              <AtIcon
+                value="volume-plus"
+                size={20}
+                color={playingAudio === 'us-audio' ? '#fff' : '#2196F3'}
+              />
             </View>
-
-            <View className="word-example">
-              <Text className="example-header">
-                <Text className="header-icon">💡</Text>
-                例句
-              </Text>
-
-              <View className="example-content">
-                <Text className="english-sentence">
-                  {currentWord.example.english
-                    .split(currentWord.word)
-                    .map((part, index, array) => (
-                      <Text key={index}>
-                        {part}
-                        {index < array.length - 1 && (
-                          <Text className="highlight-word">
-                            {currentWord.word}
-                          </Text>
-                        )}
-                      </Text>
-                    ))}
-                </Text>
-
-                <Text className="chinese-sentence">
-                  {currentWord.example.chinese}
-                </Text>
-
-                <View className="audio-control">
-                  <View
-                    className={`sentence-play-btn ${playingAudio === `${currentWord.id}-sentence` ? 'playing' : ''}`}
-                    onClick={() => playAudio('sentence')}
-                  >
-                    <AtIcon
-                      value={
-                        playingAudio === `${currentWord.id}-sentence`
-                          ? 'pause'
-                          : 'sound'
-                      }
-                    />
-                    <Text>朗读例句</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-
-            {/* 测试模式选项 */}
-            {session.mode === 'test' && !showMeaning && (
-              <View className="options-list">
-                {[
-                  currentWord.meaning,
-                  'adj. 普通的，一般的',
-                  'adj. 复杂的，困难的',
-                  'adj. 简单的，容易的',
-                ].map((option, index) => (
-                  <View
-                    key={index}
-                    className={`option-item ${selectedOption === index ? 'selected' : ''} ${
-                      showAnswer
-                        ? option === currentWord.meaning
-                          ? 'correct'
-                          : selectedOption === index
-                            ? 'incorrect'
-                            : ''
-                        : ''
-                    }`}
-                    onClick={() => {
-                      if (!showAnswer) {
-                        setSelectedOption(index)
-                        setShowAnswer(true)
-                        setTimeout(() => {
-                          handleAnswer(
-                            option === currentWord.meaning ? 'know' : 'unknown'
-                          )
-                        }, 1500)
-                      }
-                    }}
-                  >
-                    <Text className="option-text">{option}</Text>
-                  </View>
+          </View>
+          <View className="example-sentence">
+            <Text className="sentence">
+              {currentWord.example.english
+                .split(currentWord.word)
+                .map((part, index) => (
+                  <React.Fragment key={index}>
+                    {part}
+                    {index <
+                      currentWord.example.english.split(currentWord.word)
+                        .length -
+                        1 && (
+                      <Text className="highlight">{currentWord.word}</Text>
+                    )}
+                  </React.Fragment>
                 ))}
-              </View>
-            )}
-
-            {/* 学习和复习模式的操作按钮 */}
-            {(session.mode === 'new' || session.mode === 'review') && (
-              <View className="word-actions">
-                <View
-                  className="action-btn know-btn"
-                  onClick={() => handleAnswer('know')}
-                >
-                  <AtIcon value="check" className="btn-icon" />
-                  <Text>认识</Text>
-                </View>
-                <View
-                  className="action-btn unknown-btn"
-                  onClick={() => handleAnswer('unknown')}
-                >
-                  <AtIcon value="close" className="btn-icon" />
-                  <Text>不认识</Text>
-                </View>
-                <View
-                  className="action-btn hard-btn"
-                  onClick={() => handleAnswer('hard')}
-                >
-                  <AtIcon value="help" className="btn-icon" />
-                  <Text>有点难</Text>
-                </View>
-              </View>
-            )}
-
-            {/* 挑战模式的快速操作 */}
-            {session.mode === 'challenge' && (
-              <View className="word-actions">
-                <View
-                  className="action-btn know-btn"
-                  onClick={() => handleAnswer('know')}
-                >
-                  <AtIcon value="check" className="btn-icon" />
-                  <Text>认识</Text>
-                </View>
-                <View
-                  className="action-btn unknown-btn"
-                  onClick={() => handleAnswer('unknown')}
-                >
-                  <AtIcon value="close" className="btn-icon" />
-                  <Text>不认识</Text>
-                </View>
-              </View>
-            )}
-          </View>
-        </View>
-      </View>
-
-      {/* 底部控制区 */}
-      <View className="study-controls">
-        <View className="control-stats">
-          <View className="stat-item">
-            <Text className="stat-number correct">{session.correctCount}</Text>
-            <Text className="stat-label">正确</Text>
-          </View>
-          <View className="stat-item">
-            <Text className="stat-number incorrect">
-              {session.incorrectCount}
             </Text>
-            <Text className="stat-label">错误</Text>
-          </View>
-          <View className="stat-item">
-            <Text className="stat-number remaining">
-              {session.wordCount - session.currentIndex - 1}
-            </Text>
-            <Text className="stat-label">剩余</Text>
+            <Text className="translation">{currentWord.example.chinese}</Text>
           </View>
         </View>
 
-        <View className="control-buttons">
-          <View className="control-btn pause-btn" onClick={togglePause}>
-            {isPaused ? '继续' : '暂停'}
+        {/* Recognition Buttons */}
+        <View className="recognition-controls">
+          <View
+            className={`control-button unknown ${isSubmitting ? 'disabled' : ''}`}
+            onClick={() => handleKnowledgeLevel('unknown')}
+          >
+            <IconFont name="close" size={24} color="#f56c6c" />
+            <Text>不认识</Text>
           </View>
-          <View className="control-btn continue-btn" onClick={nextWord}>
-            下一个
+          <View
+            className={`control-button vague ${isSubmitting ? 'disabled' : ''}`}
+            onClick={() => handleKnowledgeLevel('vague')}
+          >
+            <Text className="vague-icon">?</Text>
+            <Text>模糊</Text>
+          </View>
+          <View
+            className={`control-button known ${isSubmitting ? 'disabled' : ''}`}
+            onClick={() => handleKnowledgeLevel('known')}
+          >
+            <IconFont name="check" size={24} color="#67c23a" />
+            <Text>认识</Text>
           </View>
         </View>
-      </View>
 
-      {/* 完成总结弹窗 */}
-      {isCompleted && (
-        <View className="completion-summary">
-          <View className="summary-content">
-            <Text className="summary-icon">🎉</Text>
-            <Text className="summary-title">学习完成！</Text>
-            <Text className="summary-subtitle">
-              恭喜你完成了{session.wordCount}个单词的学习
-            </Text>
-
-            <View className="summary-stats">
-              <View className="summary-stat">
-                <Text className="stat-number accuracy">
-                  {Math.round((session.correctCount / session.wordCount) * 100)}
-                  %
-                </Text>
-                <Text className="stat-label">正确率</Text>
-              </View>
-              <View className="summary-stat">
-                <Text className="stat-number time">
-                  {Math.round((Date.now() - session.startTime) / 60000)}
-                </Text>
-                <Text className="stat-label">分钟</Text>
-              </View>
-              <View className="summary-stat">
-                <Text className="stat-number words">{session.wordCount}</Text>
-                <Text className="stat-label">单词数</Text>
-              </View>
+        {/* Study Progress */}
+        <View className="progress-card">
+          <Text className="progress-title">今日学习进度</Text>
+          <View className="progress-stats">
+            <View className="stat-item">
+              <AnimatedNumber
+                value={displayProgress.studiedWords}
+                className="stat-value"
+                style={{ color: '#e6a23c' }}
+                duration={1000}
+                easing="easeOutBounce"
+              />
+              <Text className="stat-label">已学单词</Text>
             </View>
-
-            <View className="summary-actions">
-              <View className="summary-btn retry-btn" onClick={restartSession}>
-                重新学习
-              </View>
-              <View
-                className="summary-btn continue-btn"
-                onClick={continueLearning}
-              >
-                返回词汇
-              </View>
+            <View className="stat-item">
+              <AnimatedNumber
+                value={displayProgress.masteredWords}
+                className="stat-value"
+                style={{ color: '#67c23a' }}
+                duration={1200}
+                easing="easeOutBounce"
+              />
+              <Text className="stat-label">掌握单词</Text>
+            </View>
+            <View className="stat-item">
+              <AnimatedNumber
+                value={displayProgress.continuousDays}
+                className="stat-value"
+                style={{ color: '#409eff' }}
+                duration={800}
+                easing="easeOutQuad"
+              />
+              <Text className="stat-label">连续天数</Text>
             </View>
           </View>
         </View>
-      )}
+      </View>
     </View>
   )
 }
 
-export default VocabularyStudyPage
+export default VocabularyStudy

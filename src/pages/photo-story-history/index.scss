@@ -287,24 +287,11 @@
       }
     }
 
-    // 评分徽章
-    .grade-badge {
+    // 状态徽章
+    .status-badge {
       display: flex;
       align-items: center;
       gap: 4px;
-      padding: 2px 8px;
-      background: rgba(102, 126, 234, 0.1);
-      border-radius: 12px;
-      flex-shrink: 0;
-
-      .grade-text {
-        font-size: 12px;
-        font-weight: 600;
-      }
-    }
-
-    // 状态徽章
-    .status-badge {
       padding: 2px 8px;
       border-radius: 10px;
       background: rgba(0, 0, 0, 0.05);

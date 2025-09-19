@@ -9,6 +9,13 @@ import type {
   TopicDialogueDetail,
   RecordingResult,
   DialogueProgress,
+  LearningStage,
+  StudyNote,
+  WordStudyItem,
+  WordStudyRecord,
+  WordKnowledgeLevel,
+  DailyStudyProgress,
+  WordStudyHistoryResponse,
 } from '@/types'
 
 // 用户相关API
@@ -450,6 +457,96 @@ export const vocabularyApi = {
   // 从收藏移除
   removeFromFavorites: (wordId: string) =>
     httpClient.delete(`/vocabulary/${wordId}/favorite`, { showLoading: true }),
+
+  // 获取学习阶段列表
+  getLearningStages: () =>
+    httpClient.get<LearningStage[]>('/api/vocabulary/stages', { cache: true }),
+
+  // 获取学习说明
+  getStudyNotes: () =>
+    httpClient.get<StudyNote[]>('/api/vocabulary/study-notes', { cache: true }),
+
+  // ===== 新增：单词学习相关API =====
+
+  // 获取单词学习列表（根据阶段）
+  getStudyWordsByStage: (stage: string) =>
+    httpClient.get<{
+      stage: string
+      words: WordStudyItem[]
+      totalWords: number
+      remainingWords: number
+    }>(`/api/vocabulary/study-words/${stage}`, { cache: false }),
+
+  // 获取单个学习单词详情
+  getStudyWordDetail: (wordId: string) =>
+    httpClient.get<WordStudyItem>(`/api/vocabulary/study-word/${wordId}`, {
+      cache: true,
+    }),
+
+  // 提交单词学习记录
+  submitStudyRecord: (params: {
+    wordId: string
+    knowledgeLevel: WordKnowledgeLevel
+    stage: string
+    responseTime?: number
+  }) =>
+    httpClient.post<{
+      record: WordStudyRecord
+      pointsEarned: number
+      nextWord: WordStudyItem | null
+    }>('/api/vocabulary/study-record', params, { showLoading: false }),
+
+  // 获取学习历史记录（分页）
+  getStudyHistory: (params?: {
+    page?: number
+    pageSize?: number
+    type?: 'all' | 'favorites'
+  }) => {
+    const searchParams = new URLSearchParams({
+      page: (params?.page || 1).toString(),
+      pageSize: (params?.pageSize || 10).toString(),
+      ...(params?.type && { type: params.type }),
+    })
+    return httpClient.get<WordStudyHistoryResponse>(
+      `/api/vocabulary/study-history?${searchParams}`,
+      { cache: false }
+    )
+  },
+
+  // 获取今日学习进度
+  getDailyProgress: (date?: string) => {
+    const params = date ? `?date=${date}` : ''
+    return httpClient.get<DailyStudyProgress>(
+      `/api/vocabulary/daily-progress${params}`,
+      { cache: false }
+    )
+  },
+
+  // 切换单词收藏状态
+  toggleWordFavorite: (wordId: string, isFavorited: boolean) =>
+    httpClient.post<{
+      wordId: string
+      isFavorited: boolean
+    }>(
+      '/api/vocabulary/toggle-favorite',
+      { wordId, isFavorited },
+      { showLoading: false }
+    ),
+
+  // 获取收藏单词列表
+  getFavoriteWords: (params?: { page?: number; pageSize?: number }) => {
+    const searchParams = new URLSearchParams({
+      page: (params?.page || 1).toString(),
+      pageSize: (params?.pageSize || 10).toString(),
+    })
+    return httpClient.get<{
+      list: WordStudyItem[]
+      total: number
+      page: number
+      pageSize: number
+      hasMore: boolean
+    }>(`/api/vocabulary/favorites?${searchParams}`, { cache: false })
+  },
 }
 
 // 发音评分相关API

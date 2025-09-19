@@ -28,6 +28,18 @@ export const QUERY_KEYS = {
     ['vocabularies', 'level', level] as const,
   VOCABULARY_PROGRESS: (userId: string) =>
     ['vocabularies', 'progress', userId] as const,
+  VOCABULARY_STAGES: ['vocabularies', 'stages'] as const,
+  VOCABULARY_STUDY_NOTES: ['vocabularies', 'study-notes'] as const,
+
+  // 单词学习相关
+  VOCABULARY_STUDY_WORDS: (stage: string) =>
+    ['vocabularies', 'study-words', stage] as const,
+  VOCABULARY_STUDY_WORD_DETAIL: (wordId: string) =>
+    ['vocabularies', 'study-word', wordId] as const,
+  VOCABULARY_STUDY_HISTORY: ['vocabularies', 'study-history'] as const,
+  VOCABULARY_DAILY_PROGRESS: (date?: string) =>
+    ['vocabularies', 'daily-progress', date] as const,
+  VOCABULARY_FAVORITES: ['vocabularies', 'favorites'] as const,
 
   // 聊天相关
   CHAT_HISTORY: (sessionId: string) => ['chat', 'history', sessionId] as const,
@@ -308,6 +320,171 @@ export const useUpdateVocabularyProgress = () => {
         queryKey: QUERY_KEYS.VOCABULARY_PROGRESS(''),
       })
     },
+  })
+}
+
+/**
+ * 获取学习阶段列表
+ */
+export const useLearningStages = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.VOCABULARY_STAGES,
+    queryFn: async () => {
+      const response = await vocabularyApi.getLearningStages()
+      return response.data
+    },
+    staleTime: 60 * 60 * 1000, // 1小时内认为数据是新鲜的
+  })
+}
+
+/**
+ * 获取学习说明
+ */
+export const useStudyNotes = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.VOCABULARY_STUDY_NOTES,
+    queryFn: async () => {
+      const response = await vocabularyApi.getStudyNotes()
+      return response.data
+    },
+    staleTime: 60 * 60 * 1000, // 1小时内认为数据是新鲜的
+  })
+}
+
+// ============ 单词学习相关 Hooks ============
+
+/**
+ * 获取单词学习列表（根据阶段）
+ */
+export const useStudyWordsByStage = (stage: string) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.VOCABULARY_STUDY_WORDS(stage),
+    queryFn: async () => {
+      const response = await vocabularyApi.getStudyWordsByStage(stage)
+      return response.data
+    },
+    enabled: !!stage,
+    staleTime: 2 * 60 * 1000, // 2分钟内认为数据是新鲜的
+  })
+}
+
+/**
+ * 获取单个学习单词详情
+ */
+export const useStudyWordDetail = (wordId: string) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.VOCABULARY_STUDY_WORD_DETAIL(wordId),
+    queryFn: async () => {
+      const response = await vocabularyApi.getStudyWordDetail(wordId)
+      return response.data
+    },
+    enabled: !!wordId,
+    staleTime: 10 * 60 * 1000, // 10分钟内认为数据是新鲜的
+  })
+}
+
+/**
+ * 提交单词学习记录
+ */
+export const useSubmitStudyRecord = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: vocabularyApi.submitStudyRecord,
+    onSuccess: (data, variables) => {
+      // 使学习历史失效
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.VOCABULARY_STUDY_HISTORY,
+      })
+      // 使今日进度失效
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.VOCABULARY_DAILY_PROGRESS(),
+      })
+      // 使该阶段的单词列表失效
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.VOCABULARY_STUDY_WORDS(variables.stage),
+      })
+    },
+  })
+}
+
+/**
+ * 获取学习历史记录（分页）
+ */
+export const useStudyHistory = (params?: {
+  page?: number
+  pageSize?: number
+  type?: 'all' | 'favorites'
+}) => {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.VOCABULARY_STUDY_HISTORY, params],
+    queryFn: async () => {
+      const response = await vocabularyApi.getStudyHistory(params)
+      return response.data
+    },
+    staleTime: 30 * 1000, // 30秒内认为数据是新鲜的
+  })
+}
+
+/**
+ * 获取今日学习进度
+ */
+export const useDailyProgress = (date?: string) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.VOCABULARY_DAILY_PROGRESS(date),
+    queryFn: async () => {
+      const response = await vocabularyApi.getDailyProgress(date)
+      return response.data
+    },
+    staleTime: 1 * 60 * 1000, // 1分钟内认为数据是新鲜的
+  })
+}
+
+/**
+ * 切换单词收藏状态
+ */
+export const useToggleWordFavorite = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      wordId,
+      isFavorited,
+    }: {
+      wordId: string
+      isFavorited: boolean
+    }) => vocabularyApi.toggleWordFavorite(wordId, isFavorited),
+    onSuccess: (data, variables) => {
+      // 使收藏列表失效
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.VOCABULARY_FAVORITES,
+      })
+      // 使学习历史失效
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.VOCABULARY_STUDY_HISTORY,
+      })
+      // 使单词详情失效
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.VOCABULARY_STUDY_WORD_DETAIL(variables.wordId),
+      })
+    },
+  })
+}
+
+/**
+ * 获取收藏单词列表
+ */
+export const useFavoriteWords = (params?: {
+  page?: number
+  pageSize?: number
+}) => {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.VOCABULARY_FAVORITES, params],
+    queryFn: async () => {
+      const response = await vocabularyApi.getFavoriteWords(params)
+      return response.data
+    },
+    staleTime: 2 * 60 * 1000, // 2分钟内认为数据是新鲜的
   })
 }
 

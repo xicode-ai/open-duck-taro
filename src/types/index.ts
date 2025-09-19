@@ -79,6 +79,97 @@ export interface Vocabulary {
   }
 }
 
+// 单词学习状态枚举
+export type WordKnowledgeLevel = 'unknown' | 'vague' | 'known'
+
+// 单词学习项
+export interface WordStudyItem {
+  id: string
+  word: string
+  pronunciation: {
+    us: string
+    uk: string
+  }
+  meaning: string
+  partOfSpeech: string
+  example: {
+    english: string
+    chinese: string
+  }
+  level: UserLevel
+  audioUrl?: {
+    us: string
+    uk: string
+  }
+  difficulty: 'easy' | 'medium' | 'hard'
+  tags?: string[]
+  stage: string // 学习阶段
+  isFavorited?: boolean // 是否收藏
+}
+
+// 单词学习记录
+export interface WordStudyRecord {
+  id: string
+  wordId: string
+  word: string
+  meaning: string
+  knowledgeLevel: WordKnowledgeLevel
+  studiedAt: string
+  stage: string
+  isFavorited: boolean
+  responseTime?: number // 反应时间（毫秒）
+}
+
+// 今日学习进度
+export interface DailyStudyProgress {
+  date: string
+  studiedWords: number
+  masteredWords: number
+  continuousDays: number
+  targetWords?: number
+}
+
+// 单词学习会话
+export interface WordStudySession {
+  id: string
+  stage: string
+  currentWordIndex: number
+  totalWords: number
+  studiedWords: WordStudyRecord[]
+  startTime: string
+  endTime?: string
+  progress: number // 0-100
+}
+
+// 单词学习历史分页响应
+export interface WordStudyHistoryResponse {
+  list: WordStudyRecord[]
+  total: number
+  page: number
+  pageSize: number
+  hasMore?: boolean
+}
+
+// 学习阶段类型
+export interface LearningStage {
+  id: string
+  name: string
+  ageRange: string
+  icon: string
+  bgColor: string
+  isPremium: boolean
+  description?: string
+  wordCount?: number
+}
+
+// 学习说明类型
+export interface StudyNote {
+  id: string
+  icon: string
+  text: string
+  type: 'info' | 'premium' | 'feature' | 'method'
+}
+
 // 翻译相关类型
 export interface TranslationResult {
   id: string
@@ -154,7 +245,8 @@ export interface PhotoStory {
   nativeStoryCn: string // 地道短文中文翻译
   sentences: StoryPractice[] // 练习句子列表
   createdAt: string
-  score?: PhotoStoryScore
+  standardScore?: PhotoStoryScore // 标准短文评分
+  nativeScore?: PhotoStoryScore // 地道短文评分
   status: 'generating' | 'generated' | 'practicing' | 'completed'
   isFavorite?: boolean // 是否收藏
   favoritedAt?: string // 收藏时间

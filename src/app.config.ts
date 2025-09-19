@@ -11,6 +11,8 @@ export default {
     'pages/photo-story/index',
     'pages/photo-story-history/index',
     'pages/vocabulary-study/index',
+    'pages/vocabulary-history/index',
+    'pages/vocabulary-favorites/index',
     'pages/progress/index',
     'pages/membership/index',
   ],

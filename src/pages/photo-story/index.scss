@@ -281,6 +281,84 @@
             width: 100%;
             box-sizing: border-box;
           }
+
+          // 新增：短文内容下方的播放和跟读按钮
+          .story-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            justify-content: flex-start;
+
+            .story-action-button {
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              padding: 10px 16px;
+              border-radius: 20px;
+              font-size: 14px;
+              font-weight: 500;
+              transition: all 0.3s ease;
+              cursor: pointer;
+              border: none;
+              min-width: 80px;
+              justify-content: center;
+
+              .action-text {
+                font-size: 14px;
+                font-weight: 500;
+              }
+
+              &:active {
+                transform: scale(0.95);
+              }
+
+              &.play-button {
+                background: #f0f9ff;
+                color: #2196f3;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+                .action-text {
+                  color: #2196f3;
+                }
+
+                &.playing {
+                  background: #2196f3;
+                  animation: pulse 1.5s infinite;
+
+                  .action-text {
+                    color: white;
+                  }
+                }
+
+                &.native-play {
+                  background: #f0fdf4;
+                  color: #4caf50;
+
+                  .action-text {
+                    color: #4caf50;
+                  }
+
+                  &.playing {
+                    background: #4caf50;
+
+                    .action-text {
+                      color: white;
+                    }
+                  }
+                }
+              }
+
+              &.speech-button {
+                background: #f3e5f5;
+                color: #7b1fa2;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+                .action-text {
+                  color: #7b1fa2;
+                }
+              }
+            }
+          }
         }
 
         .translation-section {
@@ -304,6 +382,25 @@
         justify-content: space-between;
         padding-top: 12px;
         border-top: 1px solid #f0f0f0;
+
+        // 新增：内联分数显示样式
+        .score-display-inline {
+          display: flex;
+          gap: 16px;
+          align-items: center;
+
+          .score-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            .score-text {
+              font-size: 13px;
+              font-weight: 500;
+              color: #374151;
+            }
+          }
+        }
 
         .action-buttons-group {
           display: flex;

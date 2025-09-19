@@ -1,8 +1,100 @@
 import { http, HttpResponse, delay } from 'msw'
 import type { BookParams, WordParams } from '../types'
+import type { WordKnowledgeLevel } from '@/types'
 
 // Mock词汇数据
 const vocabularyData = {
+  // 学习阶段数据
+  learningStages: [
+    {
+      id: 'beginner',
+      name: '萌芽期',
+      ageRange: '3-6岁',
+      icon: '🌱',
+      bgColor: '#dcfce7',
+      isPremium: false,
+      description: '适合初学者的基础词汇',
+      wordCount: 500,
+    },
+    {
+      id: 'foundation',
+      name: '基础期',
+      ageRange: '6-12岁',
+      icon: '📚',
+      bgColor: '#dbeafe',
+      isPremium: false,
+      description: '小学阶段常用词汇',
+      wordCount: 1200,
+    },
+    {
+      id: 'development',
+      name: '发展期',
+      ageRange: '12-15岁',
+      icon: '🚀',
+      bgColor: '#e0e7ff',
+      isPremium: true,
+      description: '中学阶段进阶词汇',
+      wordCount: 2000,
+    },
+    {
+      id: 'acceleration',
+      name: '加速期',
+      ageRange: '15-18岁',
+      icon: '⚡',
+      bgColor: '#fef3c7',
+      isPremium: true,
+      description: '高中阶段重点词汇',
+      wordCount: 3500,
+    },
+    {
+      id: 'mastery',
+      name: '精通期',
+      ageRange: '18-30岁',
+      icon: '🏆',
+      bgColor: '#fbbf24',
+      isPremium: true,
+      description: '大学和职场核心词汇',
+      wordCount: 5000,
+    },
+    {
+      id: 'expert',
+      name: '大师期',
+      ageRange: '30岁+',
+      icon: '🧘',
+      bgColor: '#c7d2fe',
+      isPremium: true,
+      description: '专业领域高级词汇',
+      wordCount: 8000,
+    },
+  ],
+
+  // 学习说明数据
+  studyNotes: [
+    {
+      id: 'note-1',
+      icon: '✅',
+      text: '萌芽期和基础期免费开放，适合初学者',
+      type: 'info',
+    },
+    {
+      id: 'note-2',
+      icon: '👑',
+      text: '其他阶段需要开通会员，解锁更多高级功能',
+      type: 'premium',
+    },
+    {
+      id: 'note-3',
+      icon: '📖',
+      text: '每个阶段都有针对性的词汇和例句',
+      type: 'feature',
+    },
+    {
+      id: 'note-4',
+      icon: '🎯',
+      text: '采用语境学习法，提高记忆效果',
+      type: 'method',
+    },
+  ],
   dailyWords: [
     {
       id: 'word-001',
@@ -77,9 +169,226 @@ const vocabularyData = {
       coverImage: '🎓',
     },
   ],
+
+  // 分阶段单词学习数据
+  studyWords: {
+    beginner: [
+      {
+        id: 'word-beginner-001',
+        word: 'apple',
+        pronunciation: { us: '/ˈæpl/', uk: '/ˈæpl/' },
+        meaning: '苹果',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'I eat an apple every day.',
+          chinese: '我每天吃一个苹果。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/apple-us.mp3',
+          uk: '/mock-audio/apple-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['food', 'fruit'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-002',
+        word: 'book',
+        pronunciation: { us: '/bʊk/', uk: '/bʊk/' },
+        meaning: '书，书本',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'She is reading a book.',
+          chinese: '她正在读一本书。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/book-us.mp3',
+          uk: '/mock-audio/book-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['education', 'object'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-003',
+        word: 'cat',
+        pronunciation: { us: '/kæt/', uk: '/kæt/' },
+        meaning: '猫',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'The cat is sleeping on the sofa.',
+          chinese: '猫正在沙发上睡觉。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/cat-us.mp3',
+          uk: '/mock-audio/cat-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['animal', 'pet'],
+        stage: 'beginner',
+        isFavorited: true,
+      },
+    ],
+    expert: [
+      {
+        id: 'word-expert-001',
+        word: 'immense',
+        pronunciation: { us: '/ɪˈmens/', uk: '/ɪˈmens/' },
+        meaning: '巨大的，极大的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'He inherited an immense fortune.',
+          chinese: '他继承了巨额财富。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/immense-us.mp3',
+          uk: '/mock-audio/immense-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['descriptive', 'advanced'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-002',
+        word: 'profound',
+        pronunciation: { us: '/prəˈfaʊnd/', uk: '/prəˈfaʊnd/' },
+        meaning: '深刻的，深奥的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'She had a profound impact on my life.',
+          chinese: '她对我的生活产生了深刻的影响。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/profound-us.mp3',
+          uk: '/mock-audio/profound-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['descriptive', 'advanced'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-003',
+        word: 'sophisticated',
+        pronunciation: { us: '/səˈfɪstɪkeɪtɪd/', uk: '/səˈfɪstɪkeɪtɪd/' },
+        meaning: '复杂的，精密的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'This is a sophisticated piece of equipment.',
+          chinese: '这是一件精密的设备。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/sophisticated-us.mp3',
+          uk: '/mock-audio/sophisticated-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['descriptive', 'advanced'],
+        stage: 'expert',
+        isFavorited: true,
+      },
+    ],
+  },
+
+  // 学习历史记录
+  studyHistory: [
+    {
+      id: 'history-001',
+      wordId: 'word-beginner-003',
+      word: 'cat',
+      meaning: '猫',
+      knowledgeLevel: 'known' as WordKnowledgeLevel,
+      studiedAt: '2024-01-20T09:30:00Z',
+      stage: 'beginner',
+      isFavorited: true,
+      responseTime: 2500,
+    },
+    {
+      id: 'history-002',
+      wordId: 'word-beginner-002',
+      word: 'book',
+      meaning: '书，书本',
+      knowledgeLevel: 'vague' as WordKnowledgeLevel,
+      studiedAt: '2024-01-20T09:25:00Z',
+      stage: 'beginner',
+      isFavorited: false,
+      responseTime: 4200,
+    },
+    {
+      id: 'history-003',
+      wordId: 'word-beginner-001',
+      word: 'apple',
+      meaning: '苹果',
+      knowledgeLevel: 'known' as WordKnowledgeLevel,
+      studiedAt: '2024-01-20T09:20:00Z',
+      stage: 'beginner',
+      isFavorited: false,
+      responseTime: 1800,
+    },
+    {
+      id: 'history-004',
+      wordId: 'word-expert-003',
+      word: 'sophisticated',
+      meaning: '复杂的，精密的',
+      knowledgeLevel: 'vague' as WordKnowledgeLevel,
+      studiedAt: '2024-01-19T15:45:00Z',
+      stage: 'expert',
+      isFavorited: true,
+      responseTime: 6500,
+    },
+    {
+      id: 'history-005',
+      wordId: 'word-expert-001',
+      word: 'immense',
+      meaning: '巨大的，极大的',
+      knowledgeLevel: 'known' as WordKnowledgeLevel,
+      studiedAt: '2024-01-19T15:30:00Z',
+      stage: 'expert',
+      isFavorited: false,
+      responseTime: 3200,
+    },
+  ],
+
+  // 今日学习进度
+  dailyProgress: {
+    date: '2024-01-20',
+    studiedWords: 12,
+    masteredWords: 8,
+    continuousDays: 5,
+    targetWords: 20,
+  },
 }
 
 export const vocabularyHandlers = [
+  // 获取学习阶段列表
+  http.get('/api/vocabulary/stages', async () => {
+    await delay(400)
+
+    return HttpResponse.json({
+      code: 200,
+      data: vocabularyData.learningStages,
+      message: 'success',
+    })
+  }),
+
+  // 获取学习说明
+  http.get('/api/vocabulary/study-notes', async () => {
+    await delay(300)
+
+    return HttpResponse.json({
+      code: 200,
+      data: vocabularyData.studyNotes,
+      message: 'success',
+    })
+  }),
   // 获取每日词汇
   http.get('/api/vocabulary/daily', async ({ request }) => {
     await delay(500)
@@ -331,6 +640,245 @@ export const vocabularyHandlers = [
           academic: 100,
           exam: 73,
         },
+      },
+      message: 'success',
+    })
+  }),
+
+  // ===== 新增：单词学习相关API =====
+
+  // 获取单词学习列表（根据阶段）
+  http.get('/api/vocabulary/study-words/:stage', async ({ params }) => {
+    await delay(600)
+    const { stage } = params
+
+    const stageWords =
+      vocabularyData.studyWords[
+        stage as keyof typeof vocabularyData.studyWords
+      ] || []
+
+    // 过滤掉已经认识的单词（模拟认识的单词不再出现）
+    const studiedWordIds = vocabularyData.studyHistory
+      .filter(h => h.knowledgeLevel === 'known')
+      .map(h => h.wordId)
+
+    const availableWords = stageWords.filter(
+      word => !studiedWordIds.includes(word.id)
+    )
+
+    return HttpResponse.json({
+      code: 200,
+      data: {
+        stage,
+        words: availableWords,
+        totalWords: stageWords.length,
+        remainingWords: availableWords.length,
+      },
+      message: 'success',
+    })
+  }),
+
+  // 获取单个学习单词详情
+  http.get('/api/vocabulary/study-word/:wordId', async ({ params }) => {
+    await delay(300)
+    const { wordId } = params
+
+    // 在所有阶段中查找单词
+    let word = null
+    for (const stageWords of Object.values(vocabularyData.studyWords)) {
+      word = stageWords.find(w => w.id === wordId)
+      if (word) break
+    }
+
+    if (!word) {
+      return HttpResponse.json(
+        { code: 404, message: '单词不存在' },
+        { status: 404 }
+      )
+    }
+
+    return HttpResponse.json({
+      code: 200,
+      data: word,
+      message: 'success',
+    })
+  }),
+
+  // 提交单词学习记录
+  http.post('/api/vocabulary/study-record', async ({ request }) => {
+    await delay(400)
+    const body = (await request.json()) as {
+      wordId: string
+      knowledgeLevel: WordKnowledgeLevel
+      stage: string
+      responseTime?: number
+    }
+
+    // 创建学习记录
+    const record = {
+      id: `history-${Date.now()}`,
+      wordId: body.wordId,
+      word: '', // 需要从词汇数据中获取
+      meaning: '',
+      knowledgeLevel: body.knowledgeLevel,
+      studiedAt: new Date().toISOString(),
+      stage: body.stage,
+      isFavorited: false,
+      responseTime:
+        body.responseTime || Math.floor(Math.random() * 5000) + 1000,
+    }
+
+    // 找到对应的单词信息
+    for (const stageWords of Object.values(vocabularyData.studyWords)) {
+      const word = stageWords.find(w => w.id === body.wordId)
+      if (word) {
+        record.word = word.word
+        record.meaning = word.meaning
+        record.isFavorited = word.isFavorited || false
+        break
+      }
+    }
+
+    // 添加到历史记录
+    vocabularyData.studyHistory.unshift(record)
+
+    // 更新今日进度
+    vocabularyData.dailyProgress.studiedWords += 1
+    if (body.knowledgeLevel === 'known') {
+      vocabularyData.dailyProgress.masteredWords += 1
+    }
+
+    return HttpResponse.json({
+      code: 200,
+      data: {
+        record,
+        pointsEarned: body.knowledgeLevel === 'known' ? 10 : 5,
+        nextWord: null, // 下一个单词信息
+      },
+      message: '学习记录已保存',
+    })
+  }),
+
+  // 获取学习历史记录（分页）
+  http.get('/api/vocabulary/study-history', async ({ request }) => {
+    await delay(500)
+    const url = new URL(request.url)
+    const page = Number(url.searchParams.get('page')) || 1
+    const pageSize = Number(url.searchParams.get('pageSize')) || 10
+    const type = url.searchParams.get('type') // 'all' | 'favorites'
+
+    let filteredHistory = vocabularyData.studyHistory
+    if (type === 'favorites') {
+      filteredHistory = vocabularyData.studyHistory.filter(h => h.isFavorited)
+    }
+
+    const startIndex = (page - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    const paginatedList = filteredHistory.slice(startIndex, endIndex)
+
+    return HttpResponse.json({
+      code: 200,
+      data: {
+        list: paginatedList,
+        total: filteredHistory.length,
+        page,
+        pageSize,
+        hasMore: endIndex < filteredHistory.length,
+      },
+      message: 'success',
+    })
+  }),
+
+  // 获取今日学习进度
+  http.get('/api/vocabulary/daily-progress', async ({ request }) => {
+    await delay(300)
+    const url = new URL(request.url)
+    const date =
+      url.searchParams.get('date') || new Date().toISOString().split('T')[0]
+
+    // 如果查询的不是今天，模拟返回历史数据
+    let progress = vocabularyData.dailyProgress
+    if (date !== '2024-01-20') {
+      progress = {
+        date,
+        studiedWords: Math.floor(Math.random() * 25),
+        masteredWords: Math.floor(Math.random() * 15),
+        continuousDays: Math.floor(Math.random() * 30),
+        targetWords: 20,
+      }
+    }
+
+    return HttpResponse.json({
+      code: 200,
+      data: progress,
+      message: 'success',
+    })
+  }),
+
+  // 切换单词收藏状态
+  http.post('/api/vocabulary/toggle-favorite', async ({ request }) => {
+    await delay(300)
+    const body = (await request.json()) as {
+      wordId: string
+      isFavorited: boolean
+    }
+
+    // 更新单词的收藏状态
+    for (const stageWords of Object.values(vocabularyData.studyWords)) {
+      const word = stageWords.find(w => w.id === body.wordId)
+      if (word) {
+        word.isFavorited = body.isFavorited
+        break
+      }
+    }
+
+    // 更新历史记录中的收藏状态
+    const historyRecord = vocabularyData.studyHistory.find(
+      h => h.wordId === body.wordId
+    )
+    if (historyRecord) {
+      historyRecord.isFavorited = body.isFavorited
+    }
+
+    return HttpResponse.json({
+      code: 200,
+      data: {
+        wordId: body.wordId,
+        isFavorited: body.isFavorited,
+      },
+      message: body.isFavorited ? '已添加到收藏' : '已取消收藏',
+    })
+  }),
+
+  // 获取收藏单词列表
+  http.get('/api/vocabulary/favorites', async ({ request }) => {
+    await delay(400)
+    const url = new URL(request.url)
+    const page = Number(url.searchParams.get('page')) || 1
+    const pageSize = Number(url.searchParams.get('pageSize')) || 10
+
+    // 从所有阶段中找到收藏的单词
+    const favoriteWords: typeof vocabularyData.studyWords.beginner = []
+    for (const stageWords of Object.values(vocabularyData.studyWords)) {
+      const stageFavorites = stageWords.filter(w => w.isFavorited)
+      favoriteWords.push(...stageFavorites)
+    }
+
+    // 按收藏时间倒序排序（模拟）
+    favoriteWords.sort((a, b) => b.id.localeCompare(a.id))
+
+    const startIndex = (page - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    const paginatedList = favoriteWords.slice(startIndex, endIndex)
+
+    return HttpResponse.json({
+      code: 200,
+      data: {
+        list: paginatedList,
+        total: favoriteWords.length,
+        page,
+        pageSize,
+        hasMore: endIndex < favoriteWords.length,
       },
       message: 'success',
     })

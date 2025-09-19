@@ -7,7 +7,7 @@ import {
 import axios from 'axios'
 import type {
   PhotoStory,
-  // PhotoStoryScore,
+  PhotoStoryScore,
   GenerateStoryRequest,
   GenerateStoryResponse,
   SpeechScoreRequest,
@@ -110,10 +110,47 @@ export const usePhotoStoryDetail = (id: string) => {
   })
 }
 
+// 缓存更新辅助函数：同步当前故事状态到历史数据缓存
+const updateStoryInHistoryCache = (
+  queryClient: ReturnType<typeof useQueryClient>,
+  storyId: string,
+  updates: Partial<PhotoStory>
+) => {
+  // 更新历史数据缓存中的对应项
+  queryClient.setQueriesData(
+    { queryKey: PHOTO_STORY_KEYS.history(), exact: false },
+    (oldData: { pages?: Array<{ items: PhotoStory[] }> } | undefined) => {
+      if (!oldData?.pages) return oldData
+
+      return {
+        ...oldData,
+        pages: oldData.pages.map(page => ({
+          ...page,
+          items: page.items.map((story: PhotoStory) =>
+            story.id === storyId ? { ...story, ...updates } : story
+          ),
+        })),
+      }
+    }
+  )
+
+  // 同时更新详情缓存
+  queryClient.setQueryData(
+    PHOTO_STORY_KEYS.detail(storyId),
+    (oldData: PhotoStory | undefined) => {
+      if (oldData) {
+        return { ...oldData, ...updates }
+      }
+      return oldData
+    }
+  )
+}
+
 // 语音评分
 export const useSpeechScore = () => {
-  // const queryClient = useQueryClient()
-  const { updatePracticeScore, setRecording } = usePhotoStoryStore()
+  const queryClient = useQueryClient()
+  const { updatePracticeScore, setRecording, currentStory } =
+    usePhotoStoryStore()
 
   return useMutation<SpeechScoreResponse, Error, SpeechScoreRequest>({
     mutationFn: async data => {
@@ -130,6 +167,20 @@ export const useSpeechScore = () => {
       // 更新练习分数
       if (data.score) {
         updatePracticeScore(variables.sentenceId, data.score)
+
+        // 同步更新历史数据缓存
+        if (currentStory?.id) {
+          // 从sentenceId中提取类型信息来决定更新哪个评分字段
+          const isStandardType = variables.sentenceId.includes('standard')
+          const updates = isStandardType
+            ? { standardScore: data.score }
+            : { nativeScore: data.score }
+
+          updateStoryInHistoryCache(queryClient, currentStory.id, {
+            ...updates,
+            status: 'completed',
+          })
+        }
       }
 
       // 显示分数
@@ -219,6 +270,28 @@ export const useDeletePhotoStory = () => {
       })
     },
   })
+}
+
+// 综合的故事评分更新 Hook - 同时更新 Zustand store 和 React Query 缓存
+export const useUpdateStoryScore = () => {
+  const queryClient = useQueryClient()
+  const { updateStoryScoreByType, currentStory } = usePhotoStoryStore()
+
+  return (score: PhotoStoryScore, type: 'standard' | 'native') => {
+    // 更新 Zustand store
+    updateStoryScoreByType(score, type)
+
+    // 同步更新历史数据缓存
+    if (currentStory?.id) {
+      const updates =
+        type === 'standard' ? { standardScore: score } : { nativeScore: score }
+
+      updateStoryInHistoryCache(queryClient, currentStory.id, {
+        ...updates,
+        status: 'completed',
+      })
+    }
+  }
 }
 
 // 收藏/取消收藏

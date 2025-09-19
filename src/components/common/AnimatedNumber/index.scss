@@ -1,0 +1,13 @@
+.animated-number {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  // 确保数字对齐
+  font-feature-settings: 'tnum';
+  letter-spacing: 0.025em;
+}

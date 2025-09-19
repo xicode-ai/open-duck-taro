@@ -1,5 +1,6 @@
 export { default as GradientCard } from './GradientCard'
 export { default as StatCard } from './StatCard'
+export { default as AnimatedNumber } from './AnimatedNumber'
 export { default as FunctionGrid } from './FunctionGrid'
 export { default as ProgressRing } from './ProgressRing'
 export { default as Button } from './Button'

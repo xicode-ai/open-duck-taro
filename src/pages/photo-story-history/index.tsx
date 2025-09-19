@@ -2,18 +2,13 @@ import React, { useState, useMemo } from 'react'
 import { View, Text, Image, ScrollView } from '@tarojs/components'
 import Taro, { useReachBottom } from '@tarojs/taro'
 import { AtIcon, AtLoadMore } from 'taro-ui'
-import {
-  usePhotoStoryHistory,
-  useDeletePhotoStory,
-  useToggleFavorite,
-} from '@/hooks/usePhotoStory'
+import { usePhotoStoryHistory, useToggleFavorite } from '@/hooks/usePhotoStory'
 import { formatDate } from '@/utils/date'
 import type { PhotoStory } from '@/types'
+import CustomNavBar from '@/components/common/CustomNavBar'
 import './index.scss'
 
 const PhotoStoryHistoryPage: React.FC = () => {
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
-  const [isEditMode, setIsEditMode] = useState(false)
   const [currentFilter, setCurrentFilter] = useState<'all' | 'favorite'>('all')
 
   const {
@@ -25,7 +20,6 @@ const PhotoStoryHistoryPage: React.FC = () => {
     error,
   } = usePhotoStoryHistory()
 
-  const deleteStory = useDeletePhotoStory()
   const toggleFavoriteMutation = useToggleFavorite()
 
   // 合并所有分页数据并根据筛选条件过滤
@@ -69,26 +63,10 @@ const PhotoStoryHistoryPage: React.FC = () => {
 
   // 导航到详情页
   const navigateToDetail = (story: PhotoStory) => {
-    if (isEditMode) {
-      toggleSelect(story.id)
-      return
-    }
-
     // 导航到拍照短文页面并传递故事数据
     Taro.navigateTo({
       url: `/pages/photo-story/index?storyId=${story.id}`,
     })
-  }
-
-  // 切换选中状态
-  const toggleSelect = (id: string) => {
-    const newSelected = new Set(selectedItems)
-    if (newSelected.has(id)) {
-      newSelected.delete(id)
-    } else {
-      newSelected.add(id)
-    }
-    setSelectedItems(newSelected)
   }
 
   // 切换Tab
@@ -104,89 +82,40 @@ const PhotoStoryHistoryPage: React.FC = () => {
     })
   }
 
-  // 删除选中项
-  const handleDelete = async () => {
-    if (selectedItems.size === 0) {
-      Taro.showToast({
-        title: '请选择要删除的项',
-        icon: 'none',
-      })
-      return
-    }
-
-    const result = await Taro.showModal({
-      title: '确认删除',
-      content: `确定要删除选中的${selectedItems.size}条记录吗？`,
-    })
-
-    if (result.confirm) {
-      try {
-        // 批量删除
-        await Promise.all(
-          Array.from(selectedItems).map(id => deleteStory.mutateAsync(id))
-        )
-        setSelectedItems(new Set())
-        setIsEditMode(false)
-        Taro.showToast({
-          title: '删除成功',
-          icon: 'success',
-        })
-      } catch (error) {
-        console.error('删除失败:', error)
-        Taro.showToast({
-          title: '删除失败',
-          icon: 'error',
-        })
-      }
-    }
-  }
-
-  // 渲染评分等级
-  const renderGrade = (story: PhotoStory) => {
-    if (!story.score) return null
-
-    const gradeColors: Record<string, string> = {
-      'A+': '#10b981',
-      A: '#10b981',
-      'B+': '#3b82f6',
-      B: '#3b82f6',
-      'C+': '#f59e0b',
-      C: '#f59e0b',
-    }
-
-    return (
-      <View className="grade-badge">
-        <AtIcon
-          value="star-2"
-          size="12"
-          color={gradeColors[story.score.grade]}
-        />
-        <Text style={{ color: gradeColors[story.score.grade] || '#6b7280' }}>
-          {story.score.overall}分
-        </Text>
-        <Text
-          className="grade-text"
-          style={{ color: gradeColors[story.score.grade] || '#6b7280' }}
-        >
-          {story.score.grade}
-        </Text>
-      </View>
-    )
-  }
-
   // 渲染状态标签
   const renderStatus = (status: PhotoStory['status']) => {
     const statusConfig = {
-      generating: { text: '生成中', color: '#6b7280' },
-      generated: { text: '未练习', color: '#f59e0b' },
-      practicing: { text: '练习中', color: '#3b82f6' },
-      completed: { text: '已完成', color: '#10b981' },
+      generating: {
+        text: '生成中',
+        color: '#6b7280',
+        icon: 'loading-3',
+        iconColor: '#6b7280',
+      },
+      generated: {
+        text: '未练习',
+        color: '#f59e0b',
+        icon: 'alert-circle',
+        iconColor: '#f59e0b',
+      },
+      practicing: {
+        text: '练习中',
+        color: '#3b82f6',
+        icon: 'loading-2',
+        iconColor: '#3b82f6',
+      },
+      completed: {
+        text: '已练习',
+        color: '#10b981',
+        icon: 'check-circle',
+        iconColor: '#10b981',
+      },
     }
 
     const config = statusConfig[status] || statusConfig.generated
 
     return (
       <View className="status-badge" style={{ color: config.color }}>
+        <AtIcon value={config.icon} size="10" color={config.iconColor} />
         <Text>{config.text}</Text>
       </View>
     )
@@ -195,23 +124,11 @@ const PhotoStoryHistoryPage: React.FC = () => {
   return (
     <View className="photo-story-history-page">
       {/* 导航栏 */}
-      <View className="custom-nav-bar">
-        <View className="nav-bar-content">
-          <View className="back-btn" onClick={() => Taro.navigateBack()}>
-            <AtIcon value="chevron-left" size="24" color="#ffffff" />
-          </View>
-          <Text className="nav-title">拍照历史</Text>
-          <View
-            className="edit-btn"
-            onClick={() => {
-              setIsEditMode(!isEditMode)
-              setSelectedItems(new Set())
-            }}
-          >
-            <Text className="edit-text">{isEditMode ? '取消' : '编辑'}</Text>
-          </View>
-        </View>
-      </View>
+      <CustomNavBar
+        title="拍照历史"
+        backgroundColor="#f59e0b"
+        textColor="white"
+      />
 
       {/* Tab 切换 */}
       <View className="tab-container">
@@ -256,9 +173,7 @@ const PhotoStoryHistoryPage: React.FC = () => {
                 {stories.map(story => (
                   <View
                     key={story.id}
-                    className={`history-item ${
-                      selectedItems.has(story.id) ? 'selected' : ''
-                    }`}
+                    className="history-item"
                     onClick={() => navigateToDetail(story)}
                   >
                     <View className="item-content">
@@ -269,20 +184,12 @@ const PhotoStoryHistoryPage: React.FC = () => {
                           mode="aspectFill"
                           className="story-image"
                         />
-                        {isEditMode && (
-                          <View className="select-checkbox">
-                            {selectedItems.has(story.id) && (
-                              <AtIcon value="check" size="12" color="#ffffff" />
-                            )}
-                          </View>
-                        )}
                       </View>
 
                       {/* 中间内容 */}
                       <View className="item-info">
                         <View className="item-header">
                           <Text className="item-title">{story.titleCn}</Text>
-                          {renderGrade(story)}
                         </View>
                         <Text className="item-preview">
                           {story.standardStory.substring(0, 50)}...
@@ -299,24 +206,22 @@ const PhotoStoryHistoryPage: React.FC = () => {
                       </View>
 
                       {/* 右侧操作 */}
-                      {!isEditMode && (
-                        <View className="item-actions">
-                          <View
-                            className="action-button favorite-button"
-                            onClick={e => {
-                              e.stopPropagation()
-                              handleToggleFavorite(story)
-                            }}
-                          >
-                            <AtIcon
-                              value={story.isFavorite ? 'heart-2' : 'heart'}
-                              size="16"
-                              color={story.isFavorite ? '#ff6b6b' : '#999'}
-                            />
-                          </View>
-                          <Text className="action-text">查看详情</Text>
+                      <View className="item-actions">
+                        <View
+                          className="action-button favorite-button"
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleToggleFavorite(story)
+                          }}
+                        >
+                          <AtIcon
+                            value={story.isFavorite ? 'heart-2' : 'heart'}
+                            size="16"
+                            color={story.isFavorite ? '#ff6b6b' : '#999'}
+                          />
                         </View>
-                      )}
+                        <Text className="action-text">查看详情</Text>
+                      </View>
                     </View>
                   </View>
                 ))}
@@ -352,42 +257,6 @@ const PhotoStoryHistoryPage: React.FC = () => {
           </View>
         )}
       </ScrollView>
-
-      {/* 编辑模式底部操作栏 */}
-      {isEditMode && (
-        <View className="edit-toolbar">
-          <View className="toolbar-content">
-            <View
-              className="select-all"
-              onClick={() => {
-                if (data?.pages) {
-                  const allIds = data.pages.flatMap(page =>
-                    page.items.map(item => item.id)
-                  )
-                  if (selectedItems.size === allIds.length) {
-                    setSelectedItems(new Set())
-                  } else {
-                    setSelectedItems(new Set(allIds))
-                  }
-                }
-              }}
-            >
-              <Text className="select-text">
-                {selectedItems.size > 0
-                  ? `已选择 ${selectedItems.size} 项`
-                  : '全选'}
-              </Text>
-            </View>
-            <View
-              className={`delete-btn ${selectedItems.size === 0 ? 'disabled' : ''}`}
-              onClick={handleDelete}
-            >
-              <AtIcon value="trash" size="20" color="#ffffff" />
-              <Text className="delete-text">删除</Text>
-            </View>
-          </View>
-        </View>
-      )}
     </View>
   )
 }

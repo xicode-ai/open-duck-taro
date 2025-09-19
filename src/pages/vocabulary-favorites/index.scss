@@ -1,0 +1,330 @@
+.vocabulary-favorites-page {
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding-bottom: 20px;
+
+  .page-content {
+    padding: 20px;
+  }
+
+  // 收藏单词卡片
+  .favorite-word-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-left: 4px solid #ffd700;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .word-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+
+      .word-main {
+        flex: 1;
+
+        .word-text {
+          font-size: 24px;
+          font-weight: 600;
+          color: #2c3e50;
+          margin-bottom: 8px;
+          display: block;
+        }
+
+        .word-definition {
+          font-size: 16px;
+          color: #7f8c8d;
+          line-height: 1.4;
+          margin-bottom: 12px;
+          display: block;
+        }
+
+        .pronunciation {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .region {
+            font-size: 14px;
+            color: #34495e;
+            font-weight: 500;
+            min-width: 16px;
+          }
+
+          .phonetic {
+            font-size: 14px;
+            color: #7f8c8d;
+            font-family: 'Courier New', monospace;
+            margin-right: 4px;
+          }
+        }
+      }
+
+      .word-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+
+        .favorite-star {
+          color: #ffd700;
+          transition: transform 0.2s ease;
+
+          &:hover {
+            transform: scale(1.1);
+          }
+        }
+
+        .stage-badge {
+          padding: 4px 8px;
+          background: #ecf0f1;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 500;
+          color: #7f8c8d;
+        }
+      }
+    }
+
+    .example-section {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+
+      .example-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        display: block;
+      }
+
+      .example-sentence {
+        font-size: 15px;
+        color: #2c3e50;
+        line-height: 1.6;
+        margin-bottom: 8px;
+        display: block;
+
+        .highlight {
+          color: #6366f1;
+          font-weight: 600;
+        }
+      }
+
+      .example-translation {
+        font-size: 14px;
+        color: #7f8c8d;
+        line-height: 1.5;
+        display: block;
+      }
+    }
+
+    .word-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      font-size: 12px;
+      color: #95a5a6;
+
+      .study-actions {
+        display: flex;
+        gap: 12px;
+
+        .action-button {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 6px 12px;
+          background: #f8f9fa;
+          border-radius: 16px;
+          font-size: 12px;
+          color: #6c757d;
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: #e9ecef;
+            color: #495057;
+          }
+
+          &.practice {
+            background: #e7f3ff;
+            color: #0066cc;
+
+            &:hover {
+              background: #cce7ff;
+            }
+          }
+
+          &.remove {
+            background: #ffe7e7;
+            color: #dc3545;
+
+            &:hover {
+              background: #ffcccc;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 统计信息
+  .favorites-stats {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .stats-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+
+      .stat-item {
+        text-align: center;
+
+        .stat-value {
+          font-size: 24px;
+          font-weight: 700;
+          color: #ffd700;
+          margin-bottom: 4px;
+          display: block;
+        }
+
+        .stat-label {
+          font-size: 12px;
+          color: #7f8c8d;
+          display: block;
+        }
+      }
+    }
+  }
+
+  // 加载状态
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+  }
+
+  // 空状态
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    text-align: center;
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    .empty-title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #7f8c8d;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .empty-subtitle {
+      font-size: 14px;
+      color: #bdc3c7;
+      margin-bottom: 24px;
+      display: block;
+    }
+
+    .start-study-button {
+      padding: 12px 24px;
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #5b5bdb;
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  // 无更多数据提示
+  .no-more-data {
+    text-align: center;
+    padding: 20px;
+    font-size: 14px;
+    color: #95a5a6;
+  }
+
+  // 筛选和排序
+  .filter-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    .filter-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .total-count {
+        font-size: 14px;
+        color: #7f8c8d;
+
+        .count-number {
+          color: #6366f1;
+          font-weight: 600;
+        }
+      }
+    }
+
+    .sort-button {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      background: white;
+      border: 1px solid #e9ecef;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #6c757d;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: #6366f1;
+        color: #6366f1;
+      }
+    }
+  }
+}

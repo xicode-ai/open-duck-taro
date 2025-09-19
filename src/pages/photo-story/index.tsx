@@ -8,6 +8,7 @@ import {
   useGenerateStory,
   useSpeechScore as useSpeechScoreHook,
   useToggleFavorite,
+  useUpdateStoryScore,
 } from '@/hooks/usePhotoStory'
 import { useAudioRecording } from '@/hooks/useAudioRecording'
 import type { PhotoStoryScore } from '@/types'
@@ -49,6 +50,7 @@ const PhotoStoryPage: React.FC = () => {
   const generateStory = useGenerateStory()
   const speechScoreApi = useSpeechScoreHook()
   const toggleFavoriteMutation = useToggleFavorite()
+  const updateStoryScoreWithCache = useUpdateStoryScore()
 
   // 清理页面离开时可能残留的blob URL
   useEffect(() => {
@@ -662,6 +664,8 @@ const PhotoStoryPage: React.FC = () => {
           })
           if (scoreResult.score) {
             setSpeechScore(scoreResult.score)
+            // 更新 store 中的故事评分和状态，同时同步更新历史数据缓存
+            updateStoryScoreWithCache(scoreResult.score, speechContentType)
           }
         } catch (error) {
           console.error('评分失败:', error)
@@ -917,6 +921,32 @@ const PhotoStoryPage: React.FC = () => {
                       {currentStory.standardStory}
                     </Text>
                   </View>
+
+                  {/* 播放和跟读按钮移到短文内容下方 */}
+                  <View className="story-actions">
+                    <View
+                      className={`story-action-button play-button ${playingAudio === 'standard-audio' ? 'playing' : ''}`}
+                      onClick={() =>
+                        playAudio(currentStory.standardStory, 'standard')
+                      }
+                    >
+                      <AtIcon
+                        value="sound"
+                        size="16"
+                        color={
+                          playingAudio === 'standard-audio' ? '#fff' : '#2196F3'
+                        }
+                      />
+                      <Text className="action-text">播放</Text>
+                    </View>
+                    <View
+                      className="story-action-button speech-button"
+                      onClick={() => openSpeechModal('standard')}
+                    >
+                      <AtIcon value="volume-plus" size="16" color="#fff" />
+                      <Text className="action-text">跟读</Text>
+                    </View>
+                  </View>
                 </View>
                 {/* 条件渲染翻译内容 */}
                 {showStandardTranslation && (
@@ -928,30 +958,17 @@ const PhotoStoryPage: React.FC = () => {
                 )}
               </View>
               <View className="card-footer">
-                <View className="action-buttons-group">
-                  <View
-                    className={`action-button play-button ${playingAudio === 'standard-audio' ? 'playing' : ''}`}
-                    onClick={() =>
-                      playAudio(currentStory.standardStory, 'standard')
-                    }
-                  >
-                    <AtIcon
-                      value="volume-plus"
-                      size="16"
-                      color={
-                        playingAudio === 'standard-audio' ? '#fff' : '#2196F3'
-                      }
-                    />
-                    <Text className="action-text">播放</Text>
+                {/* 标准短文发音分显示区域 */}
+                {currentStory?.standardScore && (
+                  <View className="score-display-inline">
+                    <View className="score-item">
+                      <AtIcon value="star-2" size="12" color="#FCD34D" />
+                      <Text className="score-text">
+                        发音分: {currentStory.standardScore.overall}分
+                      </Text>
+                    </View>
                   </View>
-                  <View
-                    className="action-button speech-button"
-                    onClick={() => openSpeechModal('standard')}
-                  >
-                    <AtIcon value="sound" size="16" color="#fff" />
-                    <Text className="action-text">跟读</Text>
-                  </View>
-                </View>
+                )}
                 <View
                   className="footer-action favorite-action"
                   onClick={() => handleToggleFavorite()}
@@ -993,6 +1010,32 @@ const PhotoStoryPage: React.FC = () => {
                       {currentStory.nativeStory}
                     </Text>
                   </View>
+
+                  {/* 播放和跟读按钮移到短文内容下方 */}
+                  <View className="story-actions">
+                    <View
+                      className={`story-action-button play-button native-play ${playingAudio === 'native-audio' ? 'playing' : ''}`}
+                      onClick={() =>
+                        playAudio(currentStory.nativeStory, 'native')
+                      }
+                    >
+                      <AtIcon
+                        value="sound"
+                        size="16"
+                        color={
+                          playingAudio === 'native-audio' ? '#fff' : '#4CAF50'
+                        }
+                      />
+                      <Text className="action-text">播放</Text>
+                    </View>
+                    <View
+                      className="story-action-button speech-button"
+                      onClick={() => openSpeechModal('native')}
+                    >
+                      <AtIcon value="volume-plus" size="16" color="#fff" />
+                      <Text className="action-text">跟读</Text>
+                    </View>
+                  </View>
                 </View>
                 {/* 条件渲染翻译内容 */}
                 {showNativeTranslation && (
@@ -1004,30 +1047,17 @@ const PhotoStoryPage: React.FC = () => {
                 )}
               </View>
               <View className="card-footer">
-                <View className="action-buttons-group">
-                  <View
-                    className={`action-button play-button native-play ${playingAudio === 'native-audio' ? 'playing' : ''}`}
-                    onClick={() =>
-                      playAudio(currentStory.nativeStory, 'native')
-                    }
-                  >
-                    <AtIcon
-                      value="volume-plus"
-                      size="16"
-                      color={
-                        playingAudio === 'native-audio' ? '#fff' : '#4CAF50'
-                      }
-                    />
-                    <Text className="action-text">播放</Text>
+                {/* 地道短文发音分显示区域 */}
+                {currentStory?.nativeScore && (
+                  <View className="score-display-inline">
+                    <View className="score-item">
+                      <AtIcon value="star-2" size="12" color="#FCD34D" />
+                      <Text className="score-text">
+                        发音分: {currentStory.nativeScore.overall}分
+                      </Text>
+                    </View>
                   </View>
-                  <View
-                    className="action-button speech-button"
-                    onClick={() => openSpeechModal('native')}
-                  >
-                    <AtIcon value="sound" size="16" color="#fff" />
-                    <Text className="action-text">跟读</Text>
-                  </View>
-                </View>
+                )}
                 <View
                   className="footer-action favorite-action"
                   onClick={() => handleToggleFavorite()}

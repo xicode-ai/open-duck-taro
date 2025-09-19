@@ -18,6 +18,11 @@ interface PhotoStoryState {
   setRecording: (status: boolean) => void
   setSelectedStoryType: (type: 'standard' | 'native') => void
   updatePracticeScore: (sentenceId: string, score: PhotoStoryScore) => void
+  updateStoryScore: (score: PhotoStoryScore) => void
+  updateStoryScoreByType: (
+    score: PhotoStoryScore,
+    type: 'standard' | 'native'
+  ) => void
   toggleFavorite: () => void
   nextPractice: () => void
   previousPractice: () => void
@@ -90,6 +95,44 @@ export const usePhotoStoryStore = create<PhotoStoryState>((set, get) => ({
     })
   },
 
+  updateStoryScore: score => {
+    set(state => {
+      if (state.currentStory) {
+        return {
+          currentStory: {
+            ...state.currentStory,
+            standardScore: score,
+            status: 'completed' as const,
+          },
+        }
+      }
+      return state
+    })
+  },
+
+  updateStoryScoreByType: (
+    score: PhotoStoryScore,
+    type: 'standard' | 'native'
+  ) => {
+    set(state => {
+      if (state.currentStory) {
+        const updates =
+          type === 'standard'
+            ? { standardScore: score }
+            : { nativeScore: score }
+
+        return {
+          currentStory: {
+            ...state.currentStory,
+            ...updates,
+            status: 'completed' as const,
+          },
+        }
+      }
+      return state
+    })
+  },
+
   toggleFavorite: () => {
     set(state => {
       if (state.currentStory) {
@@ -143,7 +186,8 @@ export const usePhotoStoryStore = create<PhotoStoryState>((set, get) => ({
         currentStory: {
           ...currentStory,
           sentences: resetSentences,
-          score: undefined,
+          standardScore: undefined,
+          nativeScore: undefined,
           status: 'generated' as const,
         },
       })
