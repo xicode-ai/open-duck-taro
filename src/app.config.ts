@@ -13,6 +13,7 @@ export default {
     'pages/vocabulary-study/index',
     'pages/vocabulary-history/index',
     'pages/vocabulary-favorites/index',
+    'pages/word-detail/index',
     'pages/progress/index',
     'pages/membership/index',
   ],

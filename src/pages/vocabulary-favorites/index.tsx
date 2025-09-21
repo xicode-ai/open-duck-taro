@@ -263,41 +263,44 @@ const VocabularyFavorites = () => {
 
           {/* 收藏单词列表 */}
           {allFavorites.map(word => (
-            <View key={word.id} className="favorite-word-card">
-              <View className="word-header">
-                <View className="word-main">
+            <View
+              key={word.id}
+              className="favorite-word-card"
+              onClick={() => handlePracticeWord(word)}
+            >
+              <View className="card-content">
+                <View className="word-section">
                   <Text className="word-text">{word.word}</Text>
-                  <Text className="word-definition">
-                    {word.partOfSpeech}. {word.meaning}
-                  </Text>
-                  <View className="pronunciation">
-                    <Text className="region">英</Text>
-                    <Text className="phonetic">{word.pronunciation.uk}</Text>
-                    <IconFont name="play" size={16} color="#6366f1" />
-                    <Text className="region" style={{ marginLeft: '16px' }}>
-                      美
-                    </Text>
-                    <Text className="phonetic">{word.pronunciation.us}</Text>
-                    <IconFont name="play" size={16} color="#6366f1" />
+                  <View className="word-meta">
+                    <View className="pronunciation">
+                      <Text className="phonetic-item">
+                        UK {word.pronunciation.uk}
+                      </Text>
+                      <Text className="phonetic-item">
+                        US {word.pronunciation.us}
+                      </Text>
+                    </View>
+                    <View className="stage-badge">
+                      {getStageText(word.stage)}
+                    </View>
                   </View>
                 </View>
 
-                <View className="word-actions">
-                  <IconFont
-                    name="star"
-                    size={20}
-                    className="favorite-star"
-                    onClick={() => handleRemoveFavorite(word)}
-                  />
-                  <View className="stage-badge">
-                    {getStageText(word.stage)}
+                <View className="actions-section">
+                  <View
+                    className="favorite-action"
+                    onClick={e => {
+                      e.stopPropagation()
+                      handleRemoveFavorite(word)
+                    }}
+                  >
+                    <IconFont name="star" size={20} color="#ffd700" />
                   </View>
                 </View>
               </View>
 
               {/* 例句展示 */}
               <View className="example-section">
-                <Text className="example-title">例句</Text>
                 <Text className="example-sentence">
                   {word.example.english.split(word.word).map((part, index) => (
                     <React.Fragment key={index}>
@@ -309,29 +312,6 @@ const VocabularyFavorites = () => {
                     </React.Fragment>
                   ))}
                 </Text>
-                <Text className="example-translation">
-                  {word.example.chinese}
-                </Text>
-              </View>
-
-              {/* 操作按钮 */}
-              <View className="word-meta">
-                <View className="study-actions">
-                  <View
-                    className="action-button practice"
-                    onClick={() => handlePracticeWord(word)}
-                  >
-                    <IconFont name="book" size={12} color="#0066cc" />
-                    <Text>练习</Text>
-                  </View>
-                  <View
-                    className="action-button remove"
-                    onClick={() => handleRemoveFavorite(word)}
-                  >
-                    <IconFont name="close" size={12} color="#dc3545" />
-                    <Text>取消收藏</Text>
-                  </View>
-                </View>
               </View>
             </View>
           ))}

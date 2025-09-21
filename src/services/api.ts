@@ -547,6 +547,21 @@ export const vocabularyApi = {
       hasMore: boolean
     }>(`/api/vocabulary/favorites?${searchParams}`, { cache: false })
   },
+
+  // 更新单词认识度
+  updateWordKnowledgeLevel: (
+    wordId: string,
+    knowledgeLevel: WordKnowledgeLevel
+  ) =>
+    httpClient.post<{
+      wordId: string
+      knowledgeLevel: WordKnowledgeLevel
+      updatedRecords: number
+    }>(
+      '/api/vocabulary/update-knowledge-level',
+      { wordId, knowledgeLevel },
+      { showLoading: false }
+    ),
 }
 
 // 发音评分相关API

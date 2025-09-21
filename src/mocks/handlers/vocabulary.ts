@@ -761,15 +761,32 @@ export const vocabularyHandlers = [
 
   // 获取学习历史记录（分页）
   http.get('/api/vocabulary/study-history', async ({ request }) => {
-    await delay(500)
+    await delay(300) // 减少延迟，提升用户体验
     const url = new URL(request.url)
     const page = Number(url.searchParams.get('page')) || 1
     const pageSize = Number(url.searchParams.get('pageSize')) || 10
     const type = url.searchParams.get('type') // 'all' | 'favorites'
 
-    let filteredHistory = vocabularyData.studyHistory
+    // 扩展历史记录数据，支持更多页面测试
+    const expandedHistory = []
+    for (let i = 0; i < 50; i++) {
+      const baseRecord =
+        vocabularyData.studyHistory[i % vocabularyData.studyHistory.length]
+      const record = {
+        ...baseRecord,
+        id: `history-${i + 1}`,
+        studiedAt: new Date(Date.now() - i * 3600000).toISOString(), // 每小时递减
+        word: `${baseRecord.word}${i > vocabularyData.studyHistory.length - 1 ? i : ''}`,
+        knowledgeLevel: (['known', 'vague', 'unknown'] as const)[i % 3],
+        isFavorited: i % 5 === 0, // 每5个一个收藏
+        responseTime: 1500 + Math.floor(Math.random() * 4000), // 1.5-5.5秒反应时间
+      }
+      expandedHistory.push(record)
+    }
+
+    let filteredHistory = expandedHistory
     if (type === 'favorites') {
-      filteredHistory = vocabularyData.studyHistory.filter(h => h.isFavorited)
+      filteredHistory = expandedHistory.filter(h => h.isFavorited)
     }
 
     const startIndex = (page - 1) * pageSize
@@ -881,6 +898,33 @@ export const vocabularyHandlers = [
         hasMore: endIndex < favoriteWords.length,
       },
       message: 'success',
+    })
+  }),
+
+  // 更新单词认识度
+  http.post('/api/vocabulary/update-knowledge-level', async ({ request }) => {
+    await delay(300)
+    const body = (await request.json()) as {
+      wordId: string
+      knowledgeLevel: WordKnowledgeLevel
+    }
+
+    // 更新历史记录中的认识度
+    const historyRecords = vocabularyData.studyHistory.filter(
+      h => h.wordId === body.wordId
+    )
+    historyRecords.forEach(record => {
+      record.knowledgeLevel = body.knowledgeLevel
+    })
+
+    return HttpResponse.json({
+      code: 200,
+      data: {
+        wordId: body.wordId,
+        knowledgeLevel: body.knowledgeLevel,
+        updatedRecords: historyRecords.length,
+      },
+      message: '认识度已更新',
     })
   }),
 ]

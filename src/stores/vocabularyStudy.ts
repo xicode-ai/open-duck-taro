@@ -46,6 +46,12 @@ interface VocabularyStudyState {
   // 收藏操作
   toggleWordFavorite: (wordId: string, isFavorited: boolean) => void
 
+  // 认识度更新
+  updateWordKnowledgeLevel: (
+    wordId: string,
+    knowledgeLevel: WordKnowledgeLevel
+  ) => void
+
   // 进度数据管理
   setDailyProgress: (progress: DailyStudyProgress) => void
   updateProgressAnimated: (
@@ -164,6 +170,12 @@ export const useVocabularyStudyStore = create<VocabularyStudyState>()(
         queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.VOCABULARY_STUDY_HISTORY,
         })
+        // 使当前单词详情失效
+        if (currentWord) {
+          queryClient.invalidateQueries({
+            queryKey: QUERY_KEYS.VOCABULARY_STUDY_WORD_DETAIL(currentWord.id),
+          })
+        }
       },
 
       // 切换单词收藏状态
@@ -276,6 +288,29 @@ export const useVocabularyStudyStore = create<VocabularyStudyState>()(
         const startTime = new Date(sessionStats.startTime).getTime()
         const now = Date.now()
         return Math.round((now - startTime) / (1000 * 60))
+      },
+
+      // 更新单词认识度
+      updateWordKnowledgeLevel: (
+        wordId: string,
+        knowledgeLevel: WordKnowledgeLevel
+      ) => {
+        const state = get()
+
+        // 更新历史记录中的认识度
+        const updatedHistory = state.studyHistory.map(record =>
+          record.wordId === wordId ? { ...record, knowledgeLevel } : record
+        )
+
+        set({ studyHistory: updatedHistory })
+
+        // 使相关的 React Query 缓存失效，触发重新获取
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.VOCABULARY_STUDY_HISTORY,
+        })
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.VOCABULARY_STUDY_WORD_DETAIL(wordId),
+        })
       },
     }),
     {

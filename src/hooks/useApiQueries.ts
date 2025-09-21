@@ -7,7 +7,7 @@ import {
   translateApi,
   photoStoryApi,
 } from '@/services/api'
-import type { User } from '@/types'
+import type { User, WordKnowledgeLevel } from '@/types'
 
 // Query Keys 常量
 export const QUERY_KEYS = {
@@ -485,6 +485,33 @@ export const useFavoriteWords = (params?: {
       return response.data
     },
     staleTime: 2 * 60 * 1000, // 2分钟内认为数据是新鲜的
+  })
+}
+
+/**
+ * 更新单词认识度
+ */
+export const useUpdateWordKnowledgeLevel = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      wordId,
+      knowledgeLevel,
+    }: {
+      wordId: string
+      knowledgeLevel: WordKnowledgeLevel
+    }) => vocabularyApi.updateWordKnowledgeLevel(wordId, knowledgeLevel),
+    onSuccess: (data, variables) => {
+      // 使学习历史失效
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.VOCABULARY_STUDY_HISTORY,
+      })
+      // 使单词详情失效
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.VOCABULARY_STUDY_WORD_DETAIL(variables.wordId),
+      })
+    },
   })
 }
 

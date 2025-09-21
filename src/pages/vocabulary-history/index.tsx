@@ -2,9 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import CustomNavBar from '@/components/common/CustomNavBar'
-import IconFont from '@/components/IconFont'
 import Loading from '@/components/common/Loading'
-import { useStudyHistory, useToggleWordFavorite } from '@/hooks/useApiQueries'
+import { useStudyHistory } from '@/hooks/useApiQueries'
 import { useVocabularyStudyStore } from '@/stores'
 import type { WordStudyRecord } from '@/types'
 import { formatDate } from '@/utils/date'
@@ -30,7 +29,6 @@ const VocabularyHistory = () => {
     pageSize,
     type: currentFilter,
   })
-  const toggleWordFavorite = useToggleWordFavorite()
   const { studyHistory } = useVocabularyStudyStore()
 
   // 合并服务端数据和本地缓存数据
@@ -106,38 +104,13 @@ const VocabularyHistory = () => {
     }
   }, [hasMore, isLoadingMore])
 
-  // 切换收藏状态
-  const handleToggleFavorite = useCallback(
-    async (record: WordStudyRecord) => {
-      const newFavoriteStatus = !record.isFavorited
-
-      try {
-        await toggleWordFavorite.mutateAsync({
-          wordId: record.wordId,
-          isFavorited: newFavoriteStatus,
-        })
-
-        // 更新本地记录
-        setAllRecords(prev =>
-          prev.map(r =>
-            r.id === record.id ? { ...r, isFavorited: newFavoriteStatus } : r
-          )
-        )
-
-        Taro.showToast({
-          title: newFavoriteStatus ? '已收藏' : '已取消收藏',
-          icon: 'success',
-        })
-      } catch (error) {
-        console.error('收藏操作失败:', error)
-        Taro.showToast({
-          title: '操作失败，请重试',
-          icon: 'error',
-        })
-      }
-    },
-    [toggleWordFavorite]
-  )
+  // 点击卡片进入单词详情页
+  const handleCardClick = useCallback((record: WordStudyRecord) => {
+    // TODO: 导航到单词详情页
+    Taro.navigateTo({
+      url: `/pages/word-detail/index?wordId=${record.wordId}&word=${record.word}`,
+    })
+  }, [])
 
   // 获取状态显示文本
   const getStatusText = useCallback(
@@ -175,7 +148,10 @@ const VocabularyHistory = () => {
 
   return (
     <View className="vocabulary-history-page">
-      <CustomNavBar title="学习历史" backgroundColor="#6366f1" />
+      <CustomNavBar
+        title="学习历史"
+        backgroundColor="linear-gradient(135deg, #ef5350 0%, #e53935 100%)"
+      />
 
       <View className="page-content">
         {/* 筛选标签 */}
@@ -233,34 +209,28 @@ const VocabularyHistory = () => {
             <View
               key={record.id}
               className={`study-record-card study-record-card--${record.knowledgeLevel}`}
+              onClick={() => handleCardClick(record)}
             >
-              <View className="record-header">
-                <View className="word-info">
+              <View className="card-content">
+                <View className="word-section">
                   <Text className="word-text">{record.word}</Text>
-                  <Text className="word-meaning">{record.meaning}</Text>
-                </View>
-                <View className="record-status">
-                  <View
-                    className={`status-badge status-badge--${record.knowledgeLevel}`}
-                  >
-                    {getStatusText(record.knowledgeLevel)}
+                  <View className="word-meta">
+                    <View
+                      className={`status-badge status-badge--${record.knowledgeLevel}`}
+                    >
+                      {getStatusText(record.knowledgeLevel)}
+                    </View>
+                    <View className="stage-badge">
+                      {getStageText(record.stage)}
+                    </View>
                   </View>
-                  <IconFont
-                    name="star"
-                    size={16}
-                    color={record.isFavorited ? '#FFD700' : '#bdc3c7'}
-                    className={`favorite-icon ${record.isFavorited ? 'favorited' : ''}`}
-                    onClick={() => handleToggleFavorite(record)}
-                  />
                 </View>
-              </View>
 
-              <View className="record-meta">
-                <View className="study-time">
-                  <IconFont name="clock" size={12} color="#95a5a6" />
-                  <Text>{formatDate(new Date(record.studiedAt))}</Text>
+                <View className="date-section">
+                  <Text className="study-date">
+                    {formatDate(new Date(record.studiedAt))}
+                  </Text>
                 </View>
-                <View className="stage-info">{getStageText(record.stage)}</View>
               </View>
             </View>
           ))}
