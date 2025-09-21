@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { queryClient } from '@/providers/QueryProvider'
+import { QUERY_KEYS } from '@/hooks/useApiQueries'
 import type { Vocabulary } from '@/types'
 
 // 单词状态接口
@@ -53,39 +55,76 @@ export const useVocabularyStore = create<VocabularyState>()(
       currentLevel: 'elementary',
       studyProgress: {},
 
-      setVocabularies: (vocabularies: Vocabulary[]) => set({ vocabularies }),
+      setVocabularies: (vocabularies: Vocabulary[]) => {
+        set({ vocabularies })
+        // 同步更新 React Query 缓存
+        queryClient.setQueryData(QUERY_KEYS.VOCABULARIES, vocabularies)
+      },
 
-      addVocabulary: (vocabulary: Vocabulary) =>
+      addVocabulary: (vocabulary: Vocabulary) => {
         set(state => ({
           vocabularies: [...state.vocabularies, vocabulary],
-        })),
+        }))
+        // 使相关查询失效
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VOCABULARIES })
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.VOCABULARY_BY_LEVEL(vocabulary.level),
+        })
+      },
 
-      updateVocabulary: (id: string, updates: Partial<Vocabulary>) =>
+      updateVocabulary: (id: string, updates: Partial<Vocabulary>) => {
         set(state => ({
           vocabularies: state.vocabularies.map(vocab =>
             vocab.id === id ? { ...vocab, ...updates } : vocab
           ),
-        })),
+        }))
+        // 使相关查询失效
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VOCABULARIES })
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.VOCABULARY_STUDY_WORD_DETAIL(id),
+        })
+      },
 
-      addStudiedWord: (wordId: string) =>
+      addStudiedWord: (wordId: string) => {
         set(state => ({
           studiedWords: state.studiedWords.includes(wordId)
             ? state.studiedWords
             : [...state.studiedWords, wordId],
-        })),
+        }))
+        // 使学习相关缓存失效
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.VOCABULARY_STUDY_HISTORY,
+        })
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.VOCABULARY_DAILY_PROGRESS(),
+        })
+      },
 
-      removeStudiedWord: (wordId: string) =>
+      removeStudiedWord: (wordId: string) => {
         set(state => ({
           studiedWords: state.studiedWords.filter(id => id !== wordId),
-        })),
+        }))
+        // 使学习相关缓存失效
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.VOCABULARY_STUDY_HISTORY,
+        })
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.VOCABULARY_DAILY_PROGRESS(),
+        })
+      },
 
-      updateStudyProgress: (wordId: string, progress: number) =>
+      updateStudyProgress: (wordId: string, progress: number) => {
         set(state => ({
           studyProgress: {
             ...state.studyProgress,
             [wordId]: Math.max(0, Math.min(100, progress)),
           },
-        })),
+        }))
+        // 使学习进度相关缓存失效
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.VOCABULARY_DAILY_PROGRESS(),
+        })
+      },
 
       isWordStudied: (wordId: string) => {
         const { studiedWords } = get()
@@ -97,17 +136,33 @@ export const useVocabularyStore = create<VocabularyState>()(
         return studyProgress[wordId] || 0
       },
 
-      addToFavorites: (wordId: string) =>
+      addToFavorites: (wordId: string) => {
         set(state => ({
           favoriteWords: state.favoriteWords.includes(wordId)
             ? state.favoriteWords
             : [...state.favoriteWords, wordId],
-        })),
+        }))
+        // 使收藏相关缓存失效
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.VOCABULARY_FAVORITES,
+        })
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.VOCABULARY_STUDY_HISTORY,
+        })
+      },
 
-      removeFromFavorites: (wordId: string) =>
+      removeFromFavorites: (wordId: string) => {
         set(state => ({
           favoriteWords: state.favoriteWords.filter(id => id !== wordId),
-        })),
+        }))
+        // 使收藏相关缓存失效
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.VOCABULARY_FAVORITES,
+        })
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.VOCABULARY_STUDY_HISTORY,
+        })
+      },
 
       isFavorite: (wordId: string) => {
         const { favoriteWords } = get()

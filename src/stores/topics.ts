@@ -48,6 +48,8 @@ export const useTopicStore = create<TopicState>()(
         set({ topics })
         // 同步更新 React Query 缓存
         queryClient.setQueryData(QUERY_KEYS.TOPICS, topics)
+        // 如果是热门话题，也更新热门话题缓存
+        queryClient.setQueryData(QUERY_KEYS.HOT_TOPICS, topics)
       },
 
       setCurrentTopic: (topic: Topic | null) => {
@@ -58,6 +60,14 @@ export const useTopicStore = create<TopicState>()(
             queryKey: QUERY_KEYS.TOPIC_DETAIL(topic.id),
             queryFn: () => Promise.resolve(topic),
           })
+          // 预取对话内容
+          queryClient.prefetchQuery({
+            queryKey: QUERY_KEYS.TOPIC_DIALOGUES(topic.id),
+            queryFn: () =>
+              import('@/services/api').then(({ topicApi }) =>
+                topicApi.getTopicDialogueDetail(topic.id)
+              ),
+          })
         }
       },
 
@@ -65,8 +75,10 @@ export const useTopicStore = create<TopicState>()(
         set(state => ({
           topics: [...state.topics, topic],
         }))
-        // 使话题列表查询失效
+        // 使话题相关查询失效
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TOPICS })
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.HOT_TOPICS })
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CUSTOM_TOPICS })
       },
 
       updateTopic: (id: string, updates: Partial<Topic>) => {
@@ -77,7 +89,11 @@ export const useTopicStore = create<TopicState>()(
         }))
         // 更新相关缓存
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TOPICS })
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.HOT_TOPICS })
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CUSTOM_TOPICS })
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TOPIC_DETAIL(id) })
+        // 更新话题进度缓存
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TOPIC_PROGRESS })
       },
 
       addToFavorites: (topicId: string) =>

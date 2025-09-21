@@ -1,0 +1,556 @@
+---
+alwaysApply: true
+---
+
+# API 和 Mock 开发规范
+
+## MSW Mock 服务规范
+
+### MSW 2.10.4 配置
+
+```typescript
+// ✅ 环境检测 - 参考 [src/app.ts](mdc:src/app.ts)
+const isDev = process.env.NODE_ENV === 'development'
+
+// 只在开发环境启用 MSW
+if (isDev || window.location.hostname === 'localhost') {
+  import('./mocks/browser').then(({ worker }) => {
+    worker.start({
+      onUnhandledRequest: 'warn',
+    })
+  })
+}
+```
+
+### MSW Worker 设置
+
+```typescript
+// ✅ MSW Worker 配置 - 参考 [src/mocks/browser.ts](mdc:src/mocks/browser.ts)
+import { setupWorker } from 'msw/browser'
+import { handlers } from './handlers'
+
+export const worker = setupWorker(...handlers)
+
+// 开发环境自动启动
+if (process.env.NODE_ENV === 'development') {
+  worker.start({
+    onUnhandledRequest: 'warn',
+    serviceWorker: {
+      url: '/mockServiceWorker.js',
+    },
+  })
+}
+```
+
+## Mock Handler 定义
+
+```typescript
+// ✅ 标准 Mock Handler - 参考 [src/mocks/handlers/user.ts](mdc:src/mocks/handlers/user.ts)
+import { http, HttpResponse } from 'msw'
+import type { User } from '@/types'
+
+export const userHandlers = [
+  // GET 请求
+  http.get('/api/user/profile', ({ request }) => {
+    const url = new URL(request.url)
+    const userId = url.searchParams.get('userId')
+
+    return HttpResponse.json({
+      code: 200,
+      message: 'success',
+      data: mockUser,
+    })
+  }),
+
+  // POST 请求
+  http.post('/api/user/update', async ({ request }) => {
+    const body = await request.json()
+
+    return HttpResponse.json({
+      code: 200,
+      message: 'success',
+      data: { ...mockUser, ...body },
+    })
+  }),
+]
+```
+
+## HTTP 客户端配置
+
+```typescript
+// ✅ HTTP 客户端 - 参考 [src/services/http.ts](mdc:src/services/http.ts)
+class HttpClient {
+  private instance: AxiosInstance
+
+  constructor() {
+    this.instance = axios.create({
+      baseURL: config.apiConfig.baseURL,
+      timeout: config.apiConfig.timeout,
+    })
+
+    this.setupInterceptors()
+  }
+
+  private setupInterceptors() {
+    // 请求拦截器
+    this.instance.interceptors.request.use(config => {
+      // 添加认证 token
+      const token = getStorage('token')
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
+      return config
+    })
+
+    // 响应拦截器
+    this.instance.interceptors.response.use(
+      response => response.data,
+      error => {
+        // 统一错误处理
+        return Promise.reject(error)
+      }
+    )
+  }
+}
+```
+
+## API 服务层规范
+
+### 基础 API 服务结构
+
+```typescript
+// ✅ API 服务基础类
+abstract class BaseApiService {
+  protected http: HttpClient
+
+  constructor() {
+    this.http = new HttpClient()
+  }
+
+  // 通用请求方法
+  protected async request<T>(config: RequestConfig): Promise<ApiResponse<T>> {
+    try {
+      const response = await this.http.request(config)
+      return response
+    } catch (error) {
+      throw this.handleError(error)
+    }
+  }
+
+  // 错误处理
+  private handleError(error: any): ApiError {
+    // 统一错误处理逻辑
+    return new ApiError(error.message, error.status)
+  }
+}
+
+// ✅ 具体 API 服务实现
+class UserApiService extends BaseApiService {
+  // 获取用户信息
+  async getUserInfo(userId?: string): Promise<ApiResponse<User>> {
+    return this.request<User>({
+      method: 'GET',
+      url: '/api/user/profile',
+      params: { userId },
+    })
+  }
+
+  // 更新用户信息
+  async updateUserInfo(userInfo: Partial<User>): Promise<ApiResponse<User>> {
+    return this.request<User>({
+      method: 'POST',
+      url: '/api/user/update',
+      data: userInfo,
+    })
+  }
+
+  // 上传头像
+  async uploadAvatar(file: File): Promise<ApiResponse<{ url: string }>> {
+    const formData = new FormData()
+    formData.append('avatar', file)
+
+    return this.request<{ url: string }>({
+      method: 'POST',
+      url: '/api/user/avatar',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  }
+}
+```
+
+### API 响应类型定义
+
+```typescript
+// ✅ 统一 API 响应格式
+interface ApiResponse<T = any> {
+  code: number
+  message: string
+  data: T
+  timestamp?: number
+}
+
+// ✅ 分页响应格式
+interface PaginatedResponse<T> {
+  code: number
+  message: string
+  data: {
+    items: T[]
+    total: number
+    page: number
+    pageSize: number
+    hasMore: boolean
+  }
+}
+
+// ✅ 错误响应格式
+interface ApiError {
+  code: number
+  message: string
+  details?: any
+  timestamp: number
+}
+```
+
+### API 请求配置
+
+```typescript
+// ✅ 请求配置接口
+interface RequestConfig {
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
+  url: string
+  params?: Record<string, any>
+  data?: any
+  headers?: Record<string, string>
+  timeout?: number
+}
+
+// ✅ 请求参数验证
+interface GetTopicsParams {
+  category?: string
+  level?: string
+  page?: number
+  pageSize?: number
+  keyword?: string
+}
+
+// ✅ 带类型安全的 API 调用
+const topicApi = {
+  getTopics: (params: GetTopicsParams): Promise<PaginatedResponse<Topic>> => {
+    return httpClient.request({
+      method: 'GET',
+      url: '/api/topics',
+      params,
+    })
+  },
+}
+```
+
+## Mock 数据管理
+
+### Mock 数据生成
+
+```typescript
+// ✅ Mock 数据生成器
+class MockDataGenerator {
+  // 生成用户数据
+  static generateUser(overrides?: Partial<User>): User {
+    return {
+      id: faker.string.uuid(),
+      nickname: faker.person.fullName(),
+      avatar: faker.image.avatar(),
+      email: faker.internet.email(),
+      phone: faker.phone.number(),
+      level: faker.helpers.arrayElement([
+        'beginner',
+        'intermediate',
+        'advanced',
+      ]),
+      createdAt: faker.date.past().toISOString(),
+      updatedAt: faker.date.recent().toISOString(),
+      ...overrides,
+    }
+  }
+
+  // 生成话题数据
+  static generateTopic(overrides?: Partial<Topic>): Topic {
+    return {
+      id: faker.string.uuid(),
+      title: faker.lorem.sentence(),
+      description: faker.lorem.paragraph(),
+      category: faker.helpers.arrayElement([
+        'travel',
+        'food',
+        'shopping',
+        'work',
+      ]),
+      level: faker.helpers.arrayElement([
+        'beginner',
+        'intermediate',
+        'advanced',
+      ]),
+      difficulty: faker.number.int({ min: 1, max: 5 }),
+      estimatedTime: faker.number.int({ min: 5, max: 60 }),
+      isFavorite: faker.datatype.boolean(),
+      createdAt: faker.date.past().toISOString(),
+      ...overrides,
+    }
+  }
+
+  // 生成分页数据
+  static generatePaginatedData<T>(
+    generator: () => T,
+    page: number = 1,
+    pageSize: number = 10,
+    total?: number
+  ): PaginatedResponse<T> {
+    const items = Array.from({ length: pageSize }, generator)
+    const totalCount = total ?? faker.number.int({ min: 50, max: 200 })
+
+    return {
+      code: 200,
+      message: 'success',
+      data: {
+        items,
+        total: totalCount,
+        page,
+        pageSize,
+        hasMore: page * pageSize < totalCount,
+      },
+    }
+  }
+}
+```
+
+### Mock 数据持久化
+
+```typescript
+// ✅ Mock 数据存储
+class MockDataStore {
+  private static instance: MockDataStore
+  private data: Map<string, any[]> = new Map()
+
+  static getInstance(): MockDataStore {
+    if (!MockDataStore.instance) {
+      MockDataStore.instance = new MockDataStore()
+    }
+    return MockDataStore.instance
+  }
+
+  // 初始化数据
+  init() {
+    this.data.set(
+      'users',
+      Array.from({ length: 10 }, () => MockDataGenerator.generateUser())
+    )
+    this.data.set(
+      'topics',
+      Array.from({ length: 20 }, () => MockDataGenerator.generateTopic())
+    )
+    this.data.set(
+      'vocabularies',
+      Array.from({ length: 50 }, () => MockDataGenerator.generateVocabulary())
+    )
+  }
+
+  // 获取数据
+  get<T>(key: string): T[] {
+    return this.data.get(key) || []
+  }
+
+  // 添加数据
+  add<T>(key: string, item: T): void {
+    const items = this.get<T>(key)
+    items.push(item)
+    this.data.set(key, items)
+  }
+
+  // 更新数据
+  update<T>(key: string, id: string, updates: Partial<T>): boolean {
+    const items = this.get<T>(key)
+    const index = items.findIndex((item: any) => item.id === id)
+    if (index !== -1) {
+      items[index] = { ...items[index], ...updates }
+      return true
+    }
+    return false
+  }
+
+  // 删除数据
+  delete<T>(key: string, id: string): boolean {
+    const items = this.get<T>(key)
+    const index = items.findIndex((item: any) => item.id === id)
+    if (index !== -1) {
+      items.splice(index, 1)
+      return true
+    }
+    return false
+  }
+}
+```
+
+## 错误处理规范
+
+### API 错误处理
+
+```typescript
+// ✅ 统一错误处理
+class ApiErrorHandler {
+  static handle(error: any): void {
+    console.error('API Error:', error)
+
+    // 根据错误类型进行不同处理
+    if (error.status === 401) {
+      // 未授权，跳转到登录页
+      Taro.navigateTo({ url: '/pages/login/index' })
+    } else if (error.status === 403) {
+      // 权限不足
+      Taro.showToast({
+        title: '权限不足',
+        icon: 'none',
+      })
+    } else if (error.status >= 500) {
+      // 服务器错误
+      Taro.showToast({
+        title: '服务器错误，请稍后重试',
+        icon: 'none',
+      })
+    } else {
+      // 其他错误
+      Taro.showToast({
+        title: error.message || '请求失败',
+        icon: 'none',
+      })
+    }
+  }
+}
+
+// ✅ 在 HTTP 拦截器中使用
+this.instance.interceptors.response.use(
+  response => response.data,
+  error => {
+    ApiErrorHandler.handle(error)
+    return Promise.reject(error)
+  }
+)
+```
+
+### 网络状态处理
+
+```typescript
+// ✅ 网络状态监听
+class NetworkManager {
+  private static instance: NetworkManager
+  private isOnline: boolean = true
+
+  static getInstance(): NetworkManager {
+    if (!NetworkManager.instance) {
+      NetworkManager.instance = new NetworkManager()
+    }
+    return NetworkManager.instance
+  }
+
+  init() {
+    // 监听网络状态变化
+    Taro.onNetworkStatusChange(res => {
+      this.isOnline = res.isConnected
+
+      if (!res.isConnected) {
+        Taro.showToast({
+          title: '网络连接已断开',
+          icon: 'none',
+        })
+      } else {
+        Taro.showToast({
+          title: '网络连接已恢复',
+          icon: 'success',
+        })
+      }
+    })
+  }
+
+  getOnlineStatus(): boolean {
+    return this.isOnline
+  }
+}
+```
+
+## 缓存策略
+
+### API 缓存配置
+
+```typescript
+// ✅ API 缓存配置
+const cacheConfig = {
+  // 用户信息 - 长缓存
+  userProfile: {
+    staleTime: 30 * 60 * 1000, // 30分钟
+    gcTime: 60 * 60 * 1000, // 1小时
+  },
+
+  // 话题列表 - 中等缓存
+  topics: {
+    staleTime: 15 * 60 * 1000, // 15分钟
+    gcTime: 30 * 60 * 1000, // 30分钟
+  },
+
+  // 实时数据 - 不缓存
+  liveData: {
+    staleTime: 0,
+    gcTime: 0,
+  },
+}
+
+// ✅ 在 React Query 中使用
+const useUserProfile = () => {
+  return useQuery({
+    queryKey: ['user', 'profile'],
+    queryFn: () => userApi.getUserInfo(),
+    ...cacheConfig.userProfile,
+  })
+}
+```
+
+## 开发环境配置
+
+### 环境变量配置
+
+```typescript
+// ✅ 环境配置
+const config = {
+  development: {
+    apiBaseURL: 'http://localhost:3000/api',
+    enableMock: true,
+    enableDevTools: true,
+  },
+  production: {
+    apiBaseURL: 'https://api.example.com',
+    enableMock: false,
+    enableDevTools: false,
+  },
+}
+
+const currentConfig = config[process.env.NODE_ENV as keyof typeof config]
+```
+
+### Mock 服务开关
+
+```typescript
+// ✅ Mock 服务控制
+const shouldEnableMock = () => {
+  const isDev = process.env.NODE_ENV === 'development'
+  const isLocalhost =
+    typeof window !== 'undefined' && window.location.hostname === 'localhost'
+
+  return isDev || isLocalhost
+}
+
+// 只在开发环境启用 Mock
+if (shouldEnableMock()) {
+  import('./mocks/browser').then(({ startWorker }) => {
+    startWorker()
+  })
+}
+```

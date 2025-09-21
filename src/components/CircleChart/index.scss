@@ -1,0 +1,72 @@
+.circle-chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  &--small {
+    .circle-chart-title {
+      font-size: 12px;
+    }
+
+    .growth-text {
+      font-size: 10px;
+    }
+  }
+
+  &--medium {
+    .circle-chart-title {
+      font-size: 14px;
+    }
+
+    .growth-text {
+      font-size: 12px;
+    }
+  }
+
+  &--large {
+    .circle-chart-title {
+      font-size: 16px;
+    }
+
+    .growth-text {
+      font-size: 14px;
+    }
+  }
+}
+
+.circle-chart-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.circle-chart-title {
+  color: #666;
+  font-weight: 500;
+  text-align: center;
+}
+
+.circle-chart-growth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.growth-text {
+  font-weight: 600;
+
+  &--up {
+    color: #28a745;
+  }
+
+  &--down {
+    color: #dc3545;
+  }
+}
+
+// 强制使用浅色主题，与其他模块保持一致
+.circle-chart-title {
+  color: #666 !important;
+}

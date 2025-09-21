@@ -1,0 +1,142 @@
+---
+alwaysApply: true
+---
+
+# 核心技术栈和项目配置规范
+
+## 框架版本要求
+
+- **Taro**: 4.1.5 (稳定版本，不可随意升级)
+- **React**: 18.x (使用新的 JSX 转换)
+- **TypeScript**: 5.1.6 (严格模式)
+- **Webpack**: 5.x (构建工具)
+
+## 必须遵循的技术选型
+
+- **状态管理**: Zustand 5.0.7 (客户端状态管理) + React Query 5.84.2 (API服务端数据状态管理) (禁止使用 Redux)
+- **UI 组件**: Taro UI 3.3.0 (优先使用官方组件)
+- **样式**: SCSS + PostCSS (禁止使用 CSS-in-JS)
+- **HTTP**: Axios 1.11.0 + MSW 2.10.4 (开发环境 Mock)
+- **包管理**: pnpm (禁止使用 npm/yarn)
+- **代码规范检查**: ESLint 9.33.0, Stylelint 14.16.1, Prettier 3.6.2
+- **测试框架**: Jest (jsdom 环境)
+- **错误边界**: React ErrorBoundary
+- **图标管理**: taro-iconfont-cli 3.3.0
+- **国际化**: i18next 25.3.4 + react-i18next 15.6.1
+- **时间处理**: dayjs 1.11.13
+- **数据处理**: immer 10.1.1, lodash-es 4.17.21
+
+## 参考文档
+
+- **Taro 官方技术文档**: https://docs.taro.zone/docs/ 优先以官方文档的为准
+
+## 跨平台兼容性规则
+
+### 尺寸单位规范
+
+```scss
+// ✅ 推荐：使用 px，Taro 会自动转换
+.container {
+  width: 375px;
+  height: 200px;
+  margin: 20px;
+}
+
+// ✅ 推荐：使用百分比
+.flexible {
+  width: 100%;
+  height: 50%;
+}
+
+// ❌ 禁止：不要使用 rem、em、vw、vh
+.wrong {
+  width: 10rem; // 禁止
+  height: 50vh; // 禁止
+}
+```
+
+### 设计稿适配
+
+- **设计稿宽度**: 375px (iPhone 标准)
+- **设备比例配置**: 已在 [config/index.ts](mdc:config/index.ts) 中配置
+- **响应式**: 通过 Taro 框架自动处理
+
+### API 调用规范
+
+```typescript
+// ✅ 使用统一的 API 服务
+import { userApi } from '@/services/api'
+
+// ✅ 使用 React Query 管理状态
+const { data, isLoading } = useQuery({
+  queryKey: ['user', userId],
+  queryFn: () => userApi.getProfile(userId),
+})
+
+// ❌ 禁止直接使用 Taro.request
+Taro.request({ url: '/api/user' }) // 禁止
+```
+
+## 平台特定注意事项
+
+### 小程序限制
+
+- 不能使用 `eval()` 和 `new Function()`
+- 不能动态加载脚本
+- 图片资源需要配置域名白名单
+- 音频播放需要用户交互触发
+
+### H5 特定
+
+- 支持完整的 Web API
+- 可以使用 localStorage
+- 支持 Service Worker (MSW)
+
+### 权限处理
+
+```typescript
+// ✅ 统一的权限请求
+import Taro from '@tarojs/taro'
+
+const requestRecordPermission = async () => {
+  try {
+    const result = await Taro.authorize({
+      scope: 'scope.record',
+    })
+    return result.errMsg === 'authorize:ok'
+  } catch (error) {
+    // 处理权限拒绝
+    return false
+  }
+}
+```
+
+## 生产环境注意事项
+
+### 禁止事项
+
+- ❌ 生产环境不能包含 MSW 代码
+- ❌ 不能在生产环境使用 Mock 数据
+- ❌ 不能在生产环境输出调试日志
+
+### 构建检查
+
+```typescript
+// ✅ 构建时检查
+if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {
+  if (window.location.hostname.includes('mock')) {
+    throw new Error('Production build should not include mock services')
+  }
+}
+```
+
+## 注意事项
+
+1. **避免在文件中编写临时脚本**，特别是只需运行一次的数据迁移脚本
+2. **仅测试环境使用模拟数据**，开发与生产环境严禁使用Mock数据
+3. **保持代码稳定性**，确保修改不会影响其他功能的正常运行
+4. **编译检查**，完成功能后必须保证编译正常
+5. **运行检查**，完成功能后必须保证正常运行和调试
+6. **代码格式和规范检查**，完成功能后运行pnpm check，遇到规范和格式问题请修复
+7. 使用真实的 UI 图片，而非占位符图片（可从 Unsplash、Pexels、Apple 官方 UI 资源中选择）
+8. 当前项目是个移动端项目，只需要适配主流手机即可。可通过taro框架去控制。

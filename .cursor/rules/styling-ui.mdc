@@ -1,0 +1,469 @@
+---
+alwaysApply: true
+---
+
+# 样式和UI规范
+
+## SCSS 命名规范 (BEM)
+
+```scss
+// ✅ BEM 命名规范
+.button {
+  // 基础样式
+
+  &--primary {
+    // 修饰符样式
+  }
+
+  &--large {
+    // 尺寸修饰符
+  }
+
+  &__icon {
+    // 元素样式
+  }
+
+  &--disabled {
+    // 状态修饰符
+  }
+}
+```
+
+## 响应式设计
+
+```scss
+// ✅ 移动端优先
+.container {
+  padding: 20px;
+
+  // 使用 Taro 的响应式 mixin
+  @media (min-width: 768px) {
+    padding: 40px;
+  }
+}
+```
+
+## 禁止的样式写法
+
+```scss
+// ❌ 禁止使用 !important
+.button {
+  color: red !important; // 禁止
+}
+
+// ❌ 禁止使用内联样式 (除非动态计算)
+<div style="color: red"> // 禁止
+
+// ❌ 禁止使用非标准单位
+.container {
+  width: 10rem; // 禁止，使用 px
+  height: 50vh; // 禁止，使用 px
+}
+```
+
+## 移动端优化规范
+
+### 触摸友好设计
+
+```scss
+// ✅ 最小触摸目标 44px
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+
+  // 触摸反馈
+  &:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
+```
+
+### 移动端布局规范
+
+```scss
+// ✅ 安全区域适配
+.safe-area {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+// ✅ 移动端滚动优化
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+// ✅ 防止文本选择
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+```
+
+## 颜色和主题规范
+
+### 颜色变量定义
+
+```scss
+// ✅ 统一的颜色变量
+:root {
+  // 主色调
+  --primary-color: #007aff;
+  --primary-light: #4da6ff;
+  --primary-dark: #0056cc;
+
+  // 辅助色
+  --secondary-color: #34c759;
+  --warning-color: #ff9500;
+  --error-color: #ff3b30;
+
+  // 中性色
+  --text-primary: #000000;
+  --text-secondary: #8e8e93;
+  --text-tertiary: #c7c7cc;
+
+  // 背景色
+  --bg-primary: #ffffff;
+  --bg-secondary: #f2f2f7;
+  --bg-tertiary: #e5e5ea;
+
+  // 边框色
+  --border-color: #c6c6c8;
+  --border-light: #e5e5ea;
+}
+
+// ✅ 暗色主题
+[data-theme='dark'] {
+  --text-primary: #ffffff;
+  --text-secondary: #8e8e93;
+  --bg-primary: #000000;
+  --bg-secondary: #1c1c1e;
+  --border-color: #38383a;
+}
+```
+
+### 主题切换
+
+```typescript
+// ✅ 主题切换 Hook
+const useTheme = () => {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+
+  const toggleTheme = useCallback(() => {
+    const newTheme = theme === 'light' ? 'dark' : 'light'
+    setTheme(newTheme)
+    document.documentElement.setAttribute('data-theme', newTheme)
+  }, [theme])
+
+  return { theme, toggleTheme }
+}
+```
+
+## 动画和过渡规范
+
+### 标准动画时长
+
+```scss
+// ✅ 标准动画时长
+:root {
+  --duration-fast: 0.15s;
+  --duration-normal: 0.3s;
+  --duration-slow: 0.5s;
+}
+
+// ✅ 标准缓动函数
+:root {
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+```
+
+### 常用动画效果
+
+```scss
+// ✅ 淡入淡出
+.fade-enter {
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.fade-enter-active {
+  opacity: 1;
+}
+
+// ✅ 滑动效果
+.slide-enter {
+  transform: translateX(-100%);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.slide-enter-active {
+  transform: translateX(0);
+}
+
+// ✅ 缩放效果
+.scale-enter {
+  transform: scale(0.8);
+  opacity: 0;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.scale-enter-active {
+  transform: scale(1);
+  opacity: 1;
+}
+```
+
+## 组件样式规范
+
+### 按钮组件样式
+
+```scss
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  min-height: 44px; // 移动端最小触摸目标
+
+  // 基础样式
+  &--primary {
+    background-color: var(--primary-color);
+    color: white;
+
+    &:hover {
+      background-color: var(--primary-dark);
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  &--secondary {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+
+    &:hover {
+      background-color: var(--primary-color);
+      color: white;
+    }
+  }
+
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &--loading {
+    position: relative;
+    color: transparent;
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+```
+
+### 卡片组件样式
+
+```scss
+.card {
+  background-color: var(--bg-primary);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: box-shadow var(--duration-normal) var(--ease-out);
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  &__header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  &__content {
+    padding: 20px;
+  }
+
+  &__footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-light);
+    background-color: var(--bg-secondary);
+  }
+}
+```
+
+## 布局规范
+
+### Flexbox 布局
+
+```scss
+// ✅ 常用 Flex 布局类
+.flex {
+  display: flex;
+
+  &--center {
+    align-items: center;
+    justify-content: center;
+  }
+
+  &--between {
+    justify-content: space-between;
+  }
+
+  &--around {
+    justify-content: space-around;
+  }
+
+  &--column {
+    flex-direction: column;
+  }
+
+  &--wrap {
+    flex-wrap: wrap;
+  }
+}
+
+// ✅ Flex 项目
+.flex-item {
+  &--1 {
+    flex: 1;
+  }
+  &--2 {
+    flex: 2;
+  }
+  &--3 {
+    flex: 3;
+  }
+  &--auto {
+    flex: auto;
+  }
+  &--none {
+    flex: none;
+  }
+}
+```
+
+### Grid 布局
+
+```scss
+// ✅ Grid 布局类
+.grid {
+  display: grid;
+
+  &--2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  &--3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  &--4 {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+}
+```
+
+## 响应式断点
+
+```scss
+// ✅ 响应式断点
+$breakpoints: (
+  'xs': 0,
+  'sm': 576px,
+  'md': 768px,
+  'lg': 992px,
+  'xl': 1200px,
+  'xxl': 1400px,
+);
+
+// ✅ 响应式 Mixin
+@mixin respond-to($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (min-width: map-get($breakpoints, $breakpoint)) {
+      @content;
+    }
+  }
+}
+
+// 使用示例
+.container {
+  padding: 16px;
+
+  @include respond-to('md') {
+    padding: 24px;
+  }
+
+  @include respond-to('lg') {
+    padding: 32px;
+  }
+}
+```
+
+## 字体和排版规范
+
+```scss
+// ✅ 字体大小规范
+:root {
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
+  --font-size-4xl: 36px;
+}
+
+// ✅ 行高规范
+:root {
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+}
+
+// ✅ 字重规范
+:root {
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+```

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import Taro from '@tarojs/taro'
 import {
   userApi,
   chatApi,
@@ -18,6 +19,9 @@ export const QUERY_KEYS = {
 
   // 话题相关
   TOPICS: ['topics'] as const,
+  HOT_TOPICS: ['topics', 'hot'] as const,
+  CUSTOM_TOPICS: ['topics', 'custom'] as const,
+  TOPIC_PROGRESS: ['topics', 'progress'] as const,
   TOPIC_DETAIL: (topicId: string) => ['topics', 'detail', topicId] as const,
   TOPIC_DIALOGUES: (topicId: string) =>
     ['topics', 'dialogues', topicId] as const,
@@ -55,7 +59,7 @@ export const QUERY_KEYS = {
 // ============ 用户相关 Hooks ============
 
 /**
- * 获取用户信息
+ * 获取用户信息 - 长缓存策略
  */
 export const useUserInfo = () => {
   return useQuery({
@@ -64,12 +68,13 @@ export const useUserInfo = () => {
       const response = await userApi.getUserInfo()
       return response.data
     },
-    staleTime: 10 * 60 * 1000, // 10分钟内认为数据是新鲜的
+    staleTime: 30 * 60 * 1000, // 30分钟内认为数据是新鲜的（用户信息变化不频繁）
+    gcTime: 60 * 60 * 1000, // 1小时后清理缓存
   })
 }
 
 /**
- * 获取用户学习统计
+ * 获取用户学习统计 - 中等缓存策略
  */
 export const useUserStats = () => {
   return useQuery({
@@ -78,7 +83,8 @@ export const useUserStats = () => {
       const response = await userApi.getStudyStats()
       return response.data
     },
-    staleTime: 5 * 60 * 1000, // 5分钟内认为数据是新鲜的
+    staleTime: 2 * 60 * 1000, // 2分钟内认为数据是新鲜的（学习统计更新相对频繁）
+    gcTime: 10 * 60 * 1000, // 10分钟后清理缓存
   })
 }
 
@@ -132,6 +138,48 @@ export const useTopics = (category?: string, level?: string) => {
       return response.data
     },
     staleTime: 15 * 60 * 1000, // 15分钟内认为数据是新鲜的
+  })
+}
+
+/**
+ * 获取热门话题
+ */
+export const useHotTopics = (category?: string, level?: string) => {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.HOT_TOPICS, { category, level }],
+    queryFn: async () => {
+      const response = await topicApi.getHotTopics({ category, level })
+      return response.data
+    },
+    staleTime: 15 * 60 * 1000, // 15分钟内认为数据是新鲜的
+  })
+}
+
+/**
+ * 获取自定义话题
+ */
+export const useCustomTopics = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.CUSTOM_TOPICS,
+    queryFn: async () => {
+      const response = await topicApi.getCustomTopics()
+      return response.data
+    },
+    staleTime: 5 * 60 * 1000, // 5分钟内认为数据是新鲜的
+  })
+}
+
+/**
+ * 获取话题学习进度
+ */
+export const useTopicProgress = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.TOPIC_PROGRESS,
+    queryFn: async () => {
+      const response = await topicApi.getTopicProgress()
+      return response.data
+    },
+    staleTime: 2 * 60 * 1000, // 2分钟内认为数据是新鲜的
   })
 }
 
@@ -225,16 +273,135 @@ export const useResetTopicPractice = () => {
 }
 
 /**
- * 切换话题收藏
+ * 切换话题收藏（带乐观更新）
  */
 export const useToggleTopicFavorite = () => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (topicId: string) => topicApi.toggleFavorite(topicId),
+
+    // 乐观更新
+    onMutate: async topicId => {
+      // 取消正在进行的查询
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.HOT_TOPICS })
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.TOPICS })
+
+      // 保存之前的数据
+      const previousHotTopics = queryClient.getQueryData(QUERY_KEYS.HOT_TOPICS)
+      const previousTopics = queryClient.getQueryData(QUERY_KEYS.TOPICS)
+
+      // 乐观更新热门话题
+      queryClient.setQueryData(QUERY_KEYS.HOT_TOPICS, (old: unknown) =>
+        Array.isArray(old)
+          ? old.map((topic: { id: string; isFavorite?: boolean }) =>
+              topic.id === topicId
+                ? { ...topic, isFavorite: !topic.isFavorite }
+                : topic
+            )
+          : old
+      )
+
+      return { previousHotTopics, previousTopics }
+    },
+
     onSuccess: (data, topicId) => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.TOPIC_DIALOGUES(topicId),
       })
+    },
+
+    // 错误回滚
+    onError: (err, variables, context) => {
+      if (context?.previousHotTopics) {
+        queryClient.setQueryData(
+          QUERY_KEYS.HOT_TOPICS,
+          context.previousHotTopics
+        )
+      }
+      if (context?.previousTopics) {
+        queryClient.setQueryData(QUERY_KEYS.TOPICS, context.previousTopics)
+      }
+    },
+
+    // 最终同步
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.HOT_TOPICS })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TOPICS })
+    },
+  })
+}
+
+/**
+ * 创建自定义话题
+ */
+export const useCreateCustomTopic = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { title: string; description?: string; icon: string }) =>
+      topicApi.createCustomTopic(data),
+    onSuccess: () => {
+      // 刷新自定义话题列表
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CUSTOM_TOPICS })
+    },
+  })
+}
+
+/**
+ * 更新自定义话题
+ */
+export const useUpdateCustomTopic = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      topicId,
+      data,
+    }: {
+      topicId: string
+      data: { title: string; icon: string }
+    }) => topicApi.updateCustomTopic(topicId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CUSTOM_TOPICS })
+    },
+  })
+}
+
+/**
+ * 删除自定义话题（带乐观更新）
+ */
+export const useDeleteCustomTopic = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (topicId: string) => topicApi.deleteCustomTopic(topicId),
+
+    // 乐观更新
+    onMutate: async topicId => {
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.CUSTOM_TOPICS })
+
+      const previousTopics = queryClient.getQueryData(QUERY_KEYS.CUSTOM_TOPICS)
+
+      // 乐观移除话题
+      queryClient.setQueryData(QUERY_KEYS.CUSTOM_TOPICS, (old: unknown) =>
+        Array.isArray(old)
+          ? old.filter((topic: { id: string }) => topic.id !== topicId)
+          : old
+      )
+
+      return { previousTopics }
+    },
+
+    // 错误回滚
+    onError: (err, variables, context) => {
+      if (context?.previousTopics) {
+        queryClient.setQueryData(
+          QUERY_KEYS.CUSTOM_TOPICS,
+          context.previousTopics
+        )
+      }
+    },
+
+    // 最终同步
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CUSTOM_TOPICS })
     },
   })
 }
@@ -415,6 +582,7 @@ export const useStudyHistory = (params?: {
   page?: number
   pageSize?: number
   type?: 'all' | 'favorites'
+  knowledgeLevel?: 'all' | 'known' | 'vague' | 'unknown'
 }) => {
   return useQuery({
     queryKey: [...QUERY_KEYS.VOCABULARY_STUDY_HISTORY, params],
@@ -427,7 +595,7 @@ export const useStudyHistory = (params?: {
 }
 
 /**
- * 获取今日学习进度
+ * 获取今日学习进度 - 短缓存策略（实时数据）
  */
 export const useDailyProgress = (date?: string) => {
   return useQuery({
@@ -436,7 +604,9 @@ export const useDailyProgress = (date?: string) => {
       const response = await vocabularyApi.getDailyProgress(date)
       return response.data
     },
-    staleTime: 1 * 60 * 1000, // 1分钟内认为数据是新鲜的
+    staleTime: 30 * 1000, // 30秒内认为数据是新鲜的（实时学习进度）
+    gcTime: 5 * 60 * 1000, // 5分钟后清理缓存
+    refetchOnMount: 'always', // 组件挂载时总是重新获取
   })
 }
 
@@ -649,6 +819,20 @@ export const usePrefetchData = () => {
     })
   }
 
+  const prefetchHotTopics = () => {
+    queryClient.prefetchQuery({
+      queryKey: QUERY_KEYS.HOT_TOPICS,
+      queryFn: () => topicApi.getHotTopics({}),
+    })
+  }
+
+  const prefetchCustomTopics = () => {
+    queryClient.prefetchQuery({
+      queryKey: QUERY_KEYS.CUSTOM_TOPICS,
+      queryFn: () => topicApi.getCustomTopics(),
+    })
+  }
+
   const prefetchVocabularies = (level?: string) => {
     queryClient.prefetchQuery({
       queryKey: [...QUERY_KEYS.VOCABULARIES, { level }],
@@ -659,6 +843,105 @@ export const usePrefetchData = () => {
   return {
     prefetchUserData,
     prefetchTopics,
+    prefetchHotTopics,
+    prefetchCustomTopics,
     prefetchVocabularies,
+  }
+}
+
+// ============ 错误处理工具 ============
+
+/**
+ * 统一的错误处理函数
+ */
+export const handleApiError = (
+  error: unknown,
+  options?: {
+    context?: string
+    showToast?: boolean
+    defaultMessage?: string
+  }
+) => {
+  const {
+    context = '',
+    showToast = true,
+    defaultMessage = '操作失败，请重试',
+  } = options || {}
+
+  let errorMessage = defaultMessage
+
+  // 解析错误信息
+  if (error && typeof error === 'object') {
+    const err = error as {
+      message?: string
+      response?: { data?: { message?: string } }
+    }
+    if (err.message) {
+      errorMessage = err.message
+    } else if (err.response?.data?.message) {
+      errorMessage = err.response.data.message
+    }
+  }
+
+  // 记录错误日志
+  console.error(`API Error ${context ? `[${context}]` : ''}:`, error)
+
+  // 显示错误提示
+  if (showToast) {
+    Taro.showToast({
+      title: errorMessage,
+      icon: 'error',
+      duration: 2000,
+    })
+  }
+
+  return errorMessage
+}
+
+/**
+ * 创建带错误处理的 mutation 配置（工厂函数）
+ */
+export const createMutationOptions = <T, K>(
+  mutationFn: (params: K) => Promise<T>,
+  options?: {
+    onSuccessMessage?: string
+    onErrorMessage?: string
+    context?: string
+    invalidateQueries?: string[][]
+  }
+) => {
+  return (queryClient: ReturnType<typeof useQueryClient>) => ({
+    mutationFn,
+    onSuccess: () => {
+      if (options?.onSuccessMessage) {
+        Taro.showToast({
+          title: options.onSuccessMessage,
+          icon: 'success',
+        })
+      }
+      // 使指定查询失效
+      options?.invalidateQueries?.forEach(queryKey => {
+        queryClient.invalidateQueries({ queryKey })
+      })
+    },
+    onError: (error: unknown) => {
+      handleApiError(error, {
+        context: options?.context,
+        defaultMessage: options?.onErrorMessage,
+      })
+    },
+  })
+}
+
+/**
+ * 网络状态检查 hook
+ */
+export const useNetworkStatus = () => {
+  return {
+    isOnline:
+      typeof window !== 'undefined' && 'navigator' in window
+        ? window.navigator.onLine
+        : true,
+    // 可以扩展更多网络状态检查
   }
 }

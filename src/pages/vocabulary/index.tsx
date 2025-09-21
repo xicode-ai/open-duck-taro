@@ -58,23 +58,10 @@ const VocabularyPage = () => {
       <CustomNavBar
         title="背单词"
         backgroundColor="linear-gradient(135deg, #ef5350 0%, #e53935 100%)"
-        renderRight={
-          <View className="nav-right-btn" onClick={handleRefresh}>
-            <AtIcon value="reload" size={20} color="#fff" />
-          </View>
-        }
       />
 
       {/* 主要内容 */}
       <View className="content with-custom-navbar">
-        {/* 标题部分 */}
-        <View className="header-section">
-          <Text className="main-title">选择你的学习阶段</Text>
-          <Text className="subtitle">
-            语境学习法，大脑善于记忆有联系、有故事的信息
-          </Text>
-        </View>
-
         {/* 学习阶段选择 */}
         <View className="stages-grid">
           {stagesLoading ? (

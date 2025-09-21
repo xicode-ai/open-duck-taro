@@ -162,23 +162,15 @@ export const userHandlers = [
   http.get('/api/user/stats', async () => {
     await delay(500)
 
-    const weeklyStats = [
-      { date: '2024-03-18', minutes: 45, words: 23 },
-      { date: '2024-03-19', minutes: 30, words: 18 },
-      { date: '2024-03-20', minutes: 60, words: 35 },
-      { date: '2024-03-21', minutes: 25, words: 12 },
-      { date: '2024-03-22', minutes: 40, words: 28 },
-      { date: '2024-03-23', minutes: 55, words: 31 },
-      { date: '2024-03-24', minutes: 35, words: 20 },
-    ]
-
     return HttpResponse.json({
       code: 200,
       data: {
-        overall: mockUser.stats,
-        weekly: weeklyStats,
-        monthlyGoal: 900, // 分钟
-        monthlyProgress: 520, // 分钟
+        totalStudyDays: mockUser.stats.daysStudied,
+        totalPoints: mockUser.points,
+        currentStreak: mockUser.streak,
+        totalConversations: 128, // 模拟对话次数
+        totalWords: mockUser.stats.wordsLearned,
+        totalMinutes: mockUser.stats.totalStudyTime,
       },
       message: 'success',
     })

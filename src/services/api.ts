@@ -16,6 +16,10 @@ import type {
   WordKnowledgeLevel,
   DailyStudyProgress,
   WordStudyHistoryResponse,
+  LearningProgress,
+  DailyOverview,
+  WeeklyProgress,
+  StudyStatistics,
 } from '@/types'
 
 // 用户相关API
@@ -40,7 +44,7 @@ export const userApi = {
       totalConversations: number
       totalWords: number
       totalMinutes: number
-    }>('/user/stats', { cache: true }),
+    }>('/api/user/stats', { cache: true }),
 }
 
 // 聊天相关API
@@ -501,11 +505,13 @@ export const vocabularyApi = {
     page?: number
     pageSize?: number
     type?: 'all' | 'favorites'
+    knowledgeLevel?: 'all' | 'known' | 'vague' | 'unknown'
   }) => {
     const searchParams = new URLSearchParams({
       page: (params?.page || 1).toString(),
       pageSize: (params?.pageSize || 10).toString(),
       ...(params?.type && { type: params.type }),
+      ...(params?.knowledgeLevel && { knowledgeLevel: params.knowledgeLevel }),
     })
     return httpClient.get<WordStudyHistoryResponse>(
       `/api/vocabulary/study-history?${searchParams}`,
@@ -626,6 +632,76 @@ export const topicsApi = {
   getTopicDetail: topicApi.getTopicDetail,
 }
 
+// 学习进度相关API
+export const progressApi = {
+  // 获取学习进度数据
+  getLearningProgress: () =>
+    httpClient.get<LearningProgress>('/api/progress/learning', {
+      cache: false,
+    }),
+
+  // 获取今日概览
+  getDailyOverview: (date?: string) => {
+    const params = date ? `?date=${date}` : ''
+    return httpClient.get<DailyOverview>(
+      `/api/progress/daily-overview${params}`,
+      { cache: false }
+    )
+  },
+
+  // 获取本周进度
+  getWeeklyProgress: (weekNumber?: number) => {
+    const params = weekNumber ? `?week=${weekNumber}` : ''
+    return httpClient.get<WeeklyProgress>(`/api/progress/weekly${params}`, {
+      cache: false,
+    })
+  },
+
+  // 获取学习统计
+  getStudyStatistics: (period?: 'week' | 'month' | 'year') => {
+    const params = period ? `?period=${period}` : ''
+    return httpClient.get<StudyStatistics>(
+      `/api/progress/statistics${params}`,
+      { cache: false }
+    )
+  },
+
+  // 更新学习活动（用于记录学习行为）
+  updateStudyActivity: (activity: {
+    type: 'chat' | 'topic' | 'vocabulary' | 'translate' | 'photo'
+    duration: number
+    details?: Record<string, unknown>
+  }) =>
+    httpClient.post<{ success: boolean; pointsEarned?: number }>(
+      '/api/progress/activity',
+      activity
+    ),
+
+  // 获取学习建议
+  getStudySuggestion: () =>
+    httpClient.get<{
+      title: string
+      description: string
+      type: 'chat' | 'topic' | 'vocabulary' | 'translate' | 'photo'
+      priority: 'high' | 'medium' | 'low'
+    }>('/api/progress/suggestion', { cache: false }),
+
+  // 获取学习排行榜
+  getLeaderboard: (type: 'daily' | 'weekly' | 'monthly' = 'weekly') =>
+    httpClient.get<{
+      rank: number
+      totalUsers: number
+      users: Array<{
+        rank: number
+        userId: string
+        nickname: string
+        avatar?: string
+        score: number
+        studyTime: number
+      }>
+    }>(`/api/progress/leaderboard?type=${type}`, { cache: true }),
+}
+
 // 导出所有API
 export default {
   user: userApi,
@@ -637,4 +713,5 @@ export default {
   vocabulary: vocabularyApi,
   pronunciation: pronunciationApi,
   membership: membershipApi,
+  progress: progressApi,
 }

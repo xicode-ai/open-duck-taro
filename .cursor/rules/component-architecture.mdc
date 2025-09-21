@@ -1,0 +1,260 @@
+---
+alwaysApply: true
+---
+
+# 组件架构和开发规范
+
+## 函数组件规范
+
+```typescript
+// ✅ 标准组件定义
+import React from 'react'
+import './index.scss'
+
+interface ButtonProps {
+  type?: 'primary' | 'secondary'
+  size?: 'small' | 'normal' | 'large'
+  disabled?: boolean
+  loading?: boolean
+  children: React.ReactNode
+  onClick?: () => void
+}
+
+const Button: React.FC<ButtonProps> = ({
+  type = 'primary',
+  size = 'normal',
+  disabled = false,
+  loading = false,
+  children,
+  onClick
+}) => {
+  // 组件逻辑
+  return (
+    <view className={`button button--${type} button--${size}`}>
+      {children}
+    </view>
+  )
+}
+
+export default Button
+export type { ButtonProps }
+```
+
+## 组件文件结构
+
+```
+components/
+├── Button/
+│   ├── index.tsx      # 组件实现
+│   ├── index.scss     # 组件样式
+│   └── types.ts       # 类型定义 (可选)
+```
+
+## 文件组织规范
+
+### 目录结构要求
+
+```
+src/
+├── components/          # 组件目录
+│   ├── common/         # 通用组件
+│   │   ├── Button/
+│   │   │   ├── index.tsx
+│   │   │   ├── index.scss
+│   │   │   └── types.ts
+│   │   └── Modal/
+│   └── business/       # 业务组件
+├── pages/              # 页面目录
+│   ├── user/
+│   │   ├── index.tsx
+│   │   ├── index.scss
+│   │   └── index.config.ts
+├── services/           # API 服务
+├── stores/            # 状态管理
+├── utils/             # 工具函数
+└── types/             # 类型定义
+```
+
+### 文件命名规范
+
+- **组件文件**: PascalCase (Button.tsx, UserProfile.tsx)
+- **页面文件**: kebab-case (user-profile/index.tsx)
+- **工具文件**: camelCase (dateUtils.ts, apiHelper.ts)
+- **类型文件**: camelCase (userTypes.ts, apiTypes.ts)
+
+## 错误处理标准
+
+### 页面级错误边界
+
+```typescript
+// 参考 [src/components/ErrorBoundary/PageErrorBoundary.tsx](mdc:src/components/ErrorBoundary/PageErrorBoundary.tsx)
+export const withPageErrorBoundary = <P extends object>(
+  Component: React.ComponentType<P>
+) => {
+  return (props: P) => (
+    <PageErrorBoundary>
+      <Component {...props} />
+    </PageErrorBoundary>
+  )
+}
+```
+
+### 组件内错误处理
+
+```typescript
+const UserProfile = ({ userId }) => {
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['user', userId],
+    queryFn: () => userApi.getProfile(userId),
+    onError: (error) => {
+      handleApiError(error, { context: 'UserProfile' })
+    }
+  })
+
+  if (error) {
+    return <ErrorMessage message="加载用户信息失败" />
+  }
+
+  return <div>{data?.name}</div>
+}
+```
+
+## 组件性能优化
+
+```typescript
+// ✅ 使用 React.memo 避免不必要的重渲染
+const UserCard = React.memo<UserCardProps>(({ user, onSelect }) => {
+  const handleClick = useCallback(() => {
+    onSelect(user.id)
+  }, [user.id, onSelect])
+
+  return (
+    <div onClick={handleClick}>
+      {user.name}
+    </div>
+  )
+})
+
+// ✅ 使用 useMemo 缓存计算结果
+const ExpensiveComponent = ({ items }) => {
+  const processedItems = useMemo(() => {
+    return items.map(item => ({
+      ...item,
+      processed: expensiveCalculation(item)
+    }))
+  }, [items])
+
+  return <div>{processedItems.map(renderItem)}</div>
+}
+```
+
+## 代码分割
+
+```typescript
+// ✅ 页面级代码分割
+const LazyUserPage = lazy(() => import('@/pages/user'))
+const LazySettingsPage = lazy(() => import('@/pages/settings'))
+
+// ✅ 组件级代码分割 (大型组件)
+const LazyChart = lazy(() => import('@/components/Chart'))
+```
+
+## 组件开发最佳实践
+
+### 组件设计原则
+
+1. **单一职责**: 每个组件只负责一个功能
+2. **可复用性**: 设计通用的、可配置的组件
+3. **可测试性**: 组件逻辑清晰，易于单元测试
+4. **可维护性**: 代码结构清晰，注释完整
+
+### 组件接口设计
+
+```typescript
+// ✅ 清晰的 Props 接口
+interface CardProps {
+  // 必需属性
+  title: string
+  content: string
+
+  // 可选属性
+  variant?: 'default' | 'outlined' | 'filled'
+  size?: 'small' | 'medium' | 'large'
+  loading?: boolean
+  disabled?: boolean
+
+  // 事件处理
+  onClick?: (event: React.MouseEvent) => void
+  onClose?: () => void
+
+  // 样式相关
+  className?: string
+  style?: React.CSSProperties
+
+  // 子组件
+  children?: React.ReactNode
+  actions?: React.ReactNode
+}
+
+// ✅ 使用默认值
+const Card: React.FC<CardProps> = ({
+  title,
+  content,
+  variant = 'default',
+  size = 'medium',
+  loading = false,
+  disabled = false,
+  onClick,
+  onClose,
+  className,
+  style,
+  children,
+  actions,
+}) => {
+  // 组件实现
+}
+```
+
+### 组件状态管理
+
+```typescript
+// ✅ 本地状态管理
+const InteractiveComponent = () => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<string | null>(null)
+
+  // 使用 useCallback 优化性能
+  const handleToggle = useCallback(() => {
+    setIsOpen(prev => !prev)
+  }, [])
+
+  const handleSelect = useCallback((item: string) => {
+    setSelectedItem(item)
+  }, [])
+
+  return (
+    <div>
+      {/* 组件内容 */}
+    </div>
+  )
+}
+```
+
+### 组件文档和示例
+
+````typescript
+// ✅ 组件文档注释
+/**
+ * 按钮组件
+ *
+ * @example
+ * ```tsx
+ * <Button type="primary" size="large" onClick={handleClick}>
+ *   点击我
+ * </Button>
+ * ```
+ */
+const Button: React.FC<ButtonProps> = ({ ... }) => {
+  // 实现
+}
+````

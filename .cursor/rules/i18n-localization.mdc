@@ -1,0 +1,454 @@
+---
+alwaysApply: true
+---
+
+# 国际化和本地化规范
+
+## 技术栈
+
+- **国际化框架**: i18next 25.3.4
+- **React 集成**: react-i18next 15.6.1
+- **时间处理**: dayjs 1.11.13 (支持多语言)
+
+## 国际化配置
+
+### 基础配置
+
+```typescript
+// ✅ i18n 配置 - 参考 [src/i18n/index.ts](mdc:src/i18n/index.ts)
+import i18n from 'i18next'
+import { initReactI18next } from 'react-i18next'
+import zhCN from './locales/zh-CN.json'
+import enUS from './locales/en-US.json'
+
+i18n.use(initReactI18next).init({
+  resources: {
+    'zh-CN': { translation: zhCN },
+    'en-US': { translation: enUS },
+  },
+  lng: 'zh-CN', // 默认语言
+  fallbackLng: 'zh-CN',
+  interpolation: {
+    escapeValue: false,
+  },
+  react: {
+    useSuspense: false, // Taro 环境下禁用 Suspense
+  },
+})
+
+export default i18n
+```
+
+### 语言文件组织
+
+```
+src/i18n/
+├── index.ts              # i18n 配置
+├── locales/
+│   ├── zh-CN.json       # 中文语言包
+│   ├── en-US.json       # 英文语言包
+│   └── ja-JP.json       # 日文语言包 (可选)
+└── types.ts             # 类型定义
+```
+
+## 使用规范
+
+### 在组件中使用
+
+```typescript
+// ✅ 使用 useTranslation Hook
+import { useTranslation } from 'react-i18next'
+
+const UserProfile: React.FC = () => {
+  const { t, i18n } = useTranslation()
+
+  const handleLanguageChange = (lang: string) => {
+    i18n.changeLanguage(lang)
+  }
+
+  return (
+    <View>
+      <Text>{t('user.profile.title')}</Text>
+      <Text>{t('user.profile.welcome', { name: 'John' })}</Text>
+
+      <Button onClick={() => handleLanguageChange('en-US')}>
+        {t('common.language.english')}
+      </Button>
+    </View>
+  )
+}
+```
+
+### 语言包结构
+
+```json
+// ✅ zh-CN.json 结构示例
+{
+  "common": {
+    "button": {
+      "confirm": "确认",
+      "cancel": "取消",
+      "save": "保存",
+      "delete": "删除"
+    },
+    "language": {
+      "chinese": "中文",
+      "english": "English"
+    },
+    "status": {
+      "loading": "加载中...",
+      "success": "成功",
+      "error": "错误"
+    }
+  },
+  "user": {
+    "profile": {
+      "title": "个人资料",
+      "welcome": "欢迎，{{name}}！",
+      "settings": "设置"
+    }
+  },
+  "chat": {
+    "input": {
+      "placeholder": "请输入消息...",
+      "send": "发送"
+    },
+    "voice": {
+      "recording": "录音中...",
+      "processing": "处理中..."
+    }
+  }
+}
+```
+
+### 命名规范
+
+```typescript
+// ✅ 翻译键命名规范
+const translations = {
+  // 使用点分隔的层级结构
+  'common.button.confirm': '确认',
+  'user.profile.title': '个人资料',
+  'chat.message.empty': '暂无消息',
+
+  // 带参数的翻译
+  'user.welcome': '欢迎，{{name}}！',
+  'chat.message.count': '共 {{count}} 条消息',
+
+  // 复数形式
+  'item.count_one': '{{count}} 个项目',
+  'item.count_other': '{{count}} 个项目',
+}
+
+// ❌ 避免的命名方式
+const badTranslations = {
+  confirmBtn: '确认', // 缺少层级结构
+  userProfilePageTitle: '标题', // 过于冗长
+  msg1: '消息', // 无意义的命名
+}
+```
+
+## 时间和日期本地化
+
+### dayjs 配置
+
+```typescript
+// ✅ dayjs 多语言配置
+import dayjs from 'dayjs'
+import 'dayjs/locale/zh-cn'
+import 'dayjs/locale/en'
+import 'dayjs/locale/ja'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import localizedFormat from 'dayjs/plugin/localizedFormat'
+
+dayjs.extend(relativeTime)
+dayjs.extend(localizedFormat)
+
+// 根据当前语言设置 dayjs 语言
+export const setDayjsLocale = (language: string) => {
+  const localeMap = {
+    'zh-CN': 'zh-cn',
+    'en-US': 'en',
+    'ja-JP': 'ja',
+  }
+
+  const locale = localeMap[language] || 'zh-cn'
+  dayjs.locale(locale)
+}
+
+// ✅ 使用示例
+const formatDate = (date: string | Date) => {
+  return dayjs(date).format('YYYY-MM-DD HH:mm:ss')
+}
+
+const getRelativeTime = (date: string | Date) => {
+  return dayjs(date).fromNow()
+}
+```
+
+## 语言切换
+
+### 语言切换 Hook
+
+```typescript
+// ✅ 语言切换 Hook
+import { useTranslation } from 'react-i18next'
+import { useCallback } from 'react'
+import { setStorage, getStorage } from '@/utils/storage'
+import { setDayjsLocale } from '@/utils/dayjs'
+
+export const useLanguage = () => {
+  const { i18n } = useTranslation()
+
+  const changeLanguage = useCallback(
+    async (language: string) => {
+      try {
+        await i18n.changeLanguage(language)
+        setDayjsLocale(language)
+        setStorage('language', language)
+
+        // 通知其他组件语言已切换
+        Taro.eventCenter.trigger('languageChanged', language)
+      } catch (error) {
+        console.error('Language change failed:', error)
+      }
+    },
+    [i18n]
+  )
+
+  const getCurrentLanguage = useCallback(() => {
+    return i18n.language || getStorage('language') || 'zh-CN'
+  }, [i18n])
+
+  return {
+    currentLanguage: getCurrentLanguage(),
+    changeLanguage,
+    supportedLanguages: ['zh-CN', 'en-US'],
+  }
+}
+```
+
+### 语言选择组件
+
+```typescript
+// ✅ 语言选择组件
+import { useLanguage } from '@/hooks/useLanguage'
+import { useTranslation } from 'react-i18next'
+
+const LanguageSelector: React.FC = () => {
+  const { t } = useTranslation()
+  const { currentLanguage, changeLanguage, supportedLanguages } = useLanguage()
+
+  const languageOptions = [
+    { value: 'zh-CN', label: '中文' },
+    { value: 'en-US', label: 'English' },
+  ]
+
+  return (
+    <View className="language-selector">
+      <Text className="language-selector__title">
+        {t('common.language.select')}
+      </Text>
+
+      {languageOptions.map(option => (
+        <View
+          key={option.value}
+          className={`language-option ${
+            currentLanguage === option.value ? 'active' : ''
+          }`}
+          onClick={() => changeLanguage(option.value)}
+        >
+          <Text>{option.label}</Text>
+          {currentLanguage === option.value && (
+            <Text className="check-icon">✓</Text>
+          )}
+        </View>
+      ))}
+    </View>
+  )
+}
+```
+
+## 最佳实践
+
+### 翻译文本规范
+
+```typescript
+// ✅ 正确的翻译使用
+const Component = () => {
+  const { t } = useTranslation()
+
+  return (
+    <View>
+      {/* 基础翻译 */}
+      <Text>{t('common.button.save')}</Text>
+
+      {/* 带参数的翻译 */}
+      <Text>{t('user.welcome', { name: userName })}</Text>
+
+      {/* 复数形式 */}
+      <Text>{t('message.count', { count: messageCount })}</Text>
+
+      {/* 条件翻译 */}
+      <Text>
+        {isOnline
+          ? t('status.online')
+          : t('status.offline')
+        }
+      </Text>
+    </View>
+  )
+}
+
+// ❌ 避免的做法
+const BadComponent = () => {
+  return (
+    <View>
+      {/* 硬编码文本 */}
+      <Text>保存</Text>
+
+      {/* 字符串拼接 */}
+      <Text>{'欢迎，' + userName + '！'}</Text>
+
+      {/* 在 JSX 中进行复杂逻辑 */}
+      <Text>
+        {messageCount === 1 ? '1条消息' : messageCount + '条消息'}
+      </Text>
+    </View>
+  )
+}
+```
+
+### 性能优化
+
+```typescript
+// ✅ 使用 Trans 组件处理复杂文本
+import { Trans } from 'react-i18next'
+
+const RichTextComponent = () => {
+  return (
+    <View>
+      <Trans
+        i18nKey="user.agreement"
+        values={{ appName: 'OpenDuck' }}
+        components={{
+          link: <Text className="link" />,
+          bold: <Text className="bold" />,
+        }}
+      />
+    </View>
+  )
+}
+
+// 对应的翻译文本
+// "user.agreement": "使用 <bold>{{appName}}</bold> 即表示您同意我们的<link>服务条款</link>"
+```
+
+### 类型安全
+
+```typescript
+// ✅ 翻译键类型定义
+type TranslationKeys =
+  | 'common.button.save'
+  | 'common.button.cancel'
+  | 'user.profile.title'
+  | 'chat.input.placeholder'
+
+// 类型安全的翻译函数
+const typedT = (key: TranslationKeys, options?: any) => {
+  return t(key, options)
+}
+```
+
+## 测试规范
+
+### 国际化测试
+
+```typescript
+// ✅ 国际化组件测试
+import { render, screen } from '@testing-library/react'
+import { I18nextProvider } from 'react-i18next'
+import i18n from '@/i18n'
+
+const renderWithI18n = (component: React.ReactElement) => {
+  return render(
+    <I18nextProvider i18n={i18n}>
+      {component}
+    </I18nextProvider>
+  )
+}
+
+describe('LanguageSelector', () => {
+  it('should display correct language options', () => {
+    renderWithI18n(<LanguageSelector />)
+
+    expect(screen.getByText('中文')).toBeInTheDocument()
+    expect(screen.getByText('English')).toBeInTheDocument()
+  })
+
+  it('should change language when option is clicked', async () => {
+    renderWithI18n(<LanguageSelector />)
+
+    fireEvent.click(screen.getByText('English'))
+
+    await waitFor(() => {
+      expect(i18n.language).toBe('en-US')
+    })
+  })
+})
+```
+
+## 部署注意事项
+
+### 语言包优化
+
+```typescript
+// ✅ 按需加载语言包
+const loadLanguage = async (language: string) => {
+  try {
+    const translations = await import(`./locales/${language}.json`)
+    i18n.addResourceBundle(language, 'translation', translations.default)
+    return translations.default
+  } catch (error) {
+    console.error(`Failed to load language pack: ${language}`, error)
+    return null
+  }
+}
+
+// ✅ 语言包缓存
+const cachedLanguages = new Set<string>()
+
+export const ensureLanguageLoaded = async (language: string) => {
+  if (cachedLanguages.has(language)) {
+    return true
+  }
+
+  const loaded = await loadLanguage(language)
+  if (loaded) {
+    cachedLanguages.add(language)
+    return true
+  }
+
+  return false
+}
+```
+
+### 构建优化
+
+```typescript
+// ✅ 生产环境语言包分离
+// webpack.config.js 中的配置
+module.exports = {
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        i18n: {
+          test: /[\\/]locales[\\/]/,
+          name: 'i18n',
+          chunks: 'all',
+        },
+      },
+    },
+  },
+}
+```

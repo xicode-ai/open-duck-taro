@@ -1,0 +1,594 @@
+---
+alwaysApply: true
+---
+
+# 测试和提交规范
+
+## 测试要求
+
+### 单元测试覆盖率
+
+- **最低要求**: 70%
+- **目标覆盖率**: 80%+
+- **关键组件**: 90%+
+
+### 测试文件组织
+
+```
+__tests__/
+├── components/
+│   ├── Button.test.tsx
+│   └── Modal.test.tsx
+├── pages/
+│   └── UserProfile.test.tsx
+├── utils/
+│   └── dateUtils.test.ts
+└── services/
+    └── api.test.ts
+```
+
+## 单元测试规范
+
+### 组件测试
+
+```typescript
+// ✅ 组件测试示例
+import React from 'react'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { Button } from '@/components/common/Button'
+
+describe('Button Component', () => {
+  it('renders with correct text', () => {
+    render(<Button>Click me</Button>)
+    expect(screen.getByText('Click me')).toBeInTheDocument()
+  })
+
+  it('calls onClick when clicked', () => {
+    const handleClick = jest.fn()
+    render(<Button onClick={handleClick}>Click me</Button>)
+
+    fireEvent.click(screen.getByText('Click me'))
+    expect(handleClick).toHaveBeenCalledTimes(1)
+  })
+
+  it('is disabled when disabled prop is true', () => {
+    render(<Button disabled>Click me</Button>)
+    expect(screen.getByText('Click me')).toBeDisabled()
+  })
+
+  it('shows loading state', () => {
+    render(<Button loading>Click me</Button>)
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument()
+  })
+})
+```
+
+### Hook 测试
+
+```typescript
+// ✅ Hook 测试示例
+import { renderHook, act } from '@testing-library/react'
+import { useCounter } from '@/hooks/useCounter'
+
+describe('useCounter Hook', () => {
+  it('should initialize with default value', () => {
+    const { result } = renderHook(() => useCounter())
+    expect(result.current.count).toBe(0)
+  })
+
+  it('should increment count', () => {
+    const { result } = renderHook(() => useCounter(0))
+
+    act(() => {
+      result.current.increment()
+    })
+
+    expect(result.current.count).toBe(1)
+  })
+
+  it('should decrement count', () => {
+    const { result } = renderHook(() => useCounter(5))
+
+    act(() => {
+      result.current.decrement()
+    })
+
+    expect(result.current.count).toBe(4)
+  })
+})
+```
+
+### API 服务测试
+
+```typescript
+// ✅ API 服务测试
+import { userApi } from '@/services/api'
+import { httpClient } from '@/services/http'
+
+jest.mock('@/services/http')
+
+describe('User API Service', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('should fetch user info successfully', async () => {
+    const mockUser = { id: '1', name: 'John Doe', email: 'john@example.com' }
+    const mockResponse = { code: 200, message: 'success', data: mockUser }
+
+    ;(httpClient.request as jest.Mock).mockResolvedValue(mockResponse)
+
+    const result = await userApi.getUserInfo('1')
+
+    expect(httpClient.request).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/api/user/profile',
+      params: { userId: '1' },
+    })
+    expect(result).toEqual(mockResponse)
+  })
+
+  it('should handle API errors', async () => {
+    const mockError = new Error('Network error')
+    ;(httpClient.request as jest.Mock).mockRejectedValue(mockError)
+
+    await expect(userApi.getUserInfo('1')).rejects.toThrow('Network error')
+  })
+})
+```
+
+### Store 测试
+
+```typescript
+// ✅ Zustand Store 测试
+import { renderHook, act } from '@testing-library/react'
+import { useUserStore } from '@/stores/user'
+
+describe('useUserStore', () => {
+  beforeEach(() => {
+    // 重置 store 状态
+    useUserStore.setState({
+      user: null,
+      isLoggedIn: false,
+    })
+  })
+
+  it('should set user and update login status', () => {
+    const { result } = renderHook(() => useUserStore())
+    const mockUser = { id: '1', name: 'John Doe' }
+
+    act(() => {
+      result.current.setUser(mockUser)
+    })
+
+    expect(result.current.user).toEqual(mockUser)
+    expect(result.current.isLoggedIn).toBe(true)
+  })
+
+  it('should logout and clear user data', () => {
+    const { result } = renderHook(() => useUserStore())
+
+    // 先设置用户
+    act(() => {
+      result.current.setUser({ id: '1', name: 'John Doe' })
+    })
+
+    // 然后登出
+    act(() => {
+      result.current.logout()
+    })
+
+    expect(result.current.user).toBeNull()
+    expect(result.current.isLoggedIn).toBe(false)
+  })
+})
+```
+
+## 集成测试规范
+
+### 页面测试
+
+```typescript
+// ✅ 页面集成测试
+import React from 'react'
+import { render, screen, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { UserProfile } from '@/pages/user-profile'
+
+const createTestQueryClient = () => new QueryClient({
+  defaultOptions: {
+    queries: { retry: false },
+  },
+})
+
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const queryClient = createTestQueryClient()
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  )
+}
+
+describe('UserProfile Page', () => {
+  it('renders user profile data', async () => {
+    render(
+      <TestWrapper>
+        <UserProfile userId="1" />
+      </TestWrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument()
+    })
+  })
+
+  it('shows loading state initially', () => {
+    render(
+      <TestWrapper>
+        <UserProfile userId="1" />
+      </TestWrapper>
+    )
+
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument()
+  })
+})
+```
+
+## 测试工具配置
+
+### Jest 配置
+
+```typescript
+// jest.config.ts
+export default {
+  preset: 'ts-jest',
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
+  moduleNameMapping: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/app.ts',
+    '!src/setupTests.ts',
+    '!src/i18n/**',
+    '!src/mocks/**',
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 70,
+      functions: 70,
+      lines: 70,
+      statements: 70,
+    },
+  },
+  testMatch: [
+    '<rootDir>/__tests__/**/*.{ts,tsx}',
+    '<rootDir>/src/**/__tests__/**/*.{ts,tsx}',
+    '<rootDir>/src/**/*.{test,spec}.{ts,tsx}',
+  ],
+  transform: {
+    '^.+\\.(ts|tsx)$': 'ts-jest',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
+}
+```
+
+### 测试设置文件
+
+```typescript
+// src/setupTests.ts
+import '@testing-library/jest-dom'
+
+// Mock Taro
+jest.mock('@tarojs/taro', () => ({
+  showToast: jest.fn(),
+  navigateTo: jest.fn(),
+  request: jest.fn(),
+  getStorage: jest.fn(),
+  setStorage: jest.fn(),
+}))
+
+// Mock IntersectionObserver
+global.IntersectionObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}))
+
+// Mock ResizeObserver
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}))
+```
+
+## 提交规范
+
+### Git Commit 消息格式
+
+```bash
+# ✅ 标准格式
+feat: 添加用户头像上传功能
+fix: 修复登录页面验证码刷新问题
+style: 优化按钮组件样式
+refactor: 重构用户状态管理逻辑
+test: 添加用户服务单元测试
+docs: 更新 API 文档
+
+# ❌ 不规范的提交消息
+git commit -m "fix bug"        # 太简单
+git commit -m "各种修改"        # 不明确
+git commit -m "WIP"           # 不应提交未完成代码
+```
+
+### Commit 类型说明
+
+- **feat**: 新功能
+- **fix**: 修复 bug
+- **docs**: 文档更新
+- **style**: 代码格式调整（不影响功能）
+- **refactor**: 代码重构
+- **test**: 测试相关
+- **chore**: 构建过程或辅助工具的变动
+- **perf**: 性能优化
+- **ci**: CI 配置文件和脚本的变动
+
+### 提交消息模板
+
+```bash
+# 提交消息格式
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+
+# 示例
+feat(user): 添加用户头像上传功能
+
+- 支持 JPG、PNG 格式图片上传
+- 图片大小限制为 2MB
+- 添加图片压缩功能
+
+Closes #123
+```
+
+## 代码审查规范
+
+### 审查检查清单
+
+#### 功能检查
+
+- [ ] 功能是否完整实现
+- [ ] 边界条件是否处理
+- [ ] 错误情况是否处理
+- [ ] 用户体验是否良好
+
+#### 代码质量检查
+
+- [ ] 代码是否遵循项目规范
+- [ ] 是否有重复代码
+- [ ] 函数是否过于复杂
+- [ ] 变量命名是否清晰
+
+#### 性能检查
+
+- [ ] 是否有性能问题
+- [ ] 是否有内存泄漏
+- [ ] 是否有不必要的重渲染
+- [ ] 网络请求是否优化
+
+#### 安全检查
+
+- [ ] 是否有安全漏洞
+- [ ] 敏感信息是否泄露
+- [ ] 输入验证是否充分
+- [ ] 权限控制是否正确
+
+#### 测试检查
+
+- [ ] 是否有足够的测试覆盖
+- [ ] 测试用例是否合理
+- [ ] 是否测试了边界情况
+- [ ] 集成测试是否完整
+
+### 审查流程
+
+1. **自检**: 提交前自己先检查一遍
+2. **代码审查**: 至少一人审查
+3. **测试验证**: 确保所有测试通过
+4. **功能验证**: 手动测试功能是否正常
+5. **合并**: 审查通过后合并代码
+
+## 持续集成规范
+
+### GitHub Actions 配置
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run linting
+        run: pnpm check
+
+      - name: Run tests
+        run: pnpm test --coverage
+
+      - name: Build
+        run: pnpm build:h5
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+```
+
+### 预提交钩子
+
+```json
+// package.json
+{
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+    "*.{scss,css}": ["stylelint --fix"]
+  }
+}
+```
+
+## 测试最佳实践
+
+### 测试命名规范
+
+```typescript
+// ✅ 描述性测试名称
+describe('Button Component', () => {
+  describe('when disabled', () => {
+    it('should not call onClick handler', () => {
+      // 测试实现
+    })
+  })
+
+  describe('when loading', () => {
+    it('should show loading spinner', () => {
+      // 测试实现
+    })
+  })
+})
+
+// ❌ 不清晰的测试名称
+describe('Button', () => {
+  it('works', () => {
+    // 测试实现
+  })
+})
+```
+
+### 测试数据管理
+
+```typescript
+// ✅ 测试数据工厂
+class TestDataFactory {
+  static createUser(overrides: Partial<User> = {}): User {
+    return {
+      id: '1',
+      name: 'John Doe',
+      email: 'john@example.com',
+      ...overrides,
+    }
+  }
+
+  static createApiResponse<T>(data: T): ApiResponse<T> {
+    return {
+      code: 200,
+      message: 'success',
+      data,
+    }
+  }
+}
+
+// 使用示例
+const user = TestDataFactory.createUser({ name: 'Jane Doe' })
+const response = TestDataFactory.createApiResponse(user)
+```
+
+### 异步测试
+
+```typescript
+// ✅ 异步测试示例
+describe('Async Operations', () => {
+  it('should handle async operations', async () => {
+    const mockData = { id: '1', name: 'Test' }
+    jest.spyOn(api, 'fetchData').mockResolvedValue(mockData)
+
+    const result = await fetchUserData('1')
+
+    expect(result).toEqual(mockData)
+    expect(api.fetchData).toHaveBeenCalledWith('1')
+  })
+
+  it('should handle async errors', async () => {
+    const error = new Error('Network error')
+    jest.spyOn(api, 'fetchData').mockRejectedValue(error)
+
+    await expect(fetchUserData('1')).rejects.toThrow('Network error')
+  })
+})
+```
+
+## 测试覆盖率报告
+
+### 覆盖率配置
+
+```typescript
+// jest.config.ts
+export default {
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/index.tsx',
+    '!src/setupTests.ts',
+    '!src/**/*.stories.{ts,tsx}',
+    '!src/**/*.test.{ts,tsx}',
+  ],
+  coverageReporters: ['text', 'lcov', 'html'],
+  coverageThreshold: {
+    global: {
+      branches: 70,
+      functions: 70,
+      lines: 70,
+      statements: 70,
+    },
+    './src/components/': {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
+}
+```
+
+### 覆盖率检查脚本
+
+```json
+// package.json
+{
+  "scripts": {
+    "test:coverage": "jest --coverage",
+    "test:coverage:watch": "jest --coverage --watch",
+    "test:coverage:ci": "jest --coverage --ci --coverageReporters=text-lcov"
+  }
+}
+```

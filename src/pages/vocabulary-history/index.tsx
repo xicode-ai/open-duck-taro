@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useRouter } from '@tarojs/taro'
 import CustomNavBar from '@/components/common/CustomNavBar'
 import Loading from '@/components/common/Loading'
 import { useStudyHistory } from '@/hooks/useApiQueries'
-import { useVocabularyStudyStore } from '@/stores'
 import type { WordStudyRecord } from '@/types'
 import { formatDate } from '@/utils/date'
 import './index.scss'
 
 const VocabularyHistory = () => {
+  const router = useRouter()
   const [currentFilter, setCurrentFilter] = useState<'all' | 'favorites'>('all')
+  const [knowledgeFilter, setKnowledgeFilter] = useState<
+    'all' | 'known' | 'vague' | 'unknown'
+  >('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [allRecords, setAllRecords] = useState<WordStudyRecord[]>([])
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -18,6 +21,17 @@ const VocabularyHistory = () => {
   const [hasMore, setHasMore] = useState(true)
 
   const pageSize = 10
+
+  // 从路由参数获取筛选条件
+  useEffect(() => {
+    const knowledgeLevel = router.params.knowledgeLevel
+    if (
+      knowledgeLevel &&
+      ['known', 'vague', 'unknown'].includes(knowledgeLevel)
+    ) {
+      setKnowledgeFilter(knowledgeLevel as 'known' | 'vague' | 'unknown')
+    }
+  }, [router.params.knowledgeLevel])
 
   // Hooks
   const {
@@ -28,29 +42,27 @@ const VocabularyHistory = () => {
     page: currentPage,
     pageSize,
     type: currentFilter,
+    knowledgeLevel: knowledgeFilter,
   })
-  const { studyHistory } = useVocabularyStudyStore()
 
-  // 合并服务端数据和本地缓存数据
+  // 使用API数据，因为mock API已经返回了完整的学习历史数据
   const mergedRecords = React.useMemo(() => {
-    const serverRecords = allRecords
-    const localRecords = studyHistory.filter(
-      record => !serverRecords.some(sr => sr.id === record.id)
-    )
-    return [...localRecords, ...serverRecords].sort(
+    return allRecords.sort(
       (a, b) =>
         new Date(b.studiedAt).getTime() - new Date(a.studiedAt).getTime()
     )
-  }, [allRecords, studyHistory])
+  }, [allRecords])
 
   // 当数据加载完成时更新记录列表
   useEffect(() => {
-    if (historyData?.list && currentPage === 1) {
-      setAllRecords(historyData.list)
+    if (historyData?.list) {
+      if (currentPage === 1) {
+        setAllRecords(historyData.list)
+      } else {
+        setAllRecords(prev => [...prev, ...historyData.list])
+      }
       setHasMore(historyData.hasMore || false)
-    } else if (historyData?.list && currentPage > 1) {
-      setAllRecords(prev => [...prev, ...historyData.list])
-      setHasMore(historyData.hasMore || false)
+      setIsLoadingMore(false)
     }
   }, [historyData, currentPage])
 
@@ -88,27 +100,16 @@ const VocabularyHistory = () => {
 
   // 加载更多
   const handleLoadMore = useCallback(async () => {
-    if (!hasMore || isLoadingMore) return
+    if (!hasMore || isLoadingMore || isLoading) return
 
     setIsLoadingMore(true)
-    try {
-      setCurrentPage(prev => prev + 1)
-    } catch (error) {
-      console.error('加载更多失败:', error)
-      Taro.showToast({
-        title: '加载失败，请重试',
-        icon: 'error',
-      })
-    } finally {
-      setIsLoadingMore(false)
-    }
-  }, [hasMore, isLoadingMore])
+    setCurrentPage(prev => prev + 1)
+  }, [hasMore, isLoadingMore, isLoading])
 
-  // 点击卡片进入单词详情页
+  // 点击卡片进入单词学习页
   const handleCardClick = useCallback((record: WordStudyRecord) => {
-    // TODO: 导航到单词详情页
     Taro.navigateTo({
-      url: `/pages/word-detail/index?wordId=${record.wordId}&word=${record.word}`,
+      url: `/pages/vocabulary-study/index?stage=${record.stage}&wordId=${record.wordId}`,
     })
   }, [])
 
@@ -205,9 +206,9 @@ const VocabularyHistory = () => {
           )}
 
           {/* 记录列表 */}
-          {filteredRecords.map(record => (
+          {filteredRecords.map((record, index) => (
             <View
-              key={record.id}
+              key={`${record.id}-${record.wordId}-${index}`}
               className={`study-record-card study-record-card--${record.knowledgeLevel}`}
               onClick={() => handleCardClick(record)}
             >

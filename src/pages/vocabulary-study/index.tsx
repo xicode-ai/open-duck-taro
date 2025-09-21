@@ -12,6 +12,7 @@ import {
   useDailyProgress,
   useSubmitStudyRecord,
   useToggleWordFavorite,
+  useStudyWordDetail,
 } from '@/hooks/useApiQueries'
 import { useVocabularyStudyStore } from '@/stores'
 import type { WordKnowledgeLevel } from '@/types'
@@ -22,15 +23,18 @@ const VocabularyStudy = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
 
-  // 从路由参数获取学习阶段
+  // 从路由参数获取学习阶段和单词ID
   const stage = router.params.stage || 'beginner'
   const stageName = router.params.stageName || '萌芽期'
+  const wordId = router.params.wordId // 从历史记录跳转时的单词ID
 
   // React Query hooks
   const { data: stageWordsData, isLoading: isLoadingWords } =
     useStudyWordsByStage(stage)
   const { data: dailyProgress, isLoading: isLoadingProgress } =
     useDailyProgress()
+  const { data: specificWordDetail, isLoading: isLoadingSpecificWord } =
+    useStudyWordDetail(wordId || '') // 从历史记录跳转时获取指定单词
   const submitStudyRecord = useSubmitStudyRecord()
   const toggleWordFavorite = useToggleWordFavorite()
 
@@ -56,16 +60,34 @@ const VocabularyStudy = () => {
     }
   }, [stage, startStudySession])
 
-  // 加载阶段单词数据
+  // 加载单词数据
   useEffect(() => {
+    // 如果从历史记录跳转，直接使用指定的单词
+    if (wordId && specificWordDetail) {
+      setCurrentWord(specificWordDetail)
+      setTotalWords(1) // 单个单词学习模式
+      setCurrentWordIndex(0)
+      return
+    }
+
+    // 正常的阶段学习模式
     if (stageWordsData?.words && stageWordsData.words.length > 0) {
       setTotalWords(stageWordsData.words.length)
-      // 设置第一个单词为当前单词
+
+      // 设置当前索引的单词为当前单词
       if (currentWordIndex < stageWordsData.words.length) {
         setCurrentWord(stageWordsData.words[currentWordIndex])
       }
     }
-  }, [stageWordsData, currentWordIndex, setTotalWords, setCurrentWord])
+  }, [
+    wordId,
+    specificWordDetail,
+    stageWordsData,
+    currentWordIndex,
+    setTotalWords,
+    setCurrentWord,
+    setCurrentWordIndex,
+  ])
 
   // 加载今日进度数据
   useEffect(() => {
@@ -76,6 +98,12 @@ const VocabularyStudy = () => {
 
   // 切换到下一个单词
   const moveToNextWord = useCallback(() => {
+    // 如果是从历史记录跳转（单个单词模式），直接返回
+    if (wordId && specificWordDetail) {
+      Taro.navigateBack()
+      return
+    }
+
     if (!stageWordsData?.words) return
 
     const nextIndex = currentWordIndex + 1
@@ -93,7 +121,14 @@ const VocabularyStudy = () => {
         },
       })
     }
-  }, [stageWordsData, currentWordIndex, setCurrentWordIndex, setCurrentWord])
+  }, [
+    wordId,
+    specificWordDetail,
+    stageWordsData,
+    currentWordIndex,
+    setCurrentWordIndex,
+    setCurrentWord,
+  ])
 
   // 处理认识程度按钮点击
   const handleKnowledgeLevel = useCallback(
@@ -225,13 +260,26 @@ const VocabularyStudy = () => {
   const displayProgress = storedProgress ||
     dailyProgress || {
       date: new Date().toISOString().split('T')[0],
-      studiedWords: 0,
-      masteredWords: 0,
+      knownCount: 0,
+      vagueCount: 0,
+      unknownCount: 0,
+      totalStudied: 0,
       continuousDays: 0,
+      targetWords: 20,
     }
 
+  // 点击进度数字跳转到历史页面
+  const handleProgressClick = useCallback(
+    (knowledgeLevel: 'known' | 'vague' | 'unknown') => {
+      Taro.navigateTo({
+        url: `/pages/vocabulary-history/index?knowledgeLevel=${knowledgeLevel}`,
+      })
+    },
+    []
+  )
+
   // 加载状态
-  if (isLoadingWords || isLoadingProgress) {
+  if (isLoadingWords || isLoadingProgress || isLoadingSpecificWord) {
     return (
       <View className="vocabulary-study-page">
         <CustomNavBar
@@ -271,6 +319,7 @@ const VocabularyStudy = () => {
           </View>
         }
       />
+
       <View className="page-content">
         {/* Word Card */}
         <View className="word-card">
@@ -371,35 +420,44 @@ const VocabularyStudy = () => {
         <View className="progress-card">
           <Text className="progress-title">今日学习进度</Text>
           <View className="progress-stats">
-            <View className="stat-item">
+            <View
+              className="stat-item clickable"
+              onClick={() => handleProgressClick('unknown')}
+            >
               <AnimatedNumber
-                value={displayProgress.studiedWords}
+                value={displayProgress.unknownCount}
                 className="stat-value"
-                style={{ color: '#e6a23c' }}
+                style={{ color: '#ff4d4f' }}
                 duration={1000}
                 easing="easeOutBounce"
               />
-              <Text className="stat-label">已学单词</Text>
+              <Text className="stat-label">不认识</Text>
             </View>
-            <View className="stat-item">
+            <View
+              className="stat-item clickable"
+              onClick={() => handleProgressClick('vague')}
+            >
               <AnimatedNumber
-                value={displayProgress.masteredWords}
+                value={displayProgress.vagueCount}
                 className="stat-value"
-                style={{ color: '#67c23a' }}
+                style={{ color: '#faad14' }}
                 duration={1200}
                 easing="easeOutBounce"
               />
-              <Text className="stat-label">掌握单词</Text>
+              <Text className="stat-label">模糊</Text>
             </View>
-            <View className="stat-item">
+            <View
+              className="stat-item clickable"
+              onClick={() => handleProgressClick('known')}
+            >
               <AnimatedNumber
-                value={displayProgress.continuousDays}
+                value={displayProgress.knownCount}
                 className="stat-value"
-                style={{ color: '#409eff' }}
-                duration={800}
-                easing="easeOutQuad"
+                style={{ color: '#52c41a' }}
+                duration={1500}
+                easing="easeOutBounce"
               />
-              <Text className="stat-label">连续天数</Text>
+              <Text className="stat-label">认识</Text>
             </View>
           </View>
         </View>

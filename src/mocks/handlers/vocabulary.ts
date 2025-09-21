@@ -173,6 +173,7 @@ const vocabularyData = {
   // 分阶段单词学习数据
   studyWords: {
     beginner: [
+      // 20个初学者单词
       {
         id: 'word-beginner-001',
         word: 'apple',
@@ -231,10 +232,351 @@ const vocabularyData = {
         difficulty: 'easy',
         tags: ['animal', 'pet'],
         stage: 'beginner',
-        isFavorited: true,
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-004',
+        word: 'dog',
+        pronunciation: { us: '/dɔːɡ/', uk: '/dɒɡ/' },
+        meaning: '狗',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'The dog is running in the park.',
+          chinese: '狗在公园里跑步。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/dog-us.mp3',
+          uk: '/mock-audio/dog-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['animal', 'pet'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-005',
+        word: 'water',
+        pronunciation: { us: '/ˈwɔːtər/', uk: '/ˈwɔːtə(r)/' },
+        meaning: '水',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'Please give me a glass of water.',
+          chinese: '请给我一杯水。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/water-us.mp3',
+          uk: '/mock-audio/water-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['drink', 'basic'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-006',
+        word: 'house',
+        pronunciation: { us: '/haʊs/', uk: '/haʊs/' },
+        meaning: '房子',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'This is my house.',
+          chinese: '这是我的房子。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/house-us.mp3',
+          uk: '/mock-audio/house-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['building', 'home'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-007',
+        word: 'car',
+        pronunciation: { us: '/kɑːr/', uk: '/kɑː(r)/' },
+        meaning: '汽车',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'My father drives a red car.',
+          chinese: '我爸爸开一辆红色的汽车。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/car-us.mp3',
+          uk: '/mock-audio/car-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['transportation', 'vehicle'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-008',
+        word: 'sun',
+        pronunciation: { us: '/sʌn/', uk: '/sʌn/' },
+        meaning: '太阳',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'The sun is shining brightly.',
+          chinese: '太阳照耀得很明亮。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/sun-us.mp3',
+          uk: '/mock-audio/sun-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['nature', 'weather'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-009',
+        word: 'tree',
+        pronunciation: { us: '/triː/', uk: '/triː/' },
+        meaning: '树',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'There is a big tree in the garden.',
+          chinese: '花园里有一棵大树。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/tree-us.mp3',
+          uk: '/mock-audio/tree-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['nature', 'plant'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-010',
+        word: 'bird',
+        pronunciation: { us: '/bɜːrd/', uk: '/bɜːd/' },
+        meaning: '鸟',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'I can see a bird flying in the sky.',
+          chinese: '我能看到一只鸟在天空中飞翔。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/bird-us.mp3',
+          uk: '/mock-audio/bird-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['animal', 'nature'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-011',
+        word: 'fish',
+        pronunciation: { us: '/fɪʃ/', uk: '/fɪʃ/' },
+        meaning: '鱼',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'There are many fish in the sea.',
+          chinese: '海里有很多鱼。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/fish-us.mp3',
+          uk: '/mock-audio/fish-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['animal', 'sea'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-012',
+        word: 'milk',
+        pronunciation: { us: '/mɪlk/', uk: '/mɪlk/' },
+        meaning: '牛奶',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'I drink milk every morning.',
+          chinese: '我每天早上喝牛奶。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/milk-us.mp3',
+          uk: '/mock-audio/milk-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['drink', 'food'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-013',
+        word: 'bread',
+        pronunciation: { us: '/bred/', uk: '/bred/' },
+        meaning: '面包',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'I eat bread for breakfast.',
+          chinese: '我早餐吃面包。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/bread-us.mp3',
+          uk: '/mock-audio/bread-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['food', 'breakfast'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-014',
+        word: 'ball',
+        pronunciation: { us: '/bɔːl/', uk: '/bɔːl/' },
+        meaning: '球',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'The children are playing with a ball.',
+          chinese: '孩子们在玩球。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/ball-us.mp3',
+          uk: '/mock-audio/ball-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['toy', 'sport'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-015',
+        word: 'red',
+        pronunciation: { us: '/red/', uk: '/red/' },
+        meaning: '红色的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'I like the red flower.',
+          chinese: '我喜欢这朵红花。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/red-us.mp3',
+          uk: '/mock-audio/red-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['color', 'adjective'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-016',
+        word: 'blue',
+        pronunciation: { us: '/bluː/', uk: '/bluː/' },
+        meaning: '蓝色的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'The sky is blue today.',
+          chinese: '今天天空是蓝色的。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/blue-us.mp3',
+          uk: '/mock-audio/blue-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['color', 'adjective'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-017',
+        word: 'big',
+        pronunciation: { us: '/bɪɡ/', uk: '/bɪɡ/' },
+        meaning: '大的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'This is a big house.',
+          chinese: '这是一座大房子。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/big-us.mp3',
+          uk: '/mock-audio/big-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['size', 'adjective'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-018',
+        word: 'small',
+        pronunciation: { us: '/smɔːl/', uk: '/smɔːl/' },
+        meaning: '小的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'The mouse is very small.',
+          chinese: '老鼠非常小。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/small-us.mp3',
+          uk: '/mock-audio/small-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['size', 'adjective'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-019',
+        word: 'happy',
+        pronunciation: { us: '/ˈhæpi/', uk: '/ˈhæpi/' },
+        meaning: '快乐的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'I am very happy today.',
+          chinese: '我今天很快乐。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/happy-us.mp3',
+          uk: '/mock-audio/happy-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['emotion', 'adjective'],
+        stage: 'beginner',
+        isFavorited: false,
+      },
+      {
+        id: 'word-beginner-020',
+        word: 'love',
+        pronunciation: { us: '/lʌv/', uk: '/lʌv/' },
+        meaning: '爱',
+        partOfSpeech: 'verb',
+        example: {
+          english: 'I love my family.',
+          chinese: '我爱我的家人。',
+        },
+        level: 'preschool',
+        audioUrl: {
+          us: '/mock-audio/love-us.mp3',
+          uk: '/mock-audio/love-uk.mp3',
+        },
+        difficulty: 'easy',
+        tags: ['emotion', 'verb'],
+        stage: 'beginner',
+        isFavorited: false,
       },
     ],
     expert: [
+      // 20个专家级单词
       {
         id: 'word-expert-001',
         word: 'immense',
@@ -293,77 +635,373 @@ const vocabularyData = {
         difficulty: 'hard',
         tags: ['descriptive', 'advanced'],
         stage: 'expert',
-        isFavorited: true,
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-004',
+        word: 'comprehensive',
+        pronunciation: { us: '/ˌkɑːmprɪˈhensɪv/', uk: '/ˌkɒmprɪˈhensɪv/' },
+        meaning: '全面的，综合的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'We need a comprehensive solution to this problem.',
+          chinese: '我们需要一个全面的解决方案来解决这个问题。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/comprehensive-us.mp3',
+          uk: '/mock-audio/comprehensive-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['descriptive', 'academic'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-005',
+        word: 'intricate',
+        pronunciation: { us: '/ˈɪntrɪkət/', uk: '/ˈɪntrɪkət/' },
+        meaning: '复杂精细的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'The watch has an intricate mechanism.',
+          chinese: '这块手表有复杂精细的机械装置。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/intricate-us.mp3',
+          uk: '/mock-audio/intricate-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['descriptive', 'technical'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-006',
+        word: 'eloquent',
+        pronunciation: { us: '/ˈeləkwənt/', uk: '/ˈeləkwənt/' },
+        meaning: '雄辩的，有说服力的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'She gave an eloquent speech at the conference.',
+          chinese: '她在会议上发表了一个雄辩的演讲。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/eloquent-us.mp3',
+          uk: '/mock-audio/eloquent-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['communication', 'skill'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-007',
+        word: 'meticulous',
+        pronunciation: { us: '/məˈtɪkjələs/', uk: '/məˈtɪkjələs/' },
+        meaning: '一丝不苟的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'He is meticulous in his attention to detail.',
+          chinese: '他对细节的关注一丝不苟。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/meticulous-us.mp3',
+          uk: '/mock-audio/meticulous-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['character', 'precision'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-008',
+        word: 'resilient',
+        pronunciation: { us: '/rɪˈzɪliənt/', uk: '/rɪˈzɪliənt/' },
+        meaning: '有弹性的，能迅速恢复的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'She is remarkably resilient in the face of adversity.',
+          chinese: '面对逆境，她表现出惊人的恢复能力。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/resilient-us.mp3',
+          uk: '/mock-audio/resilient-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['character', 'strength'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-009',
+        word: 'unprecedented',
+        pronunciation: { us: '/ʌnˈpresɪdentɪd/', uk: '/ʌnˈpresɪdentɪd/' },
+        meaning: '史无前例的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'This is an unprecedented situation in our company.',
+          chinese: '这在我们公司是史无前例的情况。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/unprecedented-us.mp3',
+          uk: '/mock-audio/unprecedented-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['descriptive', 'unique'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-010',
+        word: 'paradigm',
+        pronunciation: { us: '/ˈpærədaɪm/', uk: '/ˈpærədaɪm/' },
+        meaning: '范式，模式',
+        partOfSpeech: 'noun',
+        example: {
+          english: 'This represents a new paradigm in technology.',
+          chinese: '这代表了技术领域的新范式。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/paradigm-us.mp3',
+          uk: '/mock-audio/paradigm-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['concept', 'academic'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-011',
+        word: 'ubiquitous',
+        pronunciation: { us: '/juːˈbɪkwɪtəs/', uk: '/juːˈbɪkwɪtəs/' },
+        meaning: '无处不在的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'Smartphones have become ubiquitous in modern life.',
+          chinese: '智能手机在现代生活中已经无处不在。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/ubiquitous-us.mp3',
+          uk: '/mock-audio/ubiquitous-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['descriptive', 'prevalence'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-012',
+        word: 'ambiguous',
+        pronunciation: { us: '/æmˈbɪɡjuəs/', uk: '/æmˈbɪɡjuəs/' },
+        meaning: '模糊的，有歧义的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'The contract terms were deliberately ambiguous.',
+          chinese: '合同条款故意写得模糊不清。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/ambiguous-us.mp3',
+          uk: '/mock-audio/ambiguous-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['clarity', 'communication'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-013',
+        word: 'scrutinize',
+        pronunciation: { us: '/ˈskruːtənaɪz/', uk: '/ˈskruːtənaɪz/' },
+        meaning: '仔细检查，审视',
+        partOfSpeech: 'verb',
+        example: {
+          english: 'The committee will scrutinize the proposal carefully.',
+          chinese: '委员会将仔细审视这项提案。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/scrutinize-us.mp3',
+          uk: '/mock-audio/scrutinize-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['action', 'examination'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-014',
+        word: 'innovative',
+        pronunciation: { us: '/ˈɪnəveɪtɪv/', uk: '/ˈɪnəveɪtɪv/' },
+        meaning: '创新的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'They developed an innovative approach to the problem.',
+          chinese: '他们开发了解决问题的创新方法。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/innovative-us.mp3',
+          uk: '/mock-audio/innovative-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['creativity', 'progress'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-015',
+        word: 'facilitate',
+        pronunciation: { us: '/fəˈsɪlɪteɪt/', uk: '/fəˈsɪlɪteɪt/' },
+        meaning: '促进，使便利',
+        partOfSpeech: 'verb',
+        example: {
+          english: 'Technology can facilitate communication between people.',
+          chinese: '技术可以促进人们之间的交流。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/facilitate-us.mp3',
+          uk: '/mock-audio/facilitate-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['action', 'assistance'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-016',
+        word: 'deteriorate',
+        pronunciation: { us: '/dɪˈtɪriəreɪt/', uk: '/dɪˈtɪəriəreɪt/' },
+        meaning: '恶化，变质',
+        partOfSpeech: 'verb',
+        example: {
+          english: 'The situation began to deteriorate rapidly.',
+          chinese: '情况开始迅速恶化。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/deteriorate-us.mp3',
+          uk: '/mock-audio/deteriorate-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['change', 'decline'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-017',
+        word: 'substantial',
+        pronunciation: { us: '/səbˈstænʃəl/', uk: '/səbˈstænʃəl/' },
+        meaning: '大量的，实质的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'There has been substantial progress in this field.',
+          chinese: '这个领域已经取得了实质性进展。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/substantial-us.mp3',
+          uk: '/mock-audio/substantial-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['quantity', 'significance'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-018',
+        word: 'versatile',
+        pronunciation: { us: '/ˈvɜːrsətaɪl/', uk: '/ˈvɜːsətaɪl/' },
+        meaning: '多才多艺的，用途广泛的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'She is a versatile actress who can play many roles.',
+          chinese: '她是一位多才多艺的女演员，能够胜任许多角色。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/versatile-us.mp3',
+          uk: '/mock-audio/versatile-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['ability', 'flexibility'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-019',
+        word: 'contemplate',
+        pronunciation: { us: '/ˈkɑːntəmpleɪt/', uk: '/ˈkɒntəmpleɪt/' },
+        meaning: '沉思，考虑',
+        partOfSpeech: 'verb',
+        example: {
+          english: 'He sat quietly contemplating his future.',
+          chinese: '他静静地坐着思考自己的未来。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/contemplate-us.mp3',
+          uk: '/mock-audio/contemplate-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['thinking', 'reflection'],
+        stage: 'expert',
+        isFavorited: false,
+      },
+      {
+        id: 'word-expert-020',
+        word: 'perpetual',
+        pronunciation: { us: '/pərˈpetʃuəl/', uk: '/pəˈpetʃuəl/' },
+        meaning: '永久的，持续的',
+        partOfSpeech: 'adjective',
+        example: {
+          english: 'He seemed to live in perpetual fear of failure.',
+          chinese: '他似乎生活在对失败的持续恐惧中。',
+        },
+        level: 'master',
+        audioUrl: {
+          us: '/mock-audio/perpetual-us.mp3',
+          uk: '/mock-audio/perpetual-uk.mp3',
+        },
+        difficulty: 'hard',
+        tags: ['duration', 'continuity'],
+        stage: 'expert',
+        isFavorited: false,
       },
     ],
   },
 
-  // 学习历史记录
-  studyHistory: [
-    {
-      id: 'history-001',
-      wordId: 'word-beginner-003',
-      word: 'cat',
-      meaning: '猫',
-      knowledgeLevel: 'known' as WordKnowledgeLevel,
-      studiedAt: '2024-01-20T09:30:00Z',
-      stage: 'beginner',
-      isFavorited: true,
-      responseTime: 2500,
-    },
-    {
-      id: 'history-002',
-      wordId: 'word-beginner-002',
-      word: 'book',
-      meaning: '书，书本',
-      knowledgeLevel: 'vague' as WordKnowledgeLevel,
-      studiedAt: '2024-01-20T09:25:00Z',
-      stage: 'beginner',
-      isFavorited: false,
-      responseTime: 4200,
-    },
-    {
-      id: 'history-003',
-      wordId: 'word-beginner-001',
-      word: 'apple',
-      meaning: '苹果',
-      knowledgeLevel: 'known' as WordKnowledgeLevel,
-      studiedAt: '2024-01-20T09:20:00Z',
-      stage: 'beginner',
-      isFavorited: false,
-      responseTime: 1800,
-    },
-    {
-      id: 'history-004',
-      wordId: 'word-expert-003',
-      word: 'sophisticated',
-      meaning: '复杂的，精密的',
-      knowledgeLevel: 'vague' as WordKnowledgeLevel,
-      studiedAt: '2024-01-19T15:45:00Z',
-      stage: 'expert',
-      isFavorited: true,
-      responseTime: 6500,
-    },
-    {
-      id: 'history-005',
-      wordId: 'word-expert-001',
-      word: 'immense',
-      meaning: '巨大的，极大的',
-      knowledgeLevel: 'known' as WordKnowledgeLevel,
-      studiedAt: '2024-01-19T15:30:00Z',
-      stage: 'expert',
-      isFavorited: false,
-      responseTime: 3200,
-    },
-  ],
+  // 学习历史记录 - 初始为空，学习后才会生成数据
+  studyHistory: [] as Array<{
+    id: string
+    wordId: string
+    word: string
+    meaning: string
+    knowledgeLevel: WordKnowledgeLevel
+    studiedAt: string
+    stage: string
+    isFavorited: boolean
+    responseTime: number
+  }>,
 
   // 今日学习进度
   dailyProgress: {
     date: '2024-01-20',
-    studiedWords: 12,
-    masteredWords: 8,
-    continuousDays: 5,
-    targetWords: 20,
+    knownCount: 0, // 认识的单词数量
+    vagueCount: 0, // 模糊的单词数量
+    unknownCount: 0, // 不认识的单词数量
+    totalStudied: 0, // 总学习数量
+    continuousDays: 1, // 连续学习天数
+    targetWords: 20, // 目标单词数
   },
 }
 
@@ -742,10 +1380,19 @@ export const vocabularyHandlers = [
     // 添加到历史记录
     vocabularyData.studyHistory.unshift(record)
 
-    // 更新今日进度
-    vocabularyData.dailyProgress.studiedWords += 1
-    if (body.knowledgeLevel === 'known') {
-      vocabularyData.dailyProgress.masteredWords += 1
+    // 更新今日进度 - 按认识程度分类
+    vocabularyData.dailyProgress.totalStudied += 1
+
+    switch (body.knowledgeLevel) {
+      case 'known':
+        vocabularyData.dailyProgress.knownCount += 1
+        break
+      case 'vague':
+        vocabularyData.dailyProgress.vagueCount += 1
+        break
+      case 'unknown':
+        vocabularyData.dailyProgress.unknownCount += 1
+        break
     }
 
     return HttpResponse.json({
@@ -766,28 +1413,28 @@ export const vocabularyHandlers = [
     const page = Number(url.searchParams.get('page')) || 1
     const pageSize = Number(url.searchParams.get('pageSize')) || 10
     const type = url.searchParams.get('type') // 'all' | 'favorites'
+    const knowledgeLevel = url.searchParams.get('knowledgeLevel') // 按认识程度筛选
 
-    // 扩展历史记录数据，支持更多页面测试
-    const expandedHistory = []
-    for (let i = 0; i < 50; i++) {
-      const baseRecord =
-        vocabularyData.studyHistory[i % vocabularyData.studyHistory.length]
-      const record = {
-        ...baseRecord,
-        id: `history-${i + 1}`,
-        studiedAt: new Date(Date.now() - i * 3600000).toISOString(), // 每小时递减
-        word: `${baseRecord.word}${i > vocabularyData.studyHistory.length - 1 ? i : ''}`,
-        knowledgeLevel: (['known', 'vague', 'unknown'] as const)[i % 3],
-        isFavorited: i % 5 === 0, // 每5个一个收藏
-        responseTime: 1500 + Math.floor(Math.random() * 4000), // 1.5-5.5秒反应时间
-      }
-      expandedHistory.push(record)
-    }
+    // 使用真实的学习历史数据
+    let filteredHistory = [...vocabularyData.studyHistory]
 
-    let filteredHistory = expandedHistory
+    // 按类型筛选
     if (type === 'favorites') {
-      filteredHistory = expandedHistory.filter(h => h.isFavorited)
+      filteredHistory = filteredHistory.filter(h => h.isFavorited)
     }
+
+    // 按认识程度筛选
+    if (knowledgeLevel && knowledgeLevel !== 'all') {
+      filteredHistory = filteredHistory.filter(
+        h => h.knowledgeLevel === knowledgeLevel
+      )
+    }
+
+    // 按时间倒序排序
+    filteredHistory.sort(
+      (a, b) =>
+        new Date(b.studiedAt).getTime() - new Date(a.studiedAt).getTime()
+    )
 
     const startIndex = (page - 1) * pageSize
     const endIndex = startIndex + pageSize
@@ -813,16 +1460,10 @@ export const vocabularyHandlers = [
     const date =
       url.searchParams.get('date') || new Date().toISOString().split('T')[0]
 
-    // 如果查询的不是今天，模拟返回历史数据
-    let progress = vocabularyData.dailyProgress
-    if (date !== '2024-01-20') {
-      progress = {
-        date,
-        studiedWords: Math.floor(Math.random() * 25),
-        masteredWords: Math.floor(Math.random() * 15),
-        continuousDays: Math.floor(Math.random() * 30),
-        targetWords: 20,
-      }
+    // 返回当前的学习进度数据
+    const progress = {
+      ...vocabularyData.dailyProgress,
+      date,
     }
 
     return HttpResponse.json({

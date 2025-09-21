@@ -148,10 +148,16 @@ export const useVocabularyStudyStore = create<VocabularyStudyState>()(
         if (updatedDailyProgress) {
           updatedDailyProgress = {
             ...updatedDailyProgress,
-            studiedWords: updatedDailyProgress.studiedWords + 1,
-            masteredWords:
-              updatedDailyProgress.masteredWords +
+            totalStudied: updatedDailyProgress.totalStudied + 1,
+            knownCount:
+              updatedDailyProgress.knownCount +
               (knowledgeLevel === 'known' ? 1 : 0),
+            vagueCount:
+              updatedDailyProgress.vagueCount +
+              (knowledgeLevel === 'vague' ? 1 : 0),
+            unknownCount:
+              updatedDailyProgress.unknownCount +
+              (knowledgeLevel === 'unknown' ? 1 : 0),
           }
         }
 

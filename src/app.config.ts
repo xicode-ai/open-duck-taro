@@ -13,7 +13,6 @@ export default {
     'pages/vocabulary-study/index',
     'pages/vocabulary-history/index',
     'pages/vocabulary-favorites/index',
-    'pages/word-detail/index',
     'pages/progress/index',
     'pages/membership/index',
   ],
@@ -25,10 +24,13 @@ export default {
     backgroundColor: '#F5F7FA',
   },
   tabBar: {
-    color: '#999999',
-    selectedColor: '#6366f1',
+    color: '#8E8E93',
+    selectedColor: '#007AFF',
     backgroundColor: '#FFFFFF',
     borderStyle: 'white',
+    height: '50px',
+    fontSize: '12px',
+    iconWidth: '24px',
     list: [
       {
         pagePath: 'pages/index/index',

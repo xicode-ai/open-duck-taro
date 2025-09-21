@@ -8,6 +8,7 @@ export { useTopicChatStore } from './topicChat'
 export { useTranslateHistoryStore } from './translateHistory'
 export { usePhotoStoryStore } from './photoStory'
 export { useVocabularyStudyStore } from './vocabularyStudy'
+export { useProgressStore } from './progress'
 
 // 导出类型
 export type { UserState } from './user'
@@ -17,3 +18,4 @@ export type { VocabularyState } from './vocabulary'
 export type { SettingsState, Language, Theme } from './settings'
 export type { TopicChatState } from './topicChat'
 export type { VocabularyStudyState } from './vocabularyStudy'
+export type { ProgressState } from './progress'

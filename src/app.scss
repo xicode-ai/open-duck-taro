@@ -578,6 +578,68 @@ a {
 
 /* Taro自动适配，移除手动移动端样式 */
 
+/* 自定义Tab样式 - 覆盖Taro默认样式 */
+.taro-tabbar {
+  background: #ffffff !important;
+  border-top: 1px solid #f0f0f0 !important;
+  height: 50px !important;
+  padding-bottom: env(safe-area-inset-bottom) !important;
+}
+
+.taro-tabbar__item {
+  color: #8e8e93 !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  transition: all 0.2s ease !important;
+}
+
+.taro-tabbar__item--active {
+  color: #007aff !important;
+  font-weight: 500 !important;
+}
+
+.taro-tabbar__icon {
+  width: 24px !important;
+  height: 24px !important;
+  margin-bottom: 2px !important;
+}
+
+.taro-tabbar__text {
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  margin-top: 2px !important;
+}
+
+/* Tab切换动画效果 */
+.taro-tabbar__item {
+  position: relative;
+  overflow: hidden;
+}
+
+.taro-tabbar__item--active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: #007aff;
+  border-radius: 1px;
+  animation: tabIndicator 0.3s ease;
+}
+
+@keyframes tabIndicator {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 20px;
+    opacity: 1;
+  }
+}
+
 /* 响应式工具 */
 @media (width <= 750px) {
   .container {

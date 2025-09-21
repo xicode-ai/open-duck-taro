@@ -1,0 +1,138 @@
+.bar-chart-container {
+  width: 100%;
+}
+
+.statistics-list {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e9ecef;
+}
+
+.statistics-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #f8f9fa;
+    margin-bottom: 12px;
+  }
+
+  &:first-child {
+    padding-top: 0;
+  }
+
+  &:last-child {
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+}
+
+.item-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.item-label {
+  flex: 1;
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+}
+
+.item-count {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  min-width: 60px;
+  text-align: right;
+}
+
+.progress-bar {
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-left: 44px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s ease-out;
+  background: linear-gradient(
+    90deg,
+    currentColor 0%,
+    currentColor 80%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+}
+
+// 响应式适配
+@media (max-width: 375px) {
+  .statistics-list {
+    padding: 16px;
+  }
+
+  .statistics-item {
+    padding: 12px 0;
+
+    &:not(:last-child) {
+      margin-bottom: 8px;
+    }
+  }
+
+  .item-header {
+    gap: 10px;
+  }
+
+  .item-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .item-label {
+    font-size: 14px;
+  }
+
+  .item-count {
+    font-size: 14px;
+    min-width: 50px;
+  }
+
+  .progress-bar {
+    margin-left: 38px;
+    height: 6px;
+  }
+}
+
+// 强制使用浅色主题，与其他模块保持一致
+.statistics-list {
+  background-color: #ffffff !important;
+  border-color: #e9ecef !important;
+}
+
+.statistics-item {
+  border-bottom-color: #f8f9fa !important;
+}
+
+.item-label,
+.item-count {
+  color: #333 !important;
+}
+
+.progress-bar {
+  background-color: #e9ecef !important;
+}

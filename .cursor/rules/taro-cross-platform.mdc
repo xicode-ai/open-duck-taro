@@ -1,0 +1,640 @@
+---
+alwaysApply: true
+---
+
+# Taro 跨平台开发规范
+
+## 支持平台
+
+- **H5 (Web)**: 主要开发和测试平台
+- **微信小程序**: 主要目标平台
+- **支付宝小程序**: 支持平台
+- **百度小程序**: 支持平台
+- **字节跳动小程序**: 支持平台
+- **QQ 小程序**: 支持平台
+- **京东小程序**: 支持平台
+- **快应用**: 支持平台
+- **React Native**: 支持平台
+
+## 平台差异处理
+
+### 条件编译
+
+```typescript
+// ✅ 使用 Taro 的条件编译
+import Taro from '@tarojs/taro'
+
+const Component = () => {
+  // 平台判断
+  if (process.env.TARO_ENV === 'weapp') {
+    // 微信小程序特定逻辑
+    return <WechatSpecificComponent />
+  }
+
+  if (process.env.TARO_ENV === 'h5') {
+    // H5 特定逻辑
+    return <H5SpecificComponent />
+  }
+
+  // 通用逻辑
+  return <CommonComponent />
+}
+
+// ✅ 使用环境变量进行条件编译
+const getStorageSync = (key: string) => {
+  if (process.env.TARO_ENV === 'h5') {
+    return localStorage.getItem(key)
+  } else {
+    return Taro.getStorageSync(key)
+  }
+}
+```
+
+### 平台特定文件
+
+```
+src/
+├── components/
+│   ├── Button/
+│   │   ├── index.tsx          # 通用实现
+│   │   ├── index.weapp.tsx    # 微信小程序特定实现
+│   │   ├── index.h5.tsx       # H5 特定实现
+│   │   └── index.scss
+└── utils/
+    ├── storage.ts             # 通用存储工具
+    ├── storage.weapp.ts       # 小程序存储实现
+    └── storage.h5.ts          # H5 存储实现
+```
+
+## API 兼容性处理
+
+### 统一 API 封装
+
+```typescript
+// ✅ 统一的 API 封装
+class PlatformAPI {
+  // 存储 API
+  static setStorage(key: string, value: any): Promise<void> {
+    if (process.env.TARO_ENV === 'h5') {
+      localStorage.setItem(key, JSON.stringify(value))
+      return Promise.resolve()
+    } else {
+      return Taro.setStorage({ key, data: value })
+    }
+  }
+
+  static getStorage(key: string): Promise<any> {
+    if (process.env.TARO_ENV === 'h5') {
+      const value = localStorage.getItem(key)
+      return Promise.resolve(value ? JSON.parse(value) : null)
+    } else {
+      return Taro.getStorage({ key }).then(res => res.data)
+    }
+  }
+
+  // 网络请求
+  static request(options: any): Promise<any> {
+    if (process.env.TARO_ENV === 'h5') {
+      // H5 环境使用 axios
+      return axios(options)
+    } else {
+      // 小程序环境使用 Taro.request
+      return Taro.request(options)
+    }
+  }
+
+  // 导航 API
+  static navigateTo(url: string): Promise<void> {
+    if (process.env.TARO_ENV === 'h5') {
+      window.location.href = url
+      return Promise.resolve()
+    } else {
+      return Taro.navigateTo({ url })
+    }
+  }
+
+  // 分享 API
+  static share(options: any): Promise<void> {
+    if (process.env.TARO_ENV === 'h5') {
+      // H5 环境使用 Web Share API 或自定义分享
+      if (navigator.share) {
+        return navigator.share(options)
+      } else {
+        // 自定义分享逻辑
+        return Promise.resolve()
+      }
+    } else {
+      // 小程序环境使用原生分享
+      return Taro.showShareMenu(options)
+    }
+  }
+}
+```
+
+### 权限处理
+
+```typescript
+// ✅ 统一权限处理
+class PermissionManager {
+  // 录音权限
+  static async requestRecordPermission(): Promise<boolean> {
+    if (process.env.TARO_ENV === 'h5') {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        })
+        stream.getTracks().forEach(track => track.stop())
+        return true
+      } catch {
+        return false
+      }
+    } else {
+      try {
+        const result = await Taro.authorize({ scope: 'scope.record' })
+        return result.errMsg === 'authorize:ok'
+      } catch {
+        return false
+      }
+    }
+  }
+
+  // 相机权限
+  static async requestCameraPermission(): Promise<boolean> {
+    if (process.env.TARO_ENV === 'h5') {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        })
+        stream.getTracks().forEach(track => track.stop())
+        return true
+      } catch {
+        return false
+      }
+    } else {
+      try {
+        const result = await Taro.authorize({ scope: 'scope.camera' })
+        return result.errMsg === 'authorize:ok'
+      } catch {
+        return false
+      }
+    }
+  }
+
+  // 位置权限
+  static async requestLocationPermission(): Promise<boolean> {
+    if (process.env.TARO_ENV === 'h5') {
+      return new Promise(resolve => {
+        navigator.geolocation.getCurrentPosition(
+          () => resolve(true),
+          () => resolve(false)
+        )
+      })
+    } else {
+      try {
+        const result = await Taro.authorize({ scope: 'scope.userLocation' })
+        return result.errMsg === 'authorize:ok'
+      } catch {
+        return false
+      }
+    }
+  }
+}
+```
+
+## 样式兼容性
+
+### 安全区域适配
+
+```scss
+// ✅ 安全区域适配
+.safe-area-container {
+  /* H5 环境 */
+  @media screen and (min-width: 750px) {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* 小程序环境 */
+  .taro_env_weapp & {
+    padding-top: var(--status-bar-height, 0);
+  }
+}
+
+// ✅ 状态栏高度获取
+.status-bar {
+  /* 小程序环境 */
+  .taro_env_weapp & {
+    height: var(--status-bar-height, 44px);
+  }
+
+  /* H5 环境 */
+  .taro_env_h5 & {
+    height: 0;
+  }
+}
+```
+
+### 平台特定样式
+
+```scss
+// ✅ 平台特定样式
+.platform-specific {
+  /* 通用样式 */
+  padding: 20px;
+  background: #fff;
+
+  /* H5 特定样式 */
+  .taro_env_h5 & {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+
+  /* 微信小程序特定样式 */
+  .taro_env_weapp & {
+    border: 1px solid #eee;
+  }
+
+  /* 支付宝小程序特定样式 */
+  .taro_env_alipay & {
+    background: #f5f5f5;
+  }
+}
+```
+
+## 组件兼容性
+
+### 平台特定组件
+
+```typescript
+// ✅ 平台特定组件实现
+const PlatformButton: React.FC<ButtonProps> = ({ children, onClick, ...props }) => {
+  if (process.env.TARO_ENV === 'h5') {
+    return (
+      <button className="platform-button" onClick={onClick} {...props}>
+        {children}
+      </button>
+    )
+  }
+
+  // 小程序环境使用 Taro 组件
+  return (
+    <Button className="platform-button" onClick={onClick} {...props}>
+      {children}
+    </Button>
+  )
+}
+
+// ✅ 条件渲染组件
+const ConditionalComponent: React.FC = () => {
+  return (
+    <View>
+      {process.env.TARO_ENV === 'h5' && (
+        <WebOnlyComponent />
+      )}
+
+      {process.env.TARO_ENV === 'weapp' && (
+        <WechatOnlyComponent />
+      )}
+
+      <CommonComponent />
+    </View>
+  )
+}
+```
+
+### 事件处理兼容
+
+```typescript
+// ✅ 事件处理兼容
+const TouchHandler: React.FC = () => {
+  const handleTouch = (e: any) => {
+    if (process.env.TARO_ENV === 'h5') {
+      // H5 环境处理
+      const touch = e.touches?.[0] || e.changedTouches?.[0]
+      console.log('H5 touch:', touch.clientX, touch.clientY)
+    } else {
+      // 小程序环境处理
+      const touch = e.touches?.[0] || e.changedTouches?.[0]
+      console.log('Mini-program touch:', touch.pageX, touch.pageY)
+    }
+  }
+
+  return (
+    <View
+      onTouchStart={handleTouch}
+      onTouchMove={handleTouch}
+      onTouchEnd={handleTouch}
+    >
+      Touch Area
+    </View>
+  )
+}
+```
+
+## 路由和导航
+
+### 统一路由管理
+
+```typescript
+// ✅ 统一路由管理
+class RouterManager {
+  // 页面跳转
+  static navigateTo(url: string, params?: Record<string, any>): Promise<void> {
+    const fullUrl = params
+      ? `${url}?${new URLSearchParams(params).toString()}`
+      : url
+
+    if (process.env.TARO_ENV === 'h5') {
+      // H5 环境使用 history API
+      window.history.pushState(null, '', fullUrl)
+      return Promise.resolve()
+    } else {
+      // 小程序环境使用 Taro 导航
+      return Taro.navigateTo({ url: fullUrl })
+    }
+  }
+
+  // 页面替换
+  static redirectTo(url: string, params?: Record<string, any>): Promise<void> {
+    const fullUrl = params
+      ? `${url}?${new URLSearchParams(params).toString()}`
+      : url
+
+    if (process.env.TARO_ENV === 'h5') {
+      window.history.replaceState(null, '', fullUrl)
+      return Promise.resolve()
+    } else {
+      return Taro.redirectTo({ url: fullUrl })
+    }
+  }
+
+  // 返回上一页
+  static navigateBack(delta: number = 1): Promise<void> {
+    if (process.env.TARO_ENV === 'h5') {
+      window.history.go(-delta)
+      return Promise.resolve()
+    } else {
+      return Taro.navigateBack({ delta })
+    }
+  }
+
+  // 获取当前页面参数
+  static getCurrentPageParams(): Record<string, string> {
+    if (process.env.TARO_ENV === 'h5') {
+      return Object.fromEntries(new URLSearchParams(window.location.search))
+    } else {
+      const pages = Taro.getCurrentPages()
+      const currentPage = pages[pages.length - 1]
+      return currentPage.options || {}
+    }
+  }
+}
+```
+
+## 性能优化
+
+### 平台特定优化
+
+```typescript
+// ✅ 平台特定性能优化
+class PerformanceOptimizer {
+  // 图片懒加载
+  static setupImageLazyLoading() {
+    if (process.env.TARO_ENV === 'h5') {
+      // H5 环境使用 Intersection Observer
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target as HTMLImageElement
+            img.src = img.dataset.src || ''
+            observer.unobserve(img)
+          }
+        })
+      })
+
+      document.querySelectorAll('img[data-src]').forEach(img => {
+        observer.observe(img)
+      })
+    }
+    // 小程序环境使用组件的 lazy-load 属性
+  }
+
+  // 长列表优化
+  static optimizeLongList() {
+    if (process.env.TARO_ENV === 'h5') {
+      // H5 环境使用虚拟滚动
+      return {
+        useVirtualScroll: true,
+        itemHeight: 50,
+        bufferSize: 10,
+      }
+    } else {
+      // 小程序环境使用原生优化
+      return {
+        useVirtualScroll: false,
+        enablePullRefresh: true,
+        enableBackToTop: true,
+      }
+    }
+  }
+}
+```
+
+## 调试和开发工具
+
+### 平台特定调试
+
+```typescript
+// ✅ 平台特定调试工具
+class DebugTools {
+  static log(message: string, data?: any) {
+    if (process.env.NODE_ENV === 'development') {
+      if (process.env.TARO_ENV === 'h5') {
+        console.log(`[H5] ${message}`, data)
+      } else {
+        console.log(`[${process.env.TARO_ENV}] ${message}`, data)
+      }
+    }
+  }
+
+  static error(message: string, error?: any) {
+    if (process.env.TARO_ENV === 'h5') {
+      console.error(`[H5] ${message}`, error)
+    } else {
+      console.error(`[${process.env.TARO_ENV}] ${message}`, error)
+    }
+  }
+
+  // 性能监控
+  static measurePerformance(name: string, fn: () => void) {
+    if (process.env.TARO_ENV === 'h5' && window.performance) {
+      const start = performance.now()
+      fn()
+      const end = performance.now()
+      console.log(`[Performance] ${name}: ${end - start}ms`)
+    } else {
+      fn()
+    }
+  }
+}
+```
+
+## 构建配置
+
+### 平台特定配置
+
+```typescript
+// ✅ config/index.ts 平台配置
+const config = {
+  projectName: 'open-duck',
+  date: '2024-1-1',
+  designWidth: 375,
+  deviceRatio: {
+    640: 2.34 / 2,
+    750: 1,
+    375: 2,
+    828: 1.81 / 2,
+  },
+  sourceRoot: 'src',
+  outputRoot: 'dist',
+  plugins: ['@tarojs/plugin-framework-react', '@tarojs/plugin-html'],
+  defineConstants: {},
+  copy: {
+    patterns: [{ from: 'public/', to: 'dist/' }],
+    options: {},
+  },
+  framework: 'react',
+  compiler: {
+    type: 'webpack5',
+    prebundle: {
+      enable: false,
+    },
+  },
+  mini: {
+    postcss: {
+      pxtransform: {
+        enable: true,
+        config: {
+          selectorBlackList: ['nut-'],
+        },
+      },
+      url: {
+        enable: true,
+        config: {
+          limit: 1024,
+        },
+      },
+      cssModules: {
+        enable: false,
+        config: {
+          namingPattern: 'module',
+          generateScopedName: '[name]__[local]___[hash:base64:5]',
+        },
+      },
+    },
+  },
+  h5: {
+    publicPath: '/',
+    staticDirectory: 'static',
+    esnextModules: ['taro-ui'],
+    postcss: {
+      autoprefixer: {
+        enable: true,
+        config: {},
+      },
+      cssModules: {
+        enable: false,
+        config: {
+          namingPattern: 'module',
+          generateScopedName: '[name]__[local]___[hash:base64:5]',
+        },
+      },
+    },
+  },
+  rn: {
+    appName: 'OpenDuck',
+    postcss: {
+      cssModules: {
+        enable: false,
+      },
+    },
+    sass: {},
+  },
+}
+```
+
+## 测试策略
+
+### 跨平台测试
+
+```typescript
+// ✅ 跨平台测试配置
+describe('Cross Platform Component', () => {
+  beforeEach(() => {
+    // 重置环境变量
+    delete process.env.TARO_ENV
+  })
+
+  it('should render correctly on H5', () => {
+    process.env.TARO_ENV = 'h5'
+    const { container } = render(<TestComponent />)
+    expect(container).toMatchSnapshot('h5')
+  })
+
+  it('should render correctly on WeChat', () => {
+    process.env.TARO_ENV = 'weapp'
+    const { container } = render(<TestComponent />)
+    expect(container).toMatchSnapshot('weapp')
+  })
+
+  it('should handle platform-specific logic', () => {
+    process.env.TARO_ENV = 'h5'
+    const result = PlatformAPI.getStorage('test')
+    expect(result).toBeDefined()
+  })
+})
+```
+
+## 最佳实践
+
+### 跨平台开发原则
+
+1. **优先使用 Taro 统一 API**: 避免直接使用平台特定 API
+2. **渐进式增强**: 先实现基础功能，再添加平台特定优化
+3. **统一组件接口**: 保持组件 API 在各平台的一致性
+4. **性能优先**: 针对不同平台进行性能优化
+5. **测试覆盖**: 确保各平台功能的正确性
+
+### 常见问题解决
+
+```typescript
+// ✅ 解决小程序包大小限制
+const LazyComponent = lazy(() => {
+  if (process.env.TARO_ENV === 'weapp') {
+    // 小程序环境使用轻量版本
+    return import('./components/LightweightComponent')
+  } else {
+    // 其他环境使用完整版本
+    return import('./components/FullFeaturedComponent')
+  }
+})
+
+// ✅ 解决样式兼容性问题
+const getCompatibleStyles = () => {
+  const baseStyles = {
+    padding: '20px',
+    background: '#fff',
+  }
+
+  if (process.env.TARO_ENV === 'h5') {
+    return {
+      ...baseStyles,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    }
+  }
+
+  return baseStyles
+}
+```

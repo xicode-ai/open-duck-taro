@@ -9,24 +9,53 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000,
       // 缓存时间（30分钟）
       gcTime: 30 * 60 * 1000,
-      // 重试配置
-      retry: (failureCount, error: Error) => {
-        // 网络错误重试，其他错误不重试
-        if (error?.message?.includes('network') && failureCount < 3) {
+      // 重试配置 - 更智能的重试策略
+      retry: (failureCount, error: { status?: number; message?: string }) => {
+        // 网络错误或5xx错误重试
+        if (failureCount >= 3) return false
+
+        // 网络错误
+        if (
+          error?.message?.includes('network') ||
+          error?.message?.includes('fetch')
+        ) {
           return true
         }
-        return false
+
+        // 5xx 服务器错误
+        if (error?.status && error.status >= 500) {
+          return true
+        }
+
+        // 4xx 客户端错误不重试
+        if (error?.status && error.status >= 400 && error.status < 500) {
+          return false
+        }
+
+        return true
       },
-      // 重试延迟（指数退避）
-      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // 重试延迟（指数退避，但限制最大延迟）
+      retryDelay: attemptIndex => {
+        const delay = Math.min(1000 * 2 ** attemptIndex, 10000) // 最大10秒
+        // 添加随机抖动避免所有客户端同时重试
+        return delay + Math.random() * 1000
+      },
       // 窗口重新获得焦点时不自动重新获取
       refetchOnWindowFocus: false,
       // 网络重连时重新获取
       refetchOnReconnect: true,
     },
     mutations: {
-      // 变更重试配置
-      retry: 1,
+      // 变更重试配置 - 减少重试次数
+      retry: (failureCount, error: { message?: string }) => {
+        // 网络错误重试一次
+        if (error?.message?.includes('network') && failureCount < 1) {
+          return true
+        }
+        return false
+      },
+      // 变更重试延迟
+      retryDelay: () => 1000,
     },
   },
 })

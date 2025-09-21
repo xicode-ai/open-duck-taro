@@ -1,374 +1,380 @@
-import { http, HttpResponse, delay } from 'msw'
+import { http, HttpResponse } from 'msw'
+import type {
+  LearningProgress,
+  DailyOverview,
+  WeeklyProgress,
+  StudyStatistics,
+} from '@/types'
+
+// 生成本周天数数据
+function generateWeeklyDays() {
+  const today = new Date()
+  const currentDay = today.getDay() // 0 = 周日, 1 = 周一, ...
+  const days = []
+
+  // 从周一开始
+  const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay
+
+  const weekdays = ['一', '二', '三', '四', '五', '六', '日']
+
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today)
+    date.setDate(today.getDate() + mondayOffset + i)
+
+    const isToday = date.toDateString() === today.toDateString()
+    const isPast = date < today && !isToday
+
+    // 模拟学习记录：过去的日子有80%概率完成学习
+    const isCompleted = isPast ? Math.random() > 0.2 : false
+
+    days.push({
+      date: date.toISOString().split('T')[0],
+      dayOfWeek: weekdays[i],
+      dayNumber: date.getDate().toString(),
+      isCompleted,
+      isToday,
+      studyMinutes: isCompleted
+        ? Math.floor(Math.random() * 45) + 15
+        : undefined,
+    })
+  }
+
+  return days
+}
+
+// Mock 数据
+const mockDailyOverview: DailyOverview = {
+  date: new Date().toISOString().split('T')[0],
+  topicProgress: {
+    completed: 6,
+    total: 10,
+    percentage: 60,
+  },
+  vocabularyCount: 15,
+  photoStoryCount: 3,
+}
+
+const mockWeeklyProgress: WeeklyProgress = {
+  weekNumber: 3,
+  days: generateWeeklyDays(),
+}
+
+const mockStudyStatistics: StudyStatistics = {
+  chatCount: 128,
+  topicCount: 45,
+  translateCount: 67,
+  photoStoryCount: 23,
+  vocabularyCount: 156,
+  totalStudyTime: 720, // 12小时
+}
+
+const mockLearningProgress: LearningProgress = {
+  dailyOverview: mockDailyOverview,
+  weeklyProgress: mockWeeklyProgress,
+  studyStatistics: mockStudyStatistics,
+  suggestion: {
+    title: '今日建议',
+    description:
+      '你在对话练习方面表现很棒！建议今天多练习一些翻译功能，提升词汇量。',
+    type: 'translate',
+    priority: 'high',
+  },
+}
+
+// 学习排行榜数据
+const mockLeaderboard = {
+  rank: 15,
+  totalUsers: 1000,
+  users: [
+    {
+      rank: 1,
+      userId: 'user001',
+      nickname: '学霸小明',
+      avatar:
+        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=60&h=60&fit=crop&crop=face',
+      score: 2850,
+      studyTime: 480,
+    },
+    {
+      rank: 2,
+      userId: 'user002',
+      nickname: '英语达人',
+      avatar:
+        'https://images.unsplash.com/photo-1494790108755-2616b150b0e5?w=60&h=60&fit=crop&crop=face',
+      score: 2720,
+      studyTime: 450,
+    },
+    {
+      rank: 3,
+      userId: 'user003',
+      nickname: '口语小王子',
+      avatar:
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face',
+      score: 2680,
+      studyTime: 420,
+    },
+    {
+      rank: 14,
+      userId: 'user014',
+      nickname: '努力学习中',
+      avatar:
+        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=60&h=60&fit=crop&crop=face',
+      score: 1850,
+      studyTime: 280,
+    },
+    {
+      rank: 15,
+      userId: 'current',
+      nickname: '我',
+      avatar:
+        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face',
+      score: 1820,
+      studyTime: 275,
+    },
+    {
+      rank: 16,
+      userId: 'user016',
+      nickname: '新手小白',
+      avatar:
+        'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=60&h=60&fit=crop&crop=face',
+      score: 1790,
+      studyTime: 260,
+    },
+  ],
+}
 
 export const progressHandlers = [
-  // 获取学习进度总览
-  http.get('/api/progress/overview', async () => {
-    await delay(500)
-
-    const overview = {
-      todayMinutes: 35,
-      todayGoal: 30,
-      weeklyMinutes: 245,
-      weeklyGoal: 210,
-      monthlyMinutes: 890,
-      monthlyGoal: 900,
-      streak: 7,
-      longestStreak: 15,
-      totalDays: 45,
-      totalHours: Math.floor(890 / 60),
-      level: 'intermediate',
-      nextLevel: 'upper-intermediate',
-      levelProgress: 0.65,
-      points: 1250,
-      rank: 23,
-      totalUsers: 1580,
-    }
-
+  // 获取学习进度数据
+  http.get('/api/progress/learning', () => {
     return HttpResponse.json({
       code: 200,
-      data: overview,
       message: 'success',
+      data: mockLearningProgress,
     })
   }),
 
-  // 获取详细学习统计
-  http.get('/api/progress/stats', async ({ request }) => {
-    await delay(600)
-    const url = new URL(request.url)
-    const period = url.searchParams.get('period') || 'week'
+  // 获取今日概览
+  http.get('/api/progress/daily-overview', () => {
+    return HttpResponse.json({
+      code: 200,
+      message: 'success',
+      data: mockDailyOverview,
+    })
+  }),
 
-    const generateStats = (days: number) => {
-      return Array.from({ length: days }, (_, i) => {
-        const date = new Date()
-        date.setDate(date.getDate() - (days - i - 1))
-        return {
-          date: date.toISOString().split('T')[0],
-          minutes: Math.floor(Math.random() * 60) + 10,
-          words: Math.floor(Math.random() * 30) + 5,
-          sentences: Math.floor(Math.random() * 20) + 3,
-          accuracy: Math.random() * 0.3 + 0.7,
-          topics: Math.floor(Math.random() * 3) + 1,
-        }
-      })
+  // 获取本周进度
+  http.get('/api/progress/weekly', () => {
+    return HttpResponse.json({
+      code: 200,
+      message: 'success',
+      data: mockWeeklyProgress,
+    })
+  }),
+
+  // 获取学习统计
+  http.get('/api/progress/statistics', () => {
+    return HttpResponse.json({
+      code: 200,
+      message: 'success',
+      data: mockStudyStatistics,
+    })
+  }),
+
+  // 更新学习活动
+  http.post('/api/progress/activity', async ({ request }) => {
+    const activity = await request.json()
+
+    // 根据不同活动类型计算积分
+    const pointsMap = {
+      chat: 10,
+      topic: 15,
+      vocabulary: 5,
+      translate: 8,
+      photo: 12,
     }
 
-    let stats
-    switch (period) {
-      case 'week':
-        stats = generateStats(7)
-        break
-      case 'month':
-        stats = generateStats(30)
-        break
-      case 'year':
-        stats = generateStats(365)
-        break
-      default:
-        stats = generateStats(7)
+    const activityData = activity as {
+      type: keyof typeof pointsMap
+      duration: number
+      details?: Record<string, unknown>
     }
+    const pointsEarned = pointsMap[activityData.type] || 5
 
     return HttpResponse.json({
       code: 200,
+      message: 'success',
       data: {
-        period,
-        stats,
-        summary: {
-          totalMinutes: stats.reduce((sum, s) => sum + s.minutes, 0),
-          totalWords: stats.reduce((sum, s) => sum + s.words, 0),
-          totalSentences: stats.reduce((sum, s) => sum + s.sentences, 0),
-          averageAccuracy:
-            stats.reduce((sum, s) => sum + s.accuracy, 0) / stats.length,
-          activeDays: stats.filter(s => s.minutes > 0).length,
-        },
+        success: true,
+        pointsEarned,
       },
-      message: 'success',
     })
   }),
 
-  // 获取技能雷达图数据
-  http.get('/api/progress/skills', async () => {
-    await delay(400)
-
-    const skills = {
-      listening: {
-        level: 3,
-        maxLevel: 5,
-        score: 75,
-        progress: 0.6,
-        exercises: 120,
-      },
-      speaking: {
-        level: 2,
-        maxLevel: 5,
-        score: 65,
-        progress: 0.4,
-        exercises: 85,
-      },
-      reading: {
-        level: 4,
-        maxLevel: 5,
-        score: 85,
-        progress: 0.8,
-        exercises: 200,
-      },
-      writing: {
-        level: 3,
-        maxLevel: 5,
-        score: 70,
-        progress: 0.55,
-        exercises: 95,
-      },
-      vocabulary: {
-        level: 3,
-        maxLevel: 5,
-        score: 78,
-        progress: 0.65,
-        words: 523,
-      },
-      grammar: {
-        level: 3,
-        maxLevel: 5,
-        score: 72,
-        progress: 0.58,
-        rules: 156,
-      },
-    }
-
-    return HttpResponse.json({
-      code: 200,
-      data: skills,
-      message: 'success',
-    })
-  }),
-
-  // 获取学习日历
-  http.get('/api/progress/calendar', async ({ request }) => {
-    await delay(500)
-    const url = new URL(request.url)
-    const year = parseInt(
-      url.searchParams.get('year') || new Date().getFullYear().toString()
-    )
-    const month = parseInt(
-      url.searchParams.get('month') || (new Date().getMonth() + 1).toString()
-    )
-
-    // 生成一个月的学习记录
-    const daysInMonth = new Date(year, month, 0).getDate()
-    const calendar = Array.from({ length: daysInMonth }, (_, i) => {
-      const date = new Date(year, month - 1, i + 1)
-      const isStudied = Math.random() > 0.3 // 70%的概率有学习
-      return {
-        date: date.toISOString().split('T')[0],
-        studied: isStudied,
-        minutes: isStudied ? Math.floor(Math.random() * 60) + 10 : 0,
-        completed: isStudied && Math.random() > 0.5,
-      }
-    })
-
-    return HttpResponse.json({
-      code: 200,
-      data: {
-        year,
-        month,
-        calendar,
-        monthlyStreak: 7,
-        studiedDays: calendar.filter(d => d.studied).length,
-        totalMinutes: calendar.reduce((sum, d) => sum + d.minutes, 0),
-      },
-      message: 'success',
-    })
-  }),
-
-  // 获取成就和里程碑
-  http.get('/api/progress/milestones', async () => {
-    await delay(400)
-
-    const milestones = [
+  // 获取学习建议
+  http.get('/api/progress/suggestion', () => {
+    const suggestions = [
       {
-        id: 'ms-001',
-        title: '初出茅庐',
-        description: '完成第一次学习',
-        icon: '🌱',
-        achieved: true,
-        achievedDate: '2024-01-01',
-        points: 10,
-        rarity: 'common',
+        title: '今日建议',
+        description:
+          '你在对话练习方面表现很棒！建议今天多练习一些翻译功能，提升词汇量。',
+        type: 'translate' as const,
+        priority: 'high' as const,
       },
       {
-        id: 'ms-002',
-        title: '坚持一周',
-        description: '连续学习7天',
-        icon: '🔥',
-        achieved: true,
-        achievedDate: '2024-01-07',
-        points: 50,
-        rarity: 'uncommon',
+        title: '学习提示',
+        description:
+          '已经连续学习3天了！继续保持，建议尝试一些话题对话来提高口语表达。',
+        type: 'topic' as const,
+        priority: 'medium' as const,
       },
       {
-        id: 'ms-003',
-        title: '词汇百人斩',
-        description: '学习100个单词',
-        icon: '⚔️',
-        achieved: true,
-        achievedDate: '2024-01-15',
-        points: 100,
-        rarity: 'rare',
-      },
-      {
-        id: 'ms-004',
-        title: '对话达人',
-        description: '完成50次对话练习',
-        icon: '💬',
-        achieved: true,
-        achievedDate: '2024-02-01',
-        points: 150,
-        rarity: 'rare',
-      },
-      {
-        id: 'ms-005',
-        title: '月度冠军',
-        description: '单月学习时间超过30小时',
-        icon: '🏆',
-        achieved: false,
-        progress: 0.75,
-        target: 30,
-        current: 22.5,
-        points: 200,
-        rarity: 'epic',
-      },
-      {
-        id: 'ms-006',
-        title: '全能选手',
-        description: '所有技能达到4级',
-        icon: '🌟',
-        achieved: false,
-        progress: 0.5,
-        points: 500,
-        rarity: 'legendary',
+        title: '复习建议',
+        description: '单词学习进度不错，建议复习之前学过的词汇，巩固记忆。',
+        type: 'vocabulary' as const,
+        priority: 'medium' as const,
       },
     ]
 
+    const randomSuggestion =
+      suggestions[Math.floor(Math.random() * suggestions.length)]
+
     return HttpResponse.json({
       code: 200,
-      data: {
-        achieved: milestones.filter(m => m.achieved),
-        inProgress: milestones.filter(m => !m.achieved),
-        totalPoints: milestones
-          .filter(m => m.achieved)
-          .reduce((sum, m) => sum + m.points, 0),
-      },
       message: 'success',
+      data: randomSuggestion,
     })
   }),
 
-  // 获取学习报告
-  http.get('/api/progress/report', async ({ request }) => {
-    await delay(700)
+  // 获取学习排行榜
+  http.get('/api/progress/leaderboard', ({ request }) => {
     const url = new URL(request.url)
     const type = url.searchParams.get('type') || 'weekly'
 
-    const report = {
-      type,
-      period: type === 'weekly' ? '2024-03-18 至 2024-03-24' : '2024年3月',
-      summary: {
-        studyDays: type === 'weekly' ? 6 : 22,
-        totalMinutes: type === 'weekly' ? 245 : 890,
-        averageDaily: type === 'weekly' ? 35 : 30,
-        wordsLearned: type === 'weekly' ? 68 : 234,
-        sentencesPracticed: type === 'weekly' ? 42 : 186,
-        topicsCompleted: type === 'weekly' ? 3 : 12,
-      },
-      improvements: [
-        { skill: 'Pronunciation', improvement: '+15%', from: 65, to: 75 },
-        { skill: 'Vocabulary', improvement: '+12%', from: 70, to: 78 },
-        { skill: 'Fluency', improvement: '+8%', from: 60, to: 65 },
-      ],
-      strengths: [
-        'Consistent daily practice',
-        'Good vocabulary retention',
-        'Active participation',
-      ],
-      suggestions: [
-        'Try to increase speaking practice time',
-        'Focus more on grammar exercises',
-        'Review learned words more frequently',
-      ],
-      nextGoals: [
-        'Complete 5 new topics',
-        'Learn 100 new words',
-        'Achieve 80% accuracy in exercises',
-      ],
+    // 根据类型调整排行榜数据
+    let adjustedLeaderboard = { ...mockLeaderboard }
+
+    if (type === 'daily') {
+      adjustedLeaderboard.users = adjustedLeaderboard.users.map(user => ({
+        ...user,
+        score: Math.floor(user.score * 0.1),
+        studyTime: Math.floor(user.studyTime * 0.2),
+      }))
+    } else if (type === 'monthly') {
+      adjustedLeaderboard.users = adjustedLeaderboard.users.map(user => ({
+        ...user,
+        score: Math.floor(user.score * 4.2),
+        studyTime: Math.floor(user.studyTime * 4.5),
+      }))
     }
 
     return HttpResponse.json({
       code: 200,
-      data: report,
       message: 'success',
+      data: adjustedLeaderboard,
     })
   }),
 
-  // 设置学习目标
-  http.post('/api/progress/goals', async ({ request }) => {
-    await delay(400)
-    const body = (await request.json()) as {
-      dailyMinutes: number
-      weeklyDays: number
-      monthlyWords: number
+  // 获取学习历史图表数据
+  http.get('/api/progress/chart-data', ({ request }) => {
+    const url = new URL(request.url)
+    const period = url.searchParams.get('period') || 'week'
+
+    let chartData
+
+    if (period === 'week') {
+      chartData = {
+        labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+        datasets: [
+          {
+            label: '学习时长',
+            data: [45, 30, 60, 25, 55, 40, 35],
+            color: '#4CAF50',
+          },
+          {
+            label: '完成任务',
+            data: [8, 6, 12, 4, 10, 7, 5],
+            color: '#2196F3',
+          },
+        ],
+      }
+    } else if (period === 'month') {
+      const days = Array.from({ length: 30 }, (_, i) => `${i + 1}日`)
+      const studyData = Array.from(
+        { length: 30 },
+        () => Math.floor(Math.random() * 60) + 15
+      )
+      const taskData = Array.from(
+        { length: 30 },
+        () => Math.floor(Math.random() * 12) + 2
+      )
+
+      chartData = {
+        labels: days,
+        datasets: [
+          {
+            label: '学习时长',
+            data: studyData,
+            color: '#4CAF50',
+          },
+          {
+            label: '完成任务',
+            data: taskData,
+            color: '#2196F3',
+          },
+        ],
+      }
     }
 
     return HttpResponse.json({
       code: 200,
-      data: {
-        goals: body,
-        updated: true,
-      },
-      message: '目标已更新',
+      message: 'success',
+      data: chartData,
     })
   }),
 
-  // 获取学习徽章
-  http.get('/api/progress/badges', async () => {
-    await delay(400)
-
-    const badges = [
+  // 获取成就徽章
+  http.get('/api/progress/achievements', () => {
+    const achievements = [
       {
-        id: 'badge-001',
-        name: '早起鸟',
-        description: '在早上6点前完成学习',
-        icon: '🐦',
-        count: 5,
-        lastEarned: '2024-03-20',
+        id: 'streak_7',
+        title: '一周坚持',
+        description: '连续学习7天',
+        icon: 'fire',
+        earned: true,
+        earnedAt: '2024-01-15',
+        progress: 100,
       },
       {
-        id: 'badge-002',
-        name: '夜猫子',
-        description: '在晚上11点后完成学习',
-        icon: '🦉',
-        count: 3,
-        lastEarned: '2024-03-19',
+        id: 'vocabulary_100',
+        title: '单词达人',
+        description: '累计学习100个单词',
+        icon: 'book',
+        earned: true,
+        earnedAt: '2024-01-10',
+        progress: 100,
       },
       {
-        id: 'badge-003',
-        name: '完美主义者',
-        description: '单次练习正确率100%',
-        icon: '💯',
-        count: 12,
-        lastEarned: '2024-03-21',
+        id: 'topic_master',
+        title: '话题大师',
+        description: '完成50个话题对话',
+        icon: 'chat',
+        earned: false,
+        progress: 90,
       },
       {
-        id: 'badge-004',
-        name: '速度之王',
-        description: '5分钟内完成10个练习',
-        icon: '⚡',
-        count: 8,
-        lastEarned: '2024-03-18',
+        id: 'early_bird',
+        title: '早起鸟',
+        description: '早上8点前学习10次',
+        icon: 'sun',
+        earned: false,
+        progress: 60,
       },
     ]
 
     return HttpResponse.json({
       code: 200,
-      data: badges,
       message: 'success',
+      data: achievements,
     })
   }),
 ]

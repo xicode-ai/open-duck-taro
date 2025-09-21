@@ -1,12 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtIcon } from 'taro-ui'
 import CustomNavBar from '../../components/common/CustomNavBar'
 import TopicProgress from '../../components/TopicProgress'
 import { useUserStore } from '../../stores/user'
-import { topicsApi } from '../../services/api'
-import { waitForMSW } from '../../app'
+import {
+  useHotTopics,
+  useCustomTopics,
+  useDeleteCustomTopic,
+  useCreateCustomTopic,
+  useUpdateCustomTopic,
+} from '../../hooks/useApiQueries'
 import './index.scss'
 
 interface HotTopic {
@@ -35,68 +40,46 @@ interface CustomTopic {
 const TopicsPage = () => {
   const { membership } = useUserStore()
 
-  // 状态管理
-  const [isLoading, setIsLoading] = useState(true)
-  const [hotTopics, setHotTopics] = useState<HotTopic[]>([])
-  const [customTopics, setCustomTopics] = useState<CustomTopic[]>([])
+  // 使用 React Query hooks 获取数据
+  const {
+    data: hotTopicsData,
+    isLoading: hotTopicsLoading,
+    error: hotTopicsError,
+  } = useHotTopics()
+
+  const {
+    data: customTopicsData,
+    isLoading: customTopicsLoading,
+    error: customTopicsError,
+  } = useCustomTopics()
+
+  // 变更操作 hooks
+  const deleteCustomTopicMutation = useDeleteCustomTopic()
+  const _createCustomTopicMutation = useCreateCustomTopic()
+  const _updateCustomTopicMutation = useUpdateCustomTopic()
+
+  // UI 状态管理
   const [showProgress, setShowProgress] = useState(false)
 
-  // 加载热门话题
-  const loadHotTopics = async () => {
-    try {
-      const response = await topicsApi.getHotTopics()
-      if (response.code === 200) {
-        // 确保数据类型正确，将Topic转换为HotTopic
-        const topics: HotTopic[] = response.data.map(topic => ({
-          id: topic.id,
-          title: topic.title,
-          description: topic.description,
-          icon: topic.icon,
-          background: topic.background || '#10b981',
-          category: topic.category,
-          difficulty: topic.difficulty,
-          conversations: topic.conversations || topic.dialogCount || 0,
-          progress: 0, // 热门话题默认进度为0
-          isPopular: topic.isPopular || false,
-        }))
-        setHotTopics(topics)
-      }
-    } catch (error) {
-      console.error('加载热门话题失败:', error)
-    }
-  }
+  // 数据转换 - 将 API 数据转换为页面所需格式
+  const hotTopics: HotTopic[] =
+    hotTopicsData?.map(topic => ({
+      id: topic.id,
+      title: topic.title,
+      description: topic.description,
+      icon: topic.icon,
+      background: topic.background || '#10b981',
+      category: topic.category,
+      difficulty: topic.difficulty,
+      conversations: topic.conversations || topic.dialogCount || 0,
+      progress: 0, // 热门话题默认进度为0
+      isPopular: topic.isPopular || false,
+    })) || []
 
-  // 加载自定义话题
-  const loadCustomTopics = async () => {
-    try {
-      const response = await topicsApi.getCustomTopics()
-      if (response.code === 200) {
-        setCustomTopics(response.data)
-      }
-    } catch (error) {
-      console.error('加载自定义话题失败:', error)
-    }
-  }
+  const customTopics: CustomTopic[] = customTopicsData || []
 
-  // 初始化数据
-  const initData = async () => {
-    setIsLoading(true)
-    try {
-      // 等待MSW准备就绪（开发环境）
-      await waitForMSW()
-      console.log('🔧 MSW已准备就绪，开始加载数据')
-
-      await Promise.all([loadHotTopics(), loadCustomTopics()])
-    } catch (error) {
-      console.error('初始化数据失败:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    initData()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  // 统一的加载状态
+  const isLoading = hotTopicsLoading || customTopicsLoading
 
   // 显示学习进度
   const showTopicProgress = () => {
@@ -168,18 +151,14 @@ const TopicsPage = () => {
     })
   }
 
-  // 删除自定义话题
+  // 删除自定义话题 - 使用带乐观更新的 mutation
   const deleteCustomTopic = async (topic: CustomTopic) => {
     try {
-      const response = await topicsApi.deleteCustomTopic(topic.id)
-      if (response.code === 200) {
-        Taro.showToast({
-          title: '删除成功',
-          icon: 'success',
-        })
-        // 重新加载自定义话题
-        loadCustomTopics()
-      }
+      await deleteCustomTopicMutation.mutateAsync(topic.id)
+      Taro.showToast({
+        title: '删除成功',
+        icon: 'success',
+      })
     } catch (error) {
       console.error('删除话题失败:', error)
       Taro.showToast({
@@ -197,6 +176,35 @@ const TopicsPage = () => {
       hard: '困难',
     }
     return map[difficulty] || difficulty
+  }
+
+  // 错误处理
+  const _handleError = (error: unknown, defaultMessage: string) => {
+    console.error(defaultMessage, error)
+    if (!isLoading) {
+      Taro.showToast({
+        title: defaultMessage,
+        icon: 'error',
+      })
+    }
+  }
+
+  // 如果有严重错误，显示错误页面
+  if ((hotTopicsError || customTopicsError) && !isLoading) {
+    return (
+      <View className="topics-page">
+        <CustomNavBar title="话题模式" backgroundColor="#10b981" />
+        <View className="error-container">
+          <Text className="error-text">加载失败，请重试</Text>
+          <View
+            className="retry-button"
+            onClick={() => window.location.reload()}
+          >
+            <Text>重新加载</Text>
+          </View>
+        </View>
+      </View>
+    )
   }
 
   return (
@@ -247,10 +255,14 @@ const TopicsPage = () => {
                     <AtIcon value="edit" size="16" color="#6b7280" />
                   </View>
                   <View
-                    className="action-btn"
+                    className={`action-btn ${deleteCustomTopicMutation.isPending ? 'loading' : ''}`}
                     onClick={() => deleteCustomTopic(topic)}
                   >
-                    <AtIcon value="trash" size="16" color="#ef4444" />
+                    {deleteCustomTopicMutation.isPending ? (
+                      <AtIcon value="loading-3" size="16" color="#ef4444" />
+                    ) : (
+                      <AtIcon value="trash" size="16" color="#ef4444" />
+                    )}
                   </View>
                 </View>
               </View>

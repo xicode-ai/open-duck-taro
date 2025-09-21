@@ -1,0 +1,180 @@
+.circular-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  &__chart {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__svg {
+    display: block;
+
+    &.animated {
+      .circular-progress__progress {
+        transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+    }
+  }
+
+  &__bg {
+    opacity: 0.2;
+  }
+
+  &__progress {
+    transition: stroke-dashoffset 0.5s ease-in-out;
+  }
+
+  &__content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  &__value {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    line-height: 1;
+  }
+
+  &__percent {
+    font-size: 12px;
+    font-weight: 500;
+    color: #666;
+    opacity: 0.8;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__title {
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  &__growth {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 12px;
+    font-weight: 500;
+
+    &--up {
+      color: #4caf50;
+    }
+
+    &--down {
+      color: #f44336;
+    }
+  }
+
+  &__growth-icon {
+    font-size: 10px;
+    opacity: 0.8;
+  }
+
+  &__growth-value {
+    font-size: 12px;
+  }
+
+  // 尺寸变体
+  &--small {
+    gap: 8px;
+
+    .circular-progress__value {
+      font-size: 16px;
+    }
+
+    .circular-progress__title {
+      font-size: 12px;
+    }
+  }
+
+  &--medium {
+    gap: 12px;
+
+    .circular-progress__value {
+      font-size: 20px;
+    }
+
+    .circular-progress__title {
+      font-size: 14px;
+    }
+  }
+
+  &--large {
+    gap: 16px;
+
+    .circular-progress__value {
+      font-size: 24px;
+    }
+
+    .circular-progress__title {
+      font-size: 16px;
+    }
+  }
+
+  // 响应式适配
+  @media (max-width: 375px) {
+    &--medium {
+      .circular-progress__value {
+        font-size: 18px;
+      }
+    }
+
+    &--large {
+      .circular-progress__value {
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+// 动画增强
+@keyframes progressGrow {
+  from {
+    stroke-dashoffset: var(--circumference);
+  }
+  to {
+    stroke-dashoffset: var(--progress-offset);
+  }
+}
+
+// 主题色变体
+.circular-progress {
+  &.theme-green .circular-progress__progress {
+    stroke: linear-gradient(90deg, #4caf50 0%, #66bb6a 100%);
+  }
+
+  &.theme-blue .circular-progress__progress {
+    stroke: linear-gradient(90deg, #2196f3 0%, #42a5f5 100%);
+  }
+
+  &.theme-orange .circular-progress__progress {
+    stroke: linear-gradient(90deg, #ff9800 0%, #ffb74d 100%);
+  }
+
+  &.theme-purple .circular-progress__progress {
+    stroke: linear-gradient(90deg, #9c27b0 0%, #ba68c8 100%);
+  }
+
+  &.theme-red .circular-progress__progress {
+    stroke: linear-gradient(90deg, #f44336 0%, #ef5350 100%);
+  }
+}

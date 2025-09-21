@@ -1,0 +1,832 @@
+---
+alwaysApply: false
+---
+
+# Zustand + React Query 状态管理开发规范
+
+## 架构概述
+
+本项目采用 **Zustand** 作为客户端状态管理 + **React Query** 作为服务端数据状态管理的混合架构。这种架构实现了客户端状态与服务端状态的清晰分离和高效协作。
+
+## 核心技术栈
+
+- **Zustand**: 5.0.7 (客户端状态管理)
+- **React Query**: 5.84.2 (服务端数据状态管理)
+- **持久化**: zustand/middleware/persist
+- **缓存策略**: React Query 内置缓存 + Zustand 持久化
+- **数据处理**: immer 10.1.1 (用于复杂状态更新)
+
+## 状态管理职责划分
+
+### Zustand 负责的客户端状态
+
+```typescript
+// ✅ 客户端状态示例
+interface ClientState {
+  // UI 状态
+  currentPage: string
+  selectedTab: string
+  isModalOpen: boolean
+
+  // 用户偏好
+  theme: 'light' | 'dark'
+  language: 'zh' | 'en'
+  settings: UserSettings
+
+  // 临时数据
+  formData: FormData
+  tempSelections: string[]
+
+  // 计算状态
+  filteredData: Data[]
+  computedStats: Stats
+}
+```
+
+### React Query 负责的服务端状态
+
+```typescript
+// ✅ 服务端状态示例
+interface ServerState {
+  // API 数据
+  userProfile: User
+  topics: Topic[]
+  vocabularies: Vocabulary[]
+
+  // 分页数据
+  chatHistory: ChatMessage[]
+  studyHistory: StudyRecord[]
+
+  // 实时数据
+  liveNotifications: Notification[]
+}
+```
+
+## Zustand Store 开发规范
+
+### 基础 Store 定义
+
+```typescript
+// ✅ 标准 Store 定义 - 参考 [src/stores/topics.ts](mdc:src/stores/topics.ts)
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import { queryClient } from '@/providers/QueryProvider'
+import { QUERY_KEYS } from '@/hooks/useApiQueries'
+import type { Topic } from '@/types'
+
+interface TopicState {
+  // 状态数据
+  topics: Topic[]
+  currentTopic: Topic | null
+  favoriteTopics: string[]
+  selectedCategory: string | null
+  selectedLevel: string | null
+
+  // Actions（动作方法）
+  setTopics: (topics: Topic[]) => void
+  setCurrentTopic: (topic: Topic | null) => void
+  addTopic: (topic: Topic) => void
+  updateTopic: (id: string, updates: Partial<Topic>) => void
+
+  // 收藏操作
+  addToFavorites: (topicId: string) => void
+  removeFromFavorites: (topicId: string) => void
+  isFavorite: (topicId: string) => boolean
+
+  // 筛选操作
+  setSelectedCategory: (category: string | null) => void
+  setSelectedLevel: (level: string | null) => void
+
+  // 查询操作
+  getTopicsByCategory: (category: string) => Topic[]
+  getTopicsByLevel: (level: string) => Topic[]
+  getFavoriteTopics: () => Topic[]
+  getFilteredTopics: () => Topic[]
+}
+
+export const useTopicStore = create<TopicState>()(
+  persist(
+    (set, get) => ({
+      // 初始状态
+      topics: [],
+      currentTopic: null,
+      favoriteTopics: [],
+      selectedCategory: null,
+      selectedLevel: null,
+
+      // Actions 实现
+      setTopics: (topics: Topic[]) => {
+        set({ topics })
+        // 同步更新 React Query 缓存
+        queryClient.setQueryData(QUERY_KEYS.TOPICS, topics)
+      },
+
+      setCurrentTopic: (topic: Topic | null) => {
+        set({ currentTopic: topic })
+        // 预取相关数据
+        if (topic) {
+          queryClient.prefetchQuery({
+            queryKey: QUERY_KEYS.TOPIC_DETAIL(topic.id),
+            queryFn: () => Promise.resolve(topic),
+          })
+        }
+      },
+
+      // 其他 actions...
+    }),
+    {
+      name: 'topic-storage',
+      // 只持久化必要的字段
+      partialize: state => ({
+        favoriteTopics: state.favoriteTopics,
+        selectedCategory: state.selectedCategory,
+        selectedLevel: state.selectedLevel,
+      }),
+    }
+  )
+)
+```
+
+### Zustand 最佳实践
+
+```typescript
+// ✅ 使用 immer 处理复杂状态更新
+import { immer } from 'zustand/middleware/immer'
+
+export const useComplexStore = create<ComplexState>()(
+  immer((set) => ({
+    data: { nested: { value: 0 } },
+    updateNested: (newValue: number) =>
+      set((state) => {
+        state.data.nested.value = newValue
+      }),
+  }))
+)
+
+// ✅ 状态分片 - 避免单个 store 过大
+export const useUserStore = create<UserState>()(...) // 用户相关
+export const useTopicStore = create<TopicState>()(...) // 话题相关
+export const useVocabularyStore = create<VocabularyState>()(...) // 词汇相关
+
+// ✅ 使用 subscribeWithSelector 进行精确订阅
+import { subscribeWithSelector } from 'zustand/middleware'
+
+export const useStore = create<State>()(
+  subscribeWithSelector((set) => ({
+    count: 0,
+    increment: () => set((state) => ({ count: state.count + 1 })),
+  }))
+)
+
+// 组件中精确订阅
+const count = useStore((state) => state.count)
+```
+
+### Zustand 与 React Query 集成规范
+
+```typescript
+// ✅ 在 Zustand actions 中同步 React Query 缓存
+const setTopics: (topics: Topic[]) => {
+  set({ topics })
+  // 同步更新 React Query 缓存
+  queryClient.setQueryData(QUERY_KEYS.TOPICS, topics)
+}
+
+// ✅ 预取相关数据
+const setCurrentTopic: (topic: Topic | null) => {
+  set({ currentTopic: topic })
+  // 预取话题详情
+  if (topic) {
+    queryClient.prefetchQuery({
+      queryKey: QUERY_KEYS.TOPIC_DETAIL(topic.id),
+      queryFn: () => topicApi.getTopicDetail(topic.id),
+    })
+  }
+}
+
+// ✅ 清理缓存
+const logout: () => {
+  set({ user: null, isLoggedIn: false })
+  // 清除所有用户相关缓存
+  queryClient.removeQueries({ queryKey: QUERY_KEYS.USER })
+}
+```
+
+## React Query 开发规范
+
+### Query Keys 管理
+
+```typescript
+// ✅ 统一的 Query Keys 定义 - 参考 [src/hooks/useApiQueries.ts](mdc:src/hooks/useApiQueries.ts)
+export const QUERY_KEYS = {
+  // 用户相关
+  USER: ['user'] as const,
+  USER_PROFILE: (userId?: string) => ['user', 'profile', userId] as const,
+  USER_STATS: ['user', 'stats'] as const,
+
+  // 话题相关
+  TOPICS: ['topics'] as const,
+  TOPIC_DETAIL: (topicId: string) => ['topics', 'detail', topicId] as const,
+  TOPIC_DIALOGUES: (topicId: string) =>
+    ['topics', 'dialogues', topicId] as const,
+
+  // 词汇相关
+  VOCABULARIES: ['vocabularies'] as const,
+  VOCABULARY_BY_LEVEL: (level: string) =>
+    ['vocabularies', 'level', level] as const,
+} as const
+```
+
+### 查询 Hooks 规范
+
+```typescript
+// ✅ 标准查询 Hook
+export const useUserInfo = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.USER_PROFILE(),
+    queryFn: async () => {
+      const response = await userApi.getUserInfo()
+      return response.data // 返回实际数据，不是 ApiResponse 包装
+    },
+    staleTime: 10 * 60 * 1000, // 10分钟内认为数据是新鲜的
+    gcTime: 30 * 60 * 1000, // 30分钟后清理缓存
+  })
+}
+
+// ✅ 带参数的查询
+export const useTopics = (category?: string, level?: string) => {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.TOPICS, { category, level }],
+    queryFn: async () => {
+      const response = await topicApi.getTopics({ category, level })
+      return response.data
+    },
+    enabled: true, // 可以根据条件控制是否启用
+    staleTime: 15 * 60 * 1000,
+  })
+}
+
+// ✅ 条件查询
+export const useTopicDetail = (topicId: string) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.TOPIC_DETAIL(topicId),
+    queryFn: async () => {
+      const response = await topicApi.getTopicDetail(topicId)
+      return response.data
+    },
+    enabled: !!topicId, // 只有当 topicId 存在时才执行查询
+    staleTime: 30 * 60 * 1000,
+  })
+}
+```
+
+### 变更 Hooks 规范
+
+```typescript
+// ✅ 标准变更 Hook
+export const useUpdateUserInfo = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (userInfo: Partial<User>) => {
+      const response = await userApi.updateUserInfo(userInfo)
+      return response.data
+    },
+    onSuccess: data => {
+      // 更新用户信息缓存
+      queryClient.setQueryData(QUERY_KEYS.USER_PROFILE(), data)
+      // 使相关查询失效
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER })
+    },
+    onError: error => {
+      // 统一错误处理
+      console.error('更新用户信息失败:', error)
+    },
+  })
+}
+
+// ✅ 带乐观更新的变更
+export const useToggleFavorite = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      topicId,
+      isFavorite,
+    }: {
+      topicId: string
+      isFavorite: boolean
+    }) => topicApi.toggleFavorite(topicId, isFavorite),
+
+    // 乐观更新
+    onMutate: async ({ topicId, isFavorite }) => {
+      // 取消正在进行的查询
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.TOPICS })
+
+      // 保存之前的数据
+      const previousTopics = queryClient.getQueryData(QUERY_KEYS.TOPICS)
+
+      // 乐观更新
+      queryClient.setQueryData(QUERY_KEYS.TOPICS, (old: Topic[]) =>
+        old?.map(topic =>
+          topic.id === topicId ? { ...topic, isFavorite } : topic
+        )
+      )
+
+      return { previousTopics }
+    },
+
+    // 错误回滚
+    onError: (err, variables, context) => {
+      if (context?.previousTopics) {
+        queryClient.setQueryData(QUERY_KEYS.TOPICS, context.previousTopics)
+      }
+    },
+
+    // 最终同步
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TOPICS })
+    },
+  })
+}
+```
+
+### React Query 配置规范
+
+```typescript
+// ✅ QueryClient 配置 - 参考 [src/providers/QueryProvider.tsx](mdc:src/providers/QueryProvider.tsx)
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // 数据保持新鲜的时间（5分钟）
+      staleTime: 5 * 60 * 1000,
+      // 缓存时间（30分钟）
+      gcTime: 30 * 60 * 1000,
+      // 重试配置
+      retry: (failureCount, error: Error) => {
+        // 网络错误重试，其他错误不重试
+        if (error?.message?.includes('network') && failureCount < 3) {
+          return true
+        }
+        return false
+      },
+      // 重试延迟（指数退避）
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // 窗口重新获得焦点时不自动重新获取
+      refetchOnWindowFocus: false,
+      // 网络重连时重新获取
+      refetchOnReconnect: true,
+    },
+    mutations: {
+      // 变更重试配置
+      retry: 1,
+    },
+  },
+})
+```
+
+### 数据预取和缓存策略
+
+```typescript
+// ✅ 数据预取工具
+export const usePrefetchData = () => {
+  const queryClient = useQueryClient()
+
+  const prefetchUserData = (userId?: string) => {
+    queryClient.prefetchQuery({
+      queryKey: QUERY_KEYS.USER_PROFILE(userId),
+      queryFn: () => userApi.getUserInfo(),
+    })
+
+    queryClient.prefetchQuery({
+      queryKey: QUERY_KEYS.USER_STATS,
+      queryFn: () => userApi.getStudyStats(),
+    })
+  }
+
+  const prefetchTopics = () => {
+    queryClient.prefetchQuery({
+      queryKey: QUERY_KEYS.TOPICS,
+      queryFn: () => topicApi.getTopics({}),
+    })
+  }
+
+  return { prefetchUserData, prefetchTopics }
+}
+
+// ✅ 在组件中使用预取
+const HomePage = () => {
+  const { prefetchTopics } = usePrefetchData()
+
+  useEffect(() => {
+    // 预取用户可能需要的数据
+    prefetchTopics()
+  }, [prefetchTopics])
+
+  return <div>...</div>
+}
+```
+
+## 状态管理架构原则
+
+### 数据流设计
+
+```
+用户操作 → Zustand Action → 同步 React Query 缓存 → UI 更新
+     ↓
+API 调用 → React Query Hook → 自动缓存 → 后台更新
+```
+
+### 职责分离
+
+- **Zustand**: 管理客户端状态（UI 状态、用户偏好、临时数据）
+- **React Query**: 管理服务端状态（API 数据、缓存、同步）
+- **双向同步**: Zustand 更新时同步 React Query，React Query 数据变更时可选择性更新 Zustand
+
+### 缓存策略
+
+```typescript
+// ✅ 不同数据的缓存策略
+const cacheStrategies = {
+  // 用户信息 - 长缓存
+  userInfo: { staleTime: 30 * 60 * 1000, gcTime: 60 * 60 * 1000 },
+
+  // 话题列表 - 中等缓存
+  topics: { staleTime: 15 * 60 * 1000, gcTime: 30 * 60 * 1000 },
+
+  // 聊天消息 - 短缓存
+  chatMessages: { staleTime: 2 * 60 * 1000, gcTime: 10 * 60 * 1000 },
+
+  // 实时数据 - 不缓存
+  liveData: { staleTime: 0, gcTime: 0 },
+}
+```
+
+## 组件使用规范
+
+### 在组件中使用状态
+
+```typescript
+// ✅ 组件中使用状态
+const TopicList = () => {
+  // 使用 React Query 获取服务端数据
+  const { data: topics, isLoading } = useTopics()
+
+  // 使用 Zustand 管理客户端状态
+  const {
+    selectedCategory,
+    setSelectedCategory,
+    getFilteredTopics
+  } = useTopicStore()
+
+  // 计算派生状态
+  const filteredTopics = useMemo(() => {
+    return getFilteredTopics()
+  }, [topics, selectedCategory])
+
+  if (isLoading) return <Loading />
+
+  return (
+    <div>
+      {filteredTopics.map(topic => (
+        <TopicCard key={topic.id} topic={topic} />
+      ))}
+    </div>
+  )
+}
+```
+
+### 错误处理和加载状态
+
+```typescript
+// ✅ 统一的错误处理
+const UserProfile = () => {
+  const {
+    data: userInfo,
+    isLoading,
+    error,
+    refetch
+  } = useUserInfo()
+
+  if (isLoading) {
+    return <AtLoadMore status="loading" />
+  }
+
+  if (error) {
+    return (
+      <View className="error-container">
+        <Text className="error-text">加载失败，请重试</Text>
+        <View className="retry-button" onClick={() => refetch()}>
+          重试
+        </View>
+      </View>
+    )
+  }
+
+  return (
+    <View>
+      <Text>{userInfo?.nickname}</Text>
+    </View>
+  )
+}
+
+// ✅ 变更状态处理
+const UpdateButton = () => {
+  const updateUser = useUpdateUserInfo()
+
+  const handleUpdate = async () => {
+    try {
+      await updateUser.mutateAsync({ nickname: '新昵称' })
+      Taro.showToast({ title: '更新成功', icon: 'success' })
+    } catch (error) {
+      Taro.showToast({ title: '更新失败', icon: 'error' })
+    }
+  }
+
+  return (
+    <button
+      onClick={handleUpdate}
+      disabled={updateUser.isPending}
+    >
+      {updateUser.isPending ? '更新中...' : '更新'}
+    </button>
+  )
+}
+```
+
+## 性能优化规范
+
+### 避免不必要的重渲染
+
+```typescript
+// ✅ 使用 React.memo 和精确订阅
+const TopicCard = React.memo<TopicCardProps>(({ topic, onSelect }) => {
+  // 只订阅需要的状态
+  const isFavorite = useTopicStore(state =>
+    state.favoriteTopics.includes(topic.id)
+  )
+
+  const toggleFavorite = useTopicStore(state => state.toggleFavorite)
+
+  return (
+    <div onClick={() => onSelect(topic.id)}>
+      <h3>{topic.title}</h3>
+      <button onClick={() => toggleFavorite(topic.id)}>
+        {isFavorite ? '❤️' : '🤍'}
+      </button>
+    </div>
+  )
+})
+
+// ✅ 使用 useMemo 缓存计算结果
+const TopicList = () => {
+  const topics = useTopics()
+  const { selectedCategory } = useTopicStore()
+
+  const filteredTopics = useMemo(() => {
+    return topics.data?.filter(topic =>
+      !selectedCategory || topic.category === selectedCategory
+    ) || []
+  }, [topics.data, selectedCategory])
+
+  return (
+    <div>
+      {filteredTopics.map(topic => (
+        <TopicCard key={topic.id} topic={topic} />
+      ))}
+    </div>
+  )
+}
+```
+
+### 数据预加载
+
+```typescript
+// ✅ 在路由切换时预加载数据
+const App = () => {
+  const { prefetchTopics, prefetchUserData } = usePrefetchData()
+
+  useEffect(() => {
+    // 应用启动时预加载关键数据
+    prefetchUserData()
+    prefetchTopics()
+  }, [])
+
+  return <Router />
+}
+
+// ✅ 在用户交互时预加载相关数据
+const TopicCard = ({ topic }) => {
+  const { prefetchTopicDetail } = usePrefetchData()
+
+  const handleHover = () => {
+    // 鼠标悬停时预加载详情
+    prefetchTopicDetail(topic.id)
+  }
+
+  return (
+    <div onMouseEnter={handleHover}>
+      {topic.title}
+    </div>
+  )
+}
+```
+
+## 测试规范
+
+### Store 测试
+
+```typescript
+// ✅ Zustand Store 测试
+import { renderHook, act } from '@testing-library/react'
+import { useTopicStore } from '@/stores/topics'
+
+describe('useTopicStore', () => {
+  beforeEach(() => {
+    // 重置 store 状态
+    useTopicStore.setState({
+      topics: [],
+      favoriteTopics: [],
+    })
+  })
+
+  it('should add topic to favorites', () => {
+    const { result } = renderHook(() => useTopicStore())
+
+    act(() => {
+      result.current.addToFavorites('topic-1')
+    })
+
+    expect(result.current.favoriteTopics).toContain('topic-1')
+  })
+
+  it('should filter topics by category', () => {
+    const { result } = renderHook(() => useTopicStore())
+
+    act(() => {
+      result.current.setTopics([
+        { id: '1', category: 'travel', title: 'Travel' },
+        { id: '2', category: 'food', title: 'Food' },
+      ])
+    })
+
+    const travelTopics = result.current.getTopicsByCategory('travel')
+    expect(travelTopics).toHaveLength(1)
+    expect(travelTopics[0].id).toBe('1')
+  })
+})
+```
+
+### React Query 测试
+
+```typescript
+// ✅ React Query Hook 测试
+import { renderHook, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useTopics } from '@/hooks/useApiQueries'
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  })
+  return ({ children }) => (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  )
+}
+
+describe('useTopics', () => {
+  it('should fetch topics successfully', async () => {
+    const { result } = renderHook(() => useTopics(), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(result.current.data).toBeDefined()
+  })
+})
+```
+
+## 调试和开发工具
+
+### React Query DevTools
+
+```typescript
+// ✅ 开发环境启用 DevTools
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Router />
+      {process.env.NODE_ENV === 'development' && (
+        <ReactQueryDevtools initialIsOpen={false} />
+      )}
+    </QueryClientProvider>
+  )
+}
+```
+
+### Zustand DevTools
+
+```typescript
+// ✅ 开发环境启用 Zustand DevTools
+import { devtools } from 'zustand/middleware'
+
+export const useTopicStore = create<TopicState>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        // store implementation
+      }),
+      {
+        name: 'topic-storage',
+      }
+    ),
+    {
+      name: 'topic-store',
+    }
+  )
+)
+```
+
+## 常见问题和解决方案
+
+### 1. 状态同步问题
+
+```typescript
+// ❌ 错误：直接修改 React Query 缓存
+const updateTopic = (id: string, updates: Partial<Topic>) => {
+  const topics = queryClient.getQueryData(QUERY_KEYS.TOPICS)
+  queryClient.setQueryData(
+    QUERY_KEYS.TOPICS,
+    topics.map(t => (t.id === id ? { ...t, ...updates } : t))
+  )
+}
+
+// ✅ 正确：通过 Zustand 统一管理
+const updateTopic = (id: string, updates: Partial<Topic>) => {
+  set(state => ({
+    topics: state.topics.map(topic =>
+      topic.id === id ? { ...topic, ...updates } : topic
+    ),
+  }))
+  // 使相关查询失效，让 React Query 重新获取
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TOPICS })
+}
+```
+
+### 2. 缓存失效策略
+
+```typescript
+// ✅ 精确的缓存失效
+const updateUserProfile = (updates: Partial<User>) => {
+  // 更新 Zustand 状态
+  set(state => ({ user: { ...state.user, ...updates } }))
+
+  // 更新相关缓存
+  queryClient.setQueryData(QUERY_KEYS.USER_PROFILE(), updates)
+
+  // 使相关查询失效
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER })
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER_STATS })
+}
+```
+
+### 3. 内存泄漏预防
+
+```typescript
+// ✅ 组件卸载时清理
+const TopicDetail = ({ topicId }: { topicId: string }) => {
+  const { data, isLoading } = useTopicDetail(topicId)
+
+  useEffect(() => {
+    return () => {
+      // 组件卸载时清理相关缓存
+      queryClient.removeQueries({
+        queryKey: QUERY_KEYS.TOPIC_DETAIL(topicId)
+      })
+    }
+  }, [topicId])
+
+  return <div>{data?.title}</div>
+}
+```
+
+## 最佳实践总结
+
+1. **职责清晰**: Zustand 管理客户端状态，React Query 管理服务端状态
+2. **数据同步**: 通过 Zustand actions 同步更新 React Query 缓存
+3. **缓存策略**: 根据数据特性设置合适的缓存时间
+4. **性能优化**: 使用精确订阅和预加载提升用户体验
+5. **错误处理**: 统一的错误处理和加载状态管理
+6. **测试覆盖**: 完整的单元测试和集成测试
+7. **开发工具**: 充分利用 DevTools 进行调试
+
+遵循这些规范可以确保状态管理的可维护性、性能和开发效率。

@@ -59,51 +59,112 @@
     <div class="px-4 pt-6 pb-20 h-full scroll-container">
       <!-- 今日概览 -->
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">📅 今日概览</h3>
-        <div class="flex items-center justify-between">
-          <div class="flex-1">
-            <div class="grid grid-cols-2 gap-4">
-              <div class="text-center">
-                <div class="text-2xl font-bold text-blue-500 mb-1">12</div>
-                <div class="text-gray-600 text-sm">对话练习</div>
-                <div class="text-green-500 text-xs">↗ +3</div>
-              </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold text-green-500 mb-1">25</div>
-                <div class="text-gray-600 text-sm">学习时长(分)</div>
-                <div class="text-green-500 text-xs">↗ +8</div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-6">📅 今日概览</h3>
+
+        <div class="grid grid-cols-3 gap-6">
+          <!-- 话题完成进度 -->
+          <div class="text-center">
+            <div class="relative w-20 h-20 mx-auto mb-3">
+              <svg class="progress-ring w-20 h-20" viewBox="0 0 120 120">
+                <circle
+                  class="progress-ring-circle"
+                  stroke="#E5E7EB"
+                  stroke-width="8"
+                  fill="transparent"
+                  r="52"
+                  cx="60"
+                  cy="60"
+                />
+                <circle
+                  class="progress-ring-circle"
+                  stroke="#10B981"
+                  stroke-width="8"
+                  fill="transparent"
+                  r="52"
+                  cx="60"
+                  cy="60"
+                  stroke-dasharray="326.7"
+                  stroke-dashoffset="130"
+                />
+              </svg>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center">
+                  <div class="text-sm font-bold text-gray-800">60%</div>
+                </div>
               </div>
             </div>
+            <div class="text-gray-700 text-sm font-medium">话题进度</div>
+            <div class="text-green-500 text-xs mt-1">↗ +20%</div>
           </div>
-          <div class="relative w-24 h-24">
-            <svg class="progress-ring w-24 h-24" viewBox="0 0 120 120">
-              <circle
-                class="progress-ring-circle"
-                stroke="#E5E7EB"
-                stroke-width="8"
-                fill="transparent"
-                r="52"
-                cx="60"
-                cy="60"
-              />
-              <circle
-                class="progress-ring-circle"
-                stroke="#3B82F6"
-                stroke-width="8"
-                fill="transparent"
-                r="52"
-                cx="60"
-                cy="60"
-                stroke-dasharray="326.7"
-                stroke-dashoffset="98"
-              />
-            </svg>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="text-center">
-                <div class="text-lg font-bold text-gray-800">70%</div>
-                <div class="text-xs text-gray-500">目标</div>
+
+          <!-- 背单词个数 -->
+          <div class="text-center">
+            <div class="relative w-20 h-20 mx-auto mb-3">
+              <svg class="progress-ring w-20 h-20" viewBox="0 0 120 120">
+                <circle
+                  class="progress-ring-circle"
+                  stroke="#E5E7EB"
+                  stroke-width="8"
+                  fill="transparent"
+                  r="52"
+                  cx="60"
+                  cy="60"
+                />
+                <circle
+                  class="progress-ring-circle"
+                  stroke="#8B5CF6"
+                  stroke-width="8"
+                  fill="transparent"
+                  r="52"
+                  cx="60"
+                  cy="60"
+                  stroke-dasharray="326.7"
+                  stroke-dashoffset="98"
+                />
+              </svg>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center">
+                  <div class="text-sm font-bold text-gray-800">15</div>
+                </div>
               </div>
             </div>
+            <div class="text-gray-700 text-sm font-medium">背单词</div>
+            <div class="text-green-500 text-xs mt-1">↗ +5</div>
+          </div>
+
+          <!-- 拍照短文个数 -->
+          <div class="text-center">
+            <div class="relative w-20 h-20 mx-auto mb-3">
+              <svg class="progress-ring w-20 h-20" viewBox="0 0 120 120">
+                <circle
+                  class="progress-ring-circle"
+                  stroke="#E5E7EB"
+                  stroke-width="8"
+                  fill="transparent"
+                  r="52"
+                  cx="60"
+                  cy="60"
+                />
+                <circle
+                  class="progress-ring-circle"
+                  stroke="#F97316"
+                  stroke-width="8"
+                  fill="transparent"
+                  r="52"
+                  cx="60"
+                  cy="60"
+                  stroke-dasharray="326.7"
+                  stroke-dashoffset="260"
+                />
+              </svg>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center">
+                  <div class="text-sm font-bold text-gray-800">3</div>
+                </div>
+              </div>
+            </div>
+            <div class="text-gray-700 text-sm font-medium">拍照短文</div>
+            <div class="text-green-500 text-xs mt-1">↗ +1</div>
           </div>
         </div>
       </div>
@@ -218,7 +279,7 @@
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center space-x-2">
                 <i class="fas fa-camera text-orange-500"></i>
-                <span class="text-gray-700 text-sm">拍照练习</span>
+                <span class="text-gray-700 text-sm">拍照短文</span>
               </div>
               <span class="text-gray-600 text-sm">23次</span>
             </div>
@@ -226,74 +287,23 @@
               <div class="bg-orange-500 h-2 rounded-full w-1/3"></div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- 最近学习记录 -->
-      <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-800">📝 最近学习</h3>
-          <span class="text-sm text-blue-500">查看全部</span>
-        </div>
-
-        <div class="space-y-4">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <i class="fas fa-comments text-blue-500"></i>
+          <!-- 背单词 -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center space-x-2">
+                <i class="fas fa-book text-red-500"></i>
+                <span class="text-gray-700 text-sm">背单词</span>
+              </div>
+              <span class="text-gray-600 text-sm">156次</span>
             </div>
-            <div class="flex-1">
-              <div class="font-medium text-gray-800 text-sm">AI对话练习</div>
-              <div class="text-gray-500 text-xs">完成5轮对话，平均得分85分</div>
-            </div>
-            <div class="text-right">
-              <div class="text-gray-600 text-xs">今天</div>
-              <div class="text-green-500 text-xs">+50 XP</div>
-            </div>
-          </div>
-
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <i class="fas fa-coffee text-green-500"></i>
-            </div>
-            <div class="flex-1">
-              <div class="font-medium text-gray-800 text-sm">咖啡话题练习</div>
-              <div class="text-gray-500 text-xs">完成3个对话场景</div>
-            </div>
-            <div class="text-right">
-              <div class="text-gray-600 text-xs">昨天</div>
-              <div class="text-green-500 text-xs">+30 XP</div>
-            </div>
-          </div>
-
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <i class="fas fa-language text-purple-500"></i>
-            </div>
-            <div class="flex-1">
-              <div class="font-medium text-gray-800 text-sm">翻译练习</div>
-              <div class="text-gray-500 text-xs">练习日常口语翻译</div>
-            </div>
-            <div class="text-right">
-              <div class="text-gray-600 text-xs">昨天</div>
-              <div class="text-green-500 text-xs">+25 XP</div>
-            </div>
-          </div>
-
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <i class="fas fa-camera text-orange-500"></i>
-            </div>
-            <div class="flex-1">
-              <div class="font-medium text-gray-800 text-sm">拍照描述</div>
-              <div class="text-gray-500 text-xs">练习图片英文描述</div>
-            </div>
-            <div class="text-right">
-              <div class="text-gray-600 text-xs">2天前</div>
-              <div class="text-green-500 text-xs">+40 XP</div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-red-500 h-2 rounded-full w-5/6"></div>
             </div>
           </div>
         </div>
       </div>
+
 
       <!-- 学习建议 -->
       <div class="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-6 text-white mb-6">
